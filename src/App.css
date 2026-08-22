@@ -318,8 +318,7 @@
 .counter-settings-btn {
   position: absolute;
   top: 8px;
-  left: 50%;
-  transform: translateX(-50%);
+  left: 40px;
   width: 26px;
   height: 26px;
   border-radius: 50%;
@@ -369,7 +368,7 @@
 }
 
 .counter-name {
-  /* Dégage la place du sélecteur "Personnaliser", centré en haut de la carte. */
+  /* Dégage la place des boutons (glisser, personnaliser, supprimer) en haut de la carte. */
   margin: 18px 0 0;
   font-size: 1rem;
   font-weight: 600;
