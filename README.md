@@ -13,6 +13,7 @@ en ligne — tout est stocké dans le `localStorage` de l'appareil).
 - Effet de défilement façon odomètre sur les chiffres à chaque changement.
 - Persistance locale : les compteurs restent après fermeture de l'app.
 - Installable comme application (PWA), utilisable hors-ligne.
+- Image de fond par compteur, via une URL http(s).
 
 ## Développement
 
@@ -53,7 +54,7 @@ npm run preview
   sur l'ensemble du code source.
 - **Mutation testing** : seuil 100%, mais scopé volontairement aux modules de
   logique pure sans JSX/animation (`src/odds.ts`, `src/date.ts`, `src/sync.ts`,
-  `src/share.ts`, `src/id.ts`) — un score de 100% strict sur les composants
+  `src/share.ts`, `src/id.ts`, `src/url.ts`) — un score de 100% strict sur les composants
   React (drag & drop, animations, QR code...) n'est pas un objectif réaliste
   (mutants équivalents, contenu visuel difficile à mutation-tester utilement).
 - **Tests fonctionnels** : `e2e/` couvre les parcours de base, les

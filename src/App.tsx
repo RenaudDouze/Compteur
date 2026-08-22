@@ -83,6 +83,10 @@ export default function App() {
     setCounters((prev) => prev.map((c) => (c.id === id ? { ...c, startDate } : c)))
   }
 
+  const setBackgroundImage = (id: string, backgroundImageUrl: string | undefined) => {
+    setCounters((prev) => prev.map((c) => (c.id === id ? { ...c, backgroundImageUrl } : c)))
+  }
+
   const deleteCounter = (id: string) => {
     setCounters((prev) => prev.filter((c) => c.id !== id))
   }
@@ -137,6 +141,7 @@ export default function App() {
                 onRename={(name) => renameCounter(counter.id, name)}
                 onSetOdds={(denominator) => setOdds(counter.id, denominator)}
                 onSetStartDate={(date) => setStartDate(counter.id, date)}
+                onSetBackgroundImage={(url) => setBackgroundImage(counter.id, url)}
                 onDelete={() => deleteCounter(counter.id)}
               />
             ))}

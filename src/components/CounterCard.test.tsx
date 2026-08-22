@@ -26,6 +26,7 @@ function renderCard(counterOverrides: Partial<Counter> = {}, props: Partial<Para
     onRename: vi.fn(),
     onSetOdds: vi.fn(),
     onSetStartDate: vi.fn(),
+    onSetBackgroundImage: vi.fn(),
     onDelete: vi.fn(),
     ...props,
   }
@@ -359,6 +360,120 @@ describe('CounterCard', () => {
     })
   })
 
+  describe('image de fond', () => {
+    it('affiche "+ image de fond" quand aucune n\'est définie', () => {
+      renderCard()
+      expect(screen.getByText('+ image de fond')).toBeInTheDocument()
+    })
+
+    it("n'affiche pas de calque de fond quand aucune image n'est définie", () => {
+      renderCard()
+      expect(document.querySelector('.counter-bg')).not.toBeInTheDocument()
+    })
+
+    it('affiche "Image de fond ✓" en plein écran et le calque de fond quand une URL valide est définie', () => {
+      renderCard({ backgroundImageUrl: 'https://exemple.com/fond.jpg' }, { fill: true })
+      expect(screen.getByText('Image de fond ✓')).toBeInTheDocument()
+      const bg = document.querySelector('.counter-bg') as HTMLElement
+      expect(bg).toBeInTheDocument()
+      expect(bg.style.backgroundImage).toContain('exemple.com/fond.jpg')
+    })
+
+    it('affiche l\'icône compacte quand une image est définie et fill=false', () => {
+      renderCard({ backgroundImageUrl: 'https://exemple.com/fond.jpg' }, { fill: false })
+      expect(screen.getByText('🖼')).toBeInTheDocument()
+    })
+
+    it('définit une image de fond avec une URL http(s) valide', () => {
+      const { onSetBackgroundImage } = renderCard()
+      fireEvent.click(screen.getByText('+ image de fond'))
+      const input = screen.getByPlaceholderText('https://exemple.com/image.jpg')
+      fireEvent.change(input, { target: { value: 'https://exemple.com/photo.png' } })
+      fireEvent.keyDown(input, { key: 'Enter' })
+      expect(onSetBackgroundImage).toHaveBeenCalledWith('https://exemple.com/photo.png')
+    })
+
+    it('ignore une URL invalide et conserve la valeur précédente', () => {
+      const { onSetBackgroundImage } = renderCard(
+        { backgroundImageUrl: 'https://exemple.com/ancien.jpg' },
+        { fill: true }
+      )
+      fireEvent.click(screen.getByText('Image de fond ✓'))
+      const input = screen.getByDisplayValue('https://exemple.com/ancien.jpg')
+      fireEvent.change(input, { target: { value: 'pas-une-url' } })
+      fireEvent.keyDown(input, { key: 'Enter' })
+      expect(onSetBackgroundImage).not.toHaveBeenCalled()
+      expect(screen.getByText('Image de fond ✓')).toBeInTheDocument()
+    })
+
+    it('efface l\'image de fond si la saisie est vidée', () => {
+      const { onSetBackgroundImage } = renderCard(
+        { backgroundImageUrl: 'https://exemple.com/ancien.jpg' },
+        { fill: true }
+      )
+      fireEvent.click(screen.getByText('Image de fond ✓'))
+      const input = screen.getByDisplayValue('https://exemple.com/ancien.jpg')
+      fireEvent.change(input, { target: { value: '' } })
+      fireEvent.keyDown(input, { key: 'Enter' })
+      expect(onSetBackgroundImage).toHaveBeenCalledWith(undefined)
+    })
+
+    it('annule avec Échap et restaure la valeur précédente', () => {
+      const { onSetBackgroundImage } = renderCard(
+        { backgroundImageUrl: 'https://exemple.com/ancien.jpg' },
+        { fill: true }
+      )
+      fireEvent.click(screen.getByText('Image de fond ✓'))
+      const input = screen.getByDisplayValue('https://exemple.com/ancien.jpg')
+      fireEvent.change(input, { target: { value: 'https://exemple.com/autre.jpg' } })
+      fireEvent.keyDown(input, { key: 'Escape' })
+      expect(onSetBackgroundImage).not.toHaveBeenCalled()
+      expect(screen.getByText('Image de fond ✓')).toBeInTheDocument()
+    })
+
+    it('valide aussi au blur', () => {
+      const { onSetBackgroundImage } = renderCard()
+      fireEvent.click(screen.getByText('+ image de fond'))
+      const input = screen.getByPlaceholderText('https://exemple.com/image.jpg')
+      fireEvent.change(input, { target: { value: 'https://exemple.com/blur.jpg' } })
+      fireEvent.blur(input)
+      expect(onSetBackgroundImage).toHaveBeenCalledWith('https://exemple.com/blur.jpg')
+    })
+
+    it("ignore une URL invalide en repartant d'aucune image définie", () => {
+      const { onSetBackgroundImage } = renderCard()
+      fireEvent.click(screen.getByText('+ image de fond'))
+      const input = screen.getByPlaceholderText('https://exemple.com/image.jpg')
+      fireEvent.change(input, { target: { value: 'pas-une-url' } })
+      fireEvent.keyDown(input, { key: 'Enter' })
+      expect(onSetBackgroundImage).not.toHaveBeenCalled()
+      expect(screen.getByText('+ image de fond')).toBeInTheDocument()
+    })
+
+    it("annule avec Échap en repartant d'aucune image définie", () => {
+      const { onSetBackgroundImage } = renderCard()
+      fireEvent.click(screen.getByText('+ image de fond'))
+      const input = screen.getByPlaceholderText('https://exemple.com/image.jpg')
+      fireEvent.change(input, { target: { value: 'https://exemple.com/x.jpg' } })
+      fireEvent.keyDown(input, { key: 'Escape' })
+      expect(onSetBackgroundImage).not.toHaveBeenCalled()
+      expect(screen.getByText('+ image de fond')).toBeInTheDocument()
+    })
+
+    it("cliquer dans la zone de saisie n'incrémente pas le compteur", () => {
+      const { onChange } = renderCard()
+      fireEvent.click(screen.getByText('+ image de fond'))
+      fireEvent.click(document.querySelector('.counter-bg-edit')!)
+      expect(onChange).not.toHaveBeenCalled()
+    })
+
+    it("le clic pour éditer n'incrémente pas le compteur", () => {
+      const { onChange } = renderCard()
+      fireEvent.click(screen.getByText('+ image de fond'))
+      expect(onChange).not.toHaveBeenCalled()
+    })
+  })
+
   describe('partage', () => {
     afterEach(() => {
       vi.stubGlobal('navigator', realNavigator)
@@ -553,6 +668,7 @@ describe('CounterCard', () => {
             onRename={vi.fn()}
             onSetOdds={vi.fn()}
             onSetStartDate={vi.fn()}
+            onSetBackgroundImage={vi.fn()}
             onDelete={vi.fn()}
           />
         </Reorder.Group>
@@ -569,6 +685,7 @@ describe('CounterCard', () => {
             onRename={vi.fn()}
             onSetOdds={vi.fn()}
             onSetStartDate={vi.fn()}
+            onSetBackgroundImage={vi.fn()}
             onDelete={vi.fn()}
           />
         </Reorder.Group>
@@ -595,6 +712,7 @@ describe('CounterCard', () => {
             onRename={vi.fn()}
             onSetOdds={vi.fn()}
             onSetStartDate={vi.fn()}
+            onSetBackgroundImage={vi.fn()}
             onDelete={vi.fn()}
           />
         </Reorder.Group>
@@ -609,6 +727,7 @@ describe('CounterCard', () => {
             onRename={vi.fn()}
             onSetOdds={vi.fn()}
             onSetStartDate={vi.fn()}
+            onSetBackgroundImage={vi.fn()}
             onDelete={vi.fn()}
           />
         </Reorder.Group>

@@ -127,6 +127,16 @@ describe('App', () => {
     expect(screen.getByTitle('Toucher pour changer la date de début')).toHaveTextContent('2020')
   })
 
+  it('définit une image de fond', () => {
+    render(<App />)
+    fireEvent.click(screen.getByRole('button', { name: '+ Nouveau compteur' }))
+    fireEvent.click(screen.getByText('+ image de fond'))
+    const input = screen.getByPlaceholderText('https://exemple.com/image.jpg')
+    fireEvent.change(input, { target: { value: 'https://exemple.com/fond.jpg' } })
+    fireEvent.keyDown(input, { key: 'Enter' })
+    expect(document.querySelector('.counter-bg')).toBeInTheDocument()
+  })
+
   it('supprime un compteur après confirmation', () => {
     render(<App />)
     fireEvent.click(screen.getByRole('button', { name: '+ Nouveau compteur' }))
@@ -181,6 +191,15 @@ describe('App', () => {
     const dateInput = firstCard.querySelector('.counter-date-input') as HTMLInputElement
     fireEvent.change(dateInput, { target: { value: '2020-01-01' } })
     expect(within(secondCard).getByTitle('Toucher pour changer la date de début')).not.toHaveTextContent('2020')
+
+    // Définit une image de fond uniquement sur le premier.
+    fireEvent.click(within(firstCard).getByText('+ image de fond'))
+    fireEvent.change(within(firstCard).getByPlaceholderText('https://exemple.com/image.jpg'), {
+      target: { value: 'https://exemple.com/fond.jpg' },
+    })
+    fireEvent.keyDown(within(firstCard).getByPlaceholderText('https://exemple.com/image.jpg'), { key: 'Enter' })
+    expect(firstCard.querySelector('.counter-bg')).toBeInTheDocument()
+    expect(secondCard.querySelector('.counter-bg')).not.toBeInTheDocument()
 
     // Définit directement la valeur uniquement sur le premier.
     fireEvent.click(within(firstCard).getByRole('button', { name: 'Définir la valeur du compteur' }))

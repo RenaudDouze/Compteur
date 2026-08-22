@@ -34,6 +34,23 @@ test.describe('Fonctionnalités avancées', () => {
     await expect(label).not.toContainText('auj.')
   })
 
+  test('définit une image de fond via une URL http(s) valide', async ({ page }) => {
+    await page.getByText('+ image de fond').click()
+    const input = page.getByPlaceholder('https://exemple.com/image.jpg')
+    await input.fill('https://exemple.com/fond.jpg')
+    await input.press('Enter')
+    await expect(page.locator('.counter-bg')).toBeAttached()
+  })
+
+  test('ignore une URL invalide comme image de fond', async ({ page }) => {
+    await page.getByText('+ image de fond').click()
+    const input = page.getByPlaceholder('https://exemple.com/image.jpg')
+    await input.fill('pas-une-url')
+    await input.press('Enter')
+    await expect(page.locator('.counter-bg')).not.toBeAttached()
+    await expect(page.getByText('+ image de fond')).toBeVisible()
+  })
+
   test('définit directement une valeur via le crayon', async ({ page }) => {
     await page.getByRole('button', { name: 'Définir la valeur du compteur' }).click()
     const input = page.locator('.counter-value-input')

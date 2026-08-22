@@ -4,6 +4,7 @@ import { Odometer } from './Odometer'
 import { cumulativeOdds, formatOdds } from '../odds'
 import { formatStartDate, toIsoDate, todayIsoDate } from '../date'
 import { buildShareText } from '../share'
+import { isValidImageUrl } from '../url'
 import { useNarrowScreen } from '../hooks/useNarrowScreen'
 import type { Counter } from '../types'
 
@@ -15,6 +16,7 @@ interface CounterCardProps {
   onRename: (name: string) => void
   onSetOdds: (denominator: number | undefined) => void
   onSetStartDate: (isoDate: string | undefined) => void
+  onSetBackgroundImage: (url: string | undefined) => void
   onDelete: () => void
 }
 
@@ -26,6 +28,7 @@ export function CounterCard({
   onRename,
   onSetOdds,
   onSetStartDate,
+  onSetBackgroundImage,
   onDelete,
 }: CounterCardProps) {
   const [editing, setEditing] = useState(false)
@@ -33,6 +36,8 @@ export function CounterCard({
   const [editingOdds, setEditingOdds] = useState(false)
   const [draftOdds, setDraftOdds] = useState(counter.oddsDenominator?.toString() ?? '')
   const [editingDate, setEditingDate] = useState(false)
+  const [editingBackground, setEditingBackground] = useState(false)
+  const [draftBackground, setDraftBackground] = useState(counter.backgroundImageUrl ?? '')
   const [editingCount, setEditingCount] = useState(false)
   const [draftCount, setDraftCount] = useState(counter.count.toString())
   const [direction, setDirection] = useState<1 | -1>(1)
@@ -61,6 +66,20 @@ export function CounterCard({
     const parsed = parseInt(draftOdds.replace(/[^\d]/g, ''), 10)
     onSetOdds(Number.isFinite(parsed) && parsed > 0 ? parsed : undefined)
     setEditingOdds(false)
+  }
+
+  const commitBackground = () => {
+    const trimmed = draftBackground.trim()
+    if (!trimmed) {
+      onSetBackgroundImage(undefined)
+    } else if (isValidImageUrl(trimmed)) {
+      onSetBackgroundImage(trimmed)
+    } else {
+      // URL invalide : on ignore la saisie et on revient à la valeur actuelle
+      // plutôt que d'effacer une image déjà définie sur une simple faute de frappe.
+      setDraftBackground(counter.backgroundImageUrl ?? '')
+    }
+    setEditingBackground(false)
   }
 
   const commitCount = () => {
@@ -176,6 +195,14 @@ export function CounterCard({
       role="button"
       aria-label={`Incrémenter ${counter.name}`}
     >
+      {counter.backgroundImageUrl && (
+        <div
+          className="counter-bg"
+          style={{ backgroundImage: `url("${counter.backgroundImageUrl}")` }}
+          aria-hidden="true"
+        />
+      )}
+
       <button
         className="counter-delete"
         onClick={handleDeleteClick}
@@ -305,6 +332,45 @@ export function CounterCard({
         >
           {shared ? 'Copié ✓' : compactMeta ? '⇪' : '⇪ Partager'}
         </button>
+
+        {editingBackground ? (
+          <div className="counter-bg-edit" onClick={(e) => e.stopPropagation()}>
+            <input
+              type="url"
+              inputMode="url"
+              className="counter-bg-input"
+              autoFocus
+              value={draftBackground}
+              placeholder="https://exemple.com/image.jpg"
+              onChange={(e) => setDraftBackground(e.target.value)}
+              onBlur={commitBackground}
+              onKeyDown={(e) => {
+                if (e.key === 'Enter') commitBackground()
+                if (e.key === 'Escape') {
+                  setDraftBackground(counter.backgroundImageUrl ?? '')
+                  setEditingBackground(false)
+                }
+              }}
+            />
+          </div>
+        ) : (
+          <button
+            type="button"
+            className="counter-meta-label"
+            onClick={(e) => {
+              e.stopPropagation()
+              setDraftBackground(counter.backgroundImageUrl ?? '')
+              setEditingBackground(true)
+            }}
+            title="Toucher pour définir une image de fond (URL)"
+          >
+            {counter.backgroundImageUrl
+              ? compactMeta
+                ? '🖼'
+                : 'Image de fond ✓'
+              : '+ image de fond'}
+          </button>
+        )}
       </div>
 
       {editingCount ? (
