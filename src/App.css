@@ -215,6 +215,24 @@
   cursor: text;
 }
 
+.counter-card:focus-visible {
+  outline: 3px solid var(--accent);
+  outline-offset: 2px;
+}
+
+/* Visible uniquement par les technologies d'assistance (ex: lecteur d'écran). */
+.sr-only {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border: 0;
+}
+
 .counter-card::before {
   content: '';
   position: absolute;
@@ -624,4 +642,38 @@
   font-size: 0.85rem;
   text-align: center;
   margin: 12px 0 0;
+}
+
+.undo-toast {
+  position: fixed;
+  left: 50%;
+  bottom: calc(20px + env(safe-area-inset-bottom));
+  transform: translateX(-50%);
+  z-index: 60;
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  max-width: calc(100% - 32px);
+  background: var(--text);
+  color: var(--surface);
+  padding: 12px 18px;
+  border-radius: 999px;
+  box-shadow: 0 8px 24px rgba(15, 23, 42, 0.25);
+  font-size: 0.9rem;
+}
+
+.undo-toast span {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.undo-toast button {
+  flex-shrink: 0;
+  border: none;
+  background: transparent;
+  color: inherit;
+  font-weight: 700;
+  text-decoration: underline;
+  padding: 0;
 }

@@ -12,7 +12,7 @@ test.describe('Parcours de base', () => {
 
   test('crée un premier compteur', async ({ page }) => {
     await addCounter(page)
-    await expect(page.getByText('Compteur 1')).toBeVisible()
+    await expect(page.getByText('Compteur 1', { exact: true })).toBeVisible()
     await expect(page.locator('.counter-value')).toHaveText('0')
   })
 
@@ -42,11 +42,11 @@ test.describe('Parcours de base', () => {
 
   test('renomme un compteur', async ({ page }) => {
     await addCounter(page)
-    await page.getByText('Compteur 1').click()
+    await page.getByText('Compteur 1', { exact: true }).click()
     const input = page.locator('.counter-name-input')
     await input.fill('Mon compteur')
     await input.press('Enter')
-    await expect(page.getByText('Mon compteur')).toBeVisible()
+    await expect(page.getByText('Mon compteur', { exact: true })).toBeVisible()
   })
 
   test('supprime un compteur après double confirmation', async ({ page }) => {

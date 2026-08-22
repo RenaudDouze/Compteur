@@ -21,7 +21,7 @@ test.describe('Synchronisation et partage', () => {
 
   test('exporte un fichier de sauvegarde JSON téléchargeable', async ({ page }) => {
     await addCounter(page)
-    await page.getByText('Compteur 1').click()
+    await page.getByText('Compteur 1', { exact: true }).click()
     await page.locator('.counter-name-input').fill('Export test')
     await page.locator('.counter-name-input').press('Enter')
 
@@ -47,7 +47,7 @@ test.describe('Synchronisation et partage', () => {
       mimeType: 'application/json',
       buffer: Buffer.from(JSON.stringify([{ name: 'Depuis fichier', count: 7 }])),
     })
-    await expect(page.getByText('Depuis fichier')).toBeVisible()
+    await expect(page.getByText('Depuis fichier', { exact: true })).toBeVisible()
     await expect(page.locator('.counter-value')).toHaveText('7')
   })
 
@@ -58,7 +58,7 @@ test.describe('Synchronisation et partage', () => {
     // Attend que le rebond d'incrémentation soit retombé avant de cliquer sur
     // le nom, sinon le clic peut arriver pendant l'animation encore en cours.
     await expect(page.locator('.counter-value')).toHaveText('2')
-    await page.getByText('Compteur 1').click()
+    await page.getByText('Compteur 1', { exact: true }).click()
     await page.locator('.counter-name-input').fill('Partagé E2E')
     await page.locator('.counter-name-input').press('Enter')
 
@@ -78,7 +78,7 @@ test.describe('Synchronisation et partage', () => {
     const otherContext = await browser.newContext()
     const otherPage = await otherContext.newPage()
     await otherPage.goto(link)
-    await expect(otherPage.getByText('Partagé E2E')).toBeVisible()
+    await expect(otherPage.getByText('Partagé E2E', { exact: true })).toBeVisible()
     await expect(otherPage.locator('.counter-value')).toHaveText('2')
     // Le lien est nettoyé après import automatique.
     expect(new URL(otherPage.url()).search).toBe('')
@@ -87,7 +87,7 @@ test.describe('Synchronisation et partage', () => {
 
   test('copie un compteur au format texte sans lien', async ({ page }) => {
     await addCounter(page)
-    await page.getByText('Compteur 1').click()
+    await page.getByText('Compteur 1', { exact: true }).click()
     await page.locator('.counter-name-input').fill('À partager')
     await page.locator('.counter-name-input').press('Enter')
     await page.locator('.counter-card').click()

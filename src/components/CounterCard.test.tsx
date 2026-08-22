@@ -86,6 +86,42 @@ describe('CounterCard', () => {
     expect(document.querySelector('.counter-bg')).not.toBeInTheDocument()
   })
 
+  it('annonce le nom et la valeur dans une région accessible dédiée', () => {
+    renderCard({ name: 'Accessible', count: 5 })
+    expect(document.querySelector('.sr-only')).toHaveTextContent('Accessible : 5')
+  })
+
+  it("masque l'affichage animé aux technologies d'assistance", () => {
+    renderCard()
+    expect(document.querySelector('.counter-value')).toHaveAttribute('aria-hidden', 'true')
+  })
+
+  describe('raccourcis clavier', () => {
+    it.each(['Enter', ' ', 'ArrowUp', '+', '='])('incrémente sur la touche "%s"', (key) => {
+      const { onChange } = renderCard()
+      fireEvent.keyDown(screen.getByRole('button', { name: /Incrémenter Compteur 1/ }), { key })
+      expect(onChange).toHaveBeenCalledWith(1)
+    })
+
+    it.each(['ArrowDown', '-'])('décrémente sur la touche "%s"', (key) => {
+      const { onChange } = renderCard()
+      fireEvent.keyDown(screen.getByRole('button', { name: /Incrémenter Compteur 1/ }), { key })
+      expect(onChange).toHaveBeenCalledWith(-1)
+    })
+
+    it('ignore une touche sans effet', () => {
+      const { onChange } = renderCard()
+      fireEvent.keyDown(screen.getByRole('button', { name: /Incrémenter Compteur 1/ }), { key: 'a' })
+      expect(onChange).not.toHaveBeenCalled()
+    })
+
+    it("ignore une touche qui bouillonne depuis un enfant (pas de double action)", () => {
+      const { onChange } = renderCard()
+      fireEvent.keyDown(screen.getByRole('button', { name: 'Décrémenter' }), { key: 'Enter' })
+      expect(onChange).not.toHaveBeenCalled()
+    })
+  })
+
   describe('suppression', () => {
     it('demande une confirmation avant de supprimer', () => {
       const { onDelete } = renderCard()
