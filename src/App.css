@@ -182,6 +182,12 @@
 
 .counter-card {
   position: relative;
+  /* Crée un contexte d'empilement permanent pour cette carte : sans ça,
+     `.counter-bg` (z-index négatif, pour rester derrière le contenu) ne
+     serait rattaché à un contexte local que pendant les brefs instants où
+     Framer Motion pose un `transform` inline (ex: whileTap), et
+     disparaîtrait derrière le fond de la page le reste du temps. */
+  isolation: isolate;
   background: var(--surface);
   border: 1px solid var(--surface-border);
   border-radius: 22px;
