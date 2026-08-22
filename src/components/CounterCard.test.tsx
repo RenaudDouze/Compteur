@@ -95,6 +95,105 @@ describe('CounterCard', () => {
     })
   })
 
+  describe('appui long (rafale)', () => {
+    it('incrémente une seule fois pour un appui bref (tap normal)', () => {
+      const { onChange } = renderCard()
+      const plus = screen.getByRole('button', { name: 'Incrémenter' })
+      fireEvent.pointerDown(plus)
+      fireEvent.pointerUp(plus)
+      fireEvent.click(plus)
+      expect(onChange).toHaveBeenCalledTimes(1)
+      expect(onChange).toHaveBeenCalledWith(1)
+    })
+
+    it('ne déclenche pas de répétition si relâché avant le délai de maintien', () => {
+      const { onChange } = renderCard()
+      const plus = screen.getByRole('button', { name: 'Incrémenter' })
+      fireEvent.pointerDown(plus)
+      act(() => {
+        vi.advanceTimersByTime(200)
+      })
+      fireEvent.pointerUp(plus)
+      act(() => {
+        vi.advanceTimersByTime(500)
+      })
+      expect(onChange).not.toHaveBeenCalled()
+    })
+
+    it('répète en rafale après le délai de maintien, sans incrément en trop au relâchement', () => {
+      const { onChange } = renderCard()
+      const plus = screen.getByRole('button', { name: 'Incrémenter' })
+      fireEvent.pointerDown(plus)
+      act(() => {
+        vi.advanceTimersByTime(350)
+      })
+      expect(onChange).toHaveBeenCalledTimes(1)
+      act(() => {
+        vi.advanceTimersByTime(250)
+      })
+      expect(onChange).toHaveBeenCalledTimes(3)
+
+      fireEvent.pointerUp(plus)
+      fireEvent.click(plus)
+      // Le clic émis par le navigateur après le relâchement ne doit pas
+      // ajouter d'incrément supplémentaire à ceux déjà appliqués en rafale.
+      expect(onChange).toHaveBeenCalledTimes(3)
+    })
+
+    it('répète aussi en rafale sur le bouton -, sans incrément en trop au relâchement', () => {
+      const { onChange } = renderCard()
+      const minus = screen.getByRole('button', { name: 'Décrémenter' })
+      fireEvent.pointerDown(minus)
+      act(() => {
+        vi.advanceTimersByTime(350)
+      })
+      expect(onChange).toHaveBeenCalledTimes(1)
+      fireEvent.pointerUp(minus)
+      fireEvent.click(minus)
+      expect(onChange).toHaveBeenCalledTimes(1)
+      expect(onChange).toHaveBeenCalledWith(-1)
+    })
+
+    it('applique le pas personnalisé à chaque répétition', () => {
+      const { onChange } = renderCard({ step: 5 })
+      const minus = screen.getByRole('button', { name: 'Décrémenter' })
+      fireEvent.pointerDown(minus)
+      act(() => {
+        vi.advanceTimersByTime(350)
+      })
+      expect(onChange).toHaveBeenCalledWith(-5)
+    })
+
+    it('arrête la répétition si le pointeur quitte le bouton', () => {
+      const { onChange } = renderCard()
+      const plus = screen.getByRole('button', { name: 'Incrémenter' })
+      fireEvent.pointerDown(plus)
+      act(() => {
+        vi.advanceTimersByTime(350)
+      })
+      expect(onChange).toHaveBeenCalledTimes(1)
+      fireEvent.pointerLeave(plus)
+      act(() => {
+        vi.advanceTimersByTime(500)
+      })
+      expect(onChange).toHaveBeenCalledTimes(1)
+    })
+
+    it('arrête la répétition sur pointercancel', () => {
+      const { onChange } = renderCard()
+      const plus = screen.getByRole('button', { name: 'Incrémenter' })
+      fireEvent.pointerDown(plus)
+      act(() => {
+        vi.advanceTimersByTime(350)
+      })
+      fireEvent.pointerCancel(plus)
+      act(() => {
+        vi.advanceTimersByTime(500)
+      })
+      expect(onChange).toHaveBeenCalledTimes(1)
+    })
+  })
+
   it('affiche le calque d\'image de fond quand une URL est définie', () => {
     renderCard({ backgroundImageUrl: 'https://exemple.com/fond.jpg' })
     const bg = document.querySelector('.counter-bg') as HTMLElement
