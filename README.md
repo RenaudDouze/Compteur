@@ -13,8 +13,8 @@ en ligne — tout est stocké dans le `localStorage` de l'appareil).
 - Effet de défilement façon odomètre sur les chiffres à chaque changement.
 - Persistance locale : les compteurs restent après fermeture de l'app.
 - Installable comme application (PWA), utilisable hors-ligne.
-- Image de fond par compteur, via une URL http(s).
-- Couleur au choix par compteur, parmi une palette curatée.
+- Panneau « ⚙ Personnaliser » par compteur (couleur, image de fond, probabilité,
+  date de début, partage), pour garder la carte épurée.
 
 ## Développement
 

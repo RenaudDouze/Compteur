@@ -55,6 +55,9 @@ test.describe('Synchronisation et partage', () => {
     await addCounter(page)
     await page.locator('.counter-card').click()
     await page.locator('.counter-card').click()
+    // Attend que le rebond d'incrémentation soit retombé avant de cliquer sur
+    // le nom, sinon le clic peut arriver pendant l'animation encore en cours.
+    await expect(page.locator('.counter-value')).toHaveText('2')
     await page.getByText('Compteur 1').click()
     await page.locator('.counter-name-input').fill('Partagé E2E')
     await page.locator('.counter-name-input').press('Enter')
@@ -100,7 +103,8 @@ test.describe('Synchronisation et partage', () => {
         return Promise.resolve()
       }
     })
-    await page.getByTitle('Copier ou partager ce compteur (texte, sans lien)').click()
+    await page.getByRole('button', { name: 'Personnaliser le compteur' }).click()
+    await page.getByText('⇪ Partager ce compteur').click()
     const shared = await page.evaluate(() => (window as unknown as { __shared: string }).__shared)
     expect(shared).toContain('À partager : 1')
     expect(shared).not.toContain('http')

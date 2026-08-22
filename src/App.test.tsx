@@ -112,38 +112,44 @@ describe('App', () => {
   it('définit une probabilité', () => {
     render(<App />)
     fireEvent.click(screen.getByRole('button', { name: '+ Nouveau compteur' }))
-    fireEvent.click(screen.getByText('+ probabilité'))
+    fireEvent.click(screen.getByRole('button', { name: 'Personnaliser le compteur' }))
     const input = screen.getByPlaceholderText('4096')
     fireEvent.change(input, { target: { value: '10' } })
     fireEvent.keyDown(input, { key: 'Enter' })
-    expect(screen.getByText('1 chance sur 10')).toBeInTheDocument()
+    fireEvent.click(screen.getByRole('button', { name: 'Fermer' }))
+    fireEvent.click(screen.getByRole('button', { name: 'Personnaliser le compteur' }))
+    expect(screen.getByDisplayValue('10')).toBeInTheDocument()
   })
 
   it('définit une date de début', () => {
     render(<App />)
     fireEvent.click(screen.getByRole('button', { name: '+ Nouveau compteur' }))
-    fireEvent.click(screen.getByTitle('Toucher pour changer la date de début'))
-    const input = document.querySelector('.counter-date-input') as HTMLInputElement
+    fireEvent.click(screen.getByRole('button', { name: 'Personnaliser le compteur' }))
+    const input = document.querySelector('input[type="date"]') as HTMLInputElement
     fireEvent.change(input, { target: { value: '2020-01-01' } })
-    expect(screen.getByTitle('Toucher pour changer la date de début')).toHaveTextContent('2020')
+    fireEvent.click(screen.getByRole('button', { name: 'Fermer' }))
+    fireEvent.click(screen.getByRole('button', { name: 'Personnaliser le compteur' }))
+    expect(document.querySelector('input[type="date"]')).toHaveValue('2020-01-01')
   })
 
   it('définit une image de fond', () => {
     render(<App />)
     fireEvent.click(screen.getByRole('button', { name: '+ Nouveau compteur' }))
-    fireEvent.click(screen.getByText('+ image de fond'))
+    fireEvent.click(screen.getByRole('button', { name: 'Personnaliser le compteur' }))
     const input = screen.getByPlaceholderText('https://exemple.com/image.jpg')
     fireEvent.change(input, { target: { value: 'https://exemple.com/fond.jpg' } })
     fireEvent.keyDown(input, { key: 'Enter' })
+    fireEvent.click(screen.getByRole('button', { name: 'Fermer' }))
     expect(document.querySelector('.counter-bg')).toBeInTheDocument()
   })
 
   it('change la couleur du compteur', () => {
     render(<App />)
     fireEvent.click(screen.getByRole('button', { name: '+ Nouveau compteur' }))
-    fireEvent.click(screen.getByRole('button', { name: 'Changer la couleur du compteur' }))
+    fireEvent.click(screen.getByRole('button', { name: 'Personnaliser le compteur' }))
     fireEvent.click(screen.getByRole('button', { name: `Choisir la couleur ${COLORS[1]}` }))
-    fireEvent.click(screen.getByRole('button', { name: 'Changer la couleur du compteur' }))
+    fireEvent.click(screen.getByRole('button', { name: 'Fermer' }))
+    fireEvent.click(screen.getByRole('button', { name: 'Personnaliser le compteur' }))
     const selected = screen.getByRole('button', { name: `Choisir la couleur ${COLORS[1]}` })
     expect(selected.className).toContain('selected')
   })
@@ -189,35 +195,49 @@ describe('App', () => {
     fireEvent.keyDown(screen.getByDisplayValue('UnModifié'), { key: 'Enter' })
     expect(screen.getByText('Deux')).toBeInTheDocument()
 
-    // Définit une probabilité uniquement sur le premier.
+    // Définit une probabilité uniquement sur le premier (le panneau de
+    // personnalisation est affiché via un portail : on le referme après
+    // chaque interaction pour ne jamais en avoir deux ouverts à la fois).
     const firstCard = document.getElementById('a') as HTMLElement
-    fireEvent.click(within(firstCard).getByText('+ probabilité'))
-    fireEvent.change(within(firstCard).getByPlaceholderText('4096'), { target: { value: '5' } })
-    fireEvent.keyDown(within(firstCard).getByPlaceholderText('4096'), { key: 'Enter' })
     const secondCard = document.getElementById('b') as HTMLElement
-    expect(within(secondCard).getByText('+ probabilité')).toBeInTheDocument()
+    fireEvent.click(within(firstCard).getByRole('button', { name: 'Personnaliser le compteur' }))
+    fireEvent.change(screen.getByPlaceholderText('4096'), { target: { value: '5' } })
+    fireEvent.keyDown(screen.getByPlaceholderText('4096'), { key: 'Enter' })
+    fireEvent.click(screen.getByRole('button', { name: 'Fermer' }))
+
+    fireEvent.click(within(secondCard).getByRole('button', { name: 'Personnaliser le compteur' }))
+    expect(screen.queryByDisplayValue('5')).not.toBeInTheDocument()
 
     // Définit une date de début uniquement sur le premier.
-    fireEvent.click(within(firstCard).getByTitle('Toucher pour changer la date de début'))
-    const dateInput = firstCard.querySelector('.counter-date-input') as HTMLInputElement
+    fireEvent.click(screen.getByRole('button', { name: 'Fermer' }))
+    fireEvent.click(within(firstCard).getByRole('button', { name: 'Personnaliser le compteur' }))
+    const dateInput = document.querySelector('input[type="date"]') as HTMLInputElement
     fireEvent.change(dateInput, { target: { value: '2020-01-01' } })
-    expect(within(secondCard).getByTitle('Toucher pour changer la date de début')).not.toHaveTextContent('2020')
+    fireEvent.click(screen.getByRole('button', { name: 'Fermer' }))
+
+    fireEvent.click(within(secondCard).getByRole('button', { name: 'Personnaliser le compteur' }))
+    expect(document.querySelector('input[type="date"]')).not.toHaveValue('2020-01-01')
+    fireEvent.click(screen.getByRole('button', { name: 'Fermer' }))
 
     // Définit une image de fond uniquement sur le premier.
-    fireEvent.click(within(firstCard).getByText('+ image de fond'))
-    fireEvent.change(within(firstCard).getByPlaceholderText('https://exemple.com/image.jpg'), {
+    fireEvent.click(within(firstCard).getByRole('button', { name: 'Personnaliser le compteur' }))
+    fireEvent.change(screen.getByPlaceholderText('https://exemple.com/image.jpg'), {
       target: { value: 'https://exemple.com/fond.jpg' },
     })
-    fireEvent.keyDown(within(firstCard).getByPlaceholderText('https://exemple.com/image.jpg'), { key: 'Enter' })
+    fireEvent.keyDown(screen.getByPlaceholderText('https://exemple.com/image.jpg'), { key: 'Enter' })
+    fireEvent.click(screen.getByRole('button', { name: 'Fermer' }))
     expect(firstCard.querySelector('.counter-bg')).toBeInTheDocument()
     expect(secondCard.querySelector('.counter-bg')).not.toBeInTheDocument()
 
     // Change la couleur uniquement sur le premier.
-    fireEvent.click(within(firstCard).getByRole('button', { name: 'Changer la couleur du compteur' }))
-    fireEvent.click(within(firstCard).getByRole('button', { name: `Choisir la couleur ${COLORS[1]}` }))
-    fireEvent.click(within(secondCard).getByRole('button', { name: 'Changer la couleur du compteur' }))
-    const secondSelected = within(secondCard).getByRole('button', { name: `Choisir la couleur ${COLORS[0]}` })
+    fireEvent.click(within(firstCard).getByRole('button', { name: 'Personnaliser le compteur' }))
+    fireEvent.click(screen.getByRole('button', { name: `Choisir la couleur ${COLORS[1]}` }))
+    fireEvent.click(screen.getByRole('button', { name: 'Fermer' }))
+
+    fireEvent.click(within(secondCard).getByRole('button', { name: 'Personnaliser le compteur' }))
+    const secondSelected = screen.getByRole('button', { name: `Choisir la couleur ${COLORS[0]}` })
     expect(secondSelected.className).toContain('selected')
+    fireEvent.click(screen.getByRole('button', { name: 'Fermer' }))
 
     // Définit directement la valeur uniquement sur le premier.
     fireEvent.click(within(firstCard).getByRole('button', { name: 'Définir la valeur du compteur' }))

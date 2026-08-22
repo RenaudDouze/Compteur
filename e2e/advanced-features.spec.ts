@@ -8,58 +8,58 @@ test.describe('Fonctionnalités avancées', () => {
   })
 
   test('définit une probabilité et affiche le taux de réussite cumulé', async ({ page }) => {
-    await page.getByText('+ probabilité').click()
-    const input = page.locator('.counter-odds-input')
+    await page.getByRole('button', { name: 'Personnaliser le compteur' }).click()
+    const input = page.getByPlaceholder('4096')
     await input.fill('4')
     await input.press('Enter')
-    await expect(page.getByText(/1 chance sur 4|1\/4/)).toBeVisible()
+    await page.getByRole('button', { name: 'Fermer' }).click()
 
     const plus = page.getByRole('button', { name: 'Incrémenter', exact: true })
     await plus.click()
     // 1 - (1 - 1/4)^1 = 0.25 => arrondi affiché à 1 décimale : 25,0 %
+    await page.getByRole('button', { name: 'Personnaliser le compteur' }).click()
     await expect(page.getByText(/25,0\s?%/)).toBeVisible()
   })
 
-  test('modifie la date de début et affiche le nombre de jours', async ({ page }) => {
-    const label = page.getByTitle('Toucher pour changer la date de début')
-    const before = await label.textContent()
-    await label.click()
-    const input = page.locator('.counter-date-input')
+  test('modifie la date de début et affiche un rappel textuel', async ({ page }) => {
+    await page.getByRole('button', { name: 'Personnaliser le compteur' }).click()
+    const hint = page.locator('.modal-section:has(input[type="date"]) .modal-hint')
+    const before = await hint.textContent()
+    const input = page.locator('input[type="date"]')
     await input.fill('2020-01-01')
-    // Le format (complet sur grand écran, compact "JJ/MM · Nj" sur mobile)
-    // varie selon la taille d'écran ; on vérifie juste que le libellé a
-    // bien changé pour refléter la nouvelle date passée (pas "aujourd'hui").
-    await expect(label).not.toHaveText(before ?? '')
-    await expect(label).not.toContainText("aujourd'hui")
-    await expect(label).not.toContainText('auj.')
+    // Le format complet varie selon "aujourd'hui"/jours écoulés ; on vérifie
+    // juste que le rappel a bien changé pour refléter la nouvelle date.
+    await expect(hint).not.toHaveText(before ?? '')
   })
 
   test('définit une image de fond via une URL http(s) valide', async ({ page }) => {
-    await page.getByText('+ image de fond').click()
+    await page.getByRole('button', { name: 'Personnaliser le compteur' }).click()
     const input = page.getByPlaceholder('https://exemple.com/image.jpg')
     await input.fill('https://exemple.com/fond.jpg')
     await input.press('Enter')
+    await page.getByRole('button', { name: 'Fermer' }).click()
     await expect(page.locator('.counter-bg')).toBeAttached()
   })
 
   test('ignore une URL invalide comme image de fond', async ({ page }) => {
-    await page.getByText('+ image de fond').click()
+    await page.getByRole('button', { name: 'Personnaliser le compteur' }).click()
     const input = page.getByPlaceholder('https://exemple.com/image.jpg')
     await input.fill('pas-une-url')
     await input.press('Enter')
     await expect(page.locator('.counter-bg')).not.toBeAttached()
-    await expect(page.getByText('+ image de fond')).toBeVisible()
+    await expect(input).toHaveValue('')
   })
 
   test('change la couleur du compteur via la palette', async ({ page }) => {
-    const swatch = page.getByRole('button', { name: 'Changer la couleur du compteur' })
-    const before = await swatch.evaluate((el) => getComputedStyle(el).backgroundColor)
-    await swatch.click()
+    const card = page.locator('.counter-card').first()
+    const before = await card.evaluate((el) => getComputedStyle(el).getPropertyValue('--accent'))
+    await page.getByRole('button', { name: 'Personnaliser le compteur' }).click()
     // Le premier compteur créé utilise toujours la première couleur de la
     // palette : la deuxième option est donc garantie différente.
     await page.getByRole('button', { name: /Choisir la couleur/ }).nth(1).click()
-    await expect(page.getByRole('button', { name: /Choisir la couleur/ })).toHaveCount(0)
-    await expect(swatch).not.toHaveCSS('background-color', before)
+    await page.getByRole('button', { name: 'Fermer' }).click()
+    const after = await card.evaluate((el) => getComputedStyle(el).getPropertyValue('--accent'))
+    expect(after).not.toBe(before)
   })
 
   test('définit directement une valeur via le crayon', async ({ page }) => {
