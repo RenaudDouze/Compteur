@@ -6,6 +6,7 @@ import type { Counter } from '../types'
 
 const realNavigator = window.navigator
 const realMatchMedia = window.matchMedia
+const TEST_COLORS = ['#2563eb', '#7c3aed', '#0d9488']
 
 function makeCounter(overrides: Partial<Counter> = {}): Counter {
   return {
@@ -21,12 +22,14 @@ function makeCounter(overrides: Partial<Counter> = {}): Counter {
 function renderCard(counterOverrides: Partial<Counter> = {}, props: Partial<Parameters<typeof CounterCard>[0]> = {}) {
   const counter = makeCounter(counterOverrides)
   const handlers = {
+    colors: TEST_COLORS,
     onChange: vi.fn(),
     onSetCount: vi.fn(),
     onRename: vi.fn(),
     onSetOdds: vi.fn(),
     onSetStartDate: vi.fn(),
     onSetBackgroundImage: vi.fn(),
+    onSetColor: vi.fn(),
     onDelete: vi.fn(),
     ...props,
   }
@@ -474,6 +477,87 @@ describe('CounterCard', () => {
     })
   })
 
+  describe('couleur', () => {
+    it('affiche la couleur actuelle sur le sélecteur', () => {
+      renderCard({ color: '#7c3aed' })
+      const swatch = screen.getByRole('button', { name: 'Changer la couleur du compteur' })
+      expect(swatch.style.background).toBe('rgb(124, 58, 237)')
+    })
+
+    it("n'affiche pas la palette avant le clic sur le sélecteur", () => {
+      renderCard()
+      expect(screen.queryByRole('button', { name: /Choisir la couleur/ })).not.toBeInTheDocument()
+    })
+
+    it('affiche la palette au clic sur le sélecteur', () => {
+      renderCard()
+      fireEvent.click(screen.getByRole('button', { name: 'Changer la couleur du compteur' }))
+      TEST_COLORS.forEach((c) => {
+        expect(screen.getByRole('button', { name: `Choisir la couleur ${c}` })).toBeInTheDocument()
+      })
+    })
+
+    it('choisit une couleur de la palette', () => {
+      const { onSetColor } = renderCard({ color: TEST_COLORS[0] })
+      fireEvent.click(screen.getByRole('button', { name: 'Changer la couleur du compteur' }))
+      fireEvent.click(screen.getByRole('button', { name: `Choisir la couleur ${TEST_COLORS[1]}` }))
+      expect(onSetColor).toHaveBeenCalledWith(TEST_COLORS[1])
+    })
+
+    it('referme la palette après avoir choisi une couleur', () => {
+      renderCard({ color: TEST_COLORS[0] })
+      fireEvent.click(screen.getByRole('button', { name: 'Changer la couleur du compteur' }))
+      fireEvent.click(screen.getByRole('button', { name: `Choisir la couleur ${TEST_COLORS[1]}` }))
+      expect(screen.queryByRole('button', { name: /Choisir la couleur/ })).not.toBeInTheDocument()
+    })
+
+    it('marque la couleur actuellement sélectionnée dans la palette', () => {
+      renderCard({ color: TEST_COLORS[1] })
+      fireEvent.click(screen.getByRole('button', { name: 'Changer la couleur du compteur' }))
+      const selected = screen.getByRole('button', { name: `Choisir la couleur ${TEST_COLORS[1]}` })
+      expect(selected.className).toContain('selected')
+      const other = screen.getByRole('button', { name: `Choisir la couleur ${TEST_COLORS[0]}` })
+      expect(other.className).not.toContain('selected')
+    })
+
+    it('referme la palette au second clic sur le sélecteur (bascule)', () => {
+      renderCard()
+      const swatch = screen.getByRole('button', { name: 'Changer la couleur du compteur' })
+      fireEvent.click(swatch)
+      expect(screen.getAllByRole('button', { name: /Choisir la couleur/ })).toHaveLength(TEST_COLORS.length)
+      fireEvent.click(swatch)
+      expect(screen.queryAllByRole('button', { name: /Choisir la couleur/ })).toHaveLength(0)
+    })
+
+    it('referme la palette au clic en dehors de la carte', () => {
+      renderCard()
+      fireEvent.click(screen.getByRole('button', { name: 'Changer la couleur du compteur' }))
+      expect(screen.getAllByRole('button', { name: /Choisir la couleur/ })).toHaveLength(TEST_COLORS.length)
+      fireEvent.mouseDown(document.body)
+      expect(screen.queryAllByRole('button', { name: /Choisir la couleur/ })).toHaveLength(0)
+    })
+
+    it('ne referme pas la palette sur un clic à l\'intérieur du sélecteur', () => {
+      renderCard()
+      fireEvent.click(screen.getByRole('button', { name: 'Changer la couleur du compteur' }))
+      fireEvent.mouseDown(screen.getByRole('button', { name: `Choisir la couleur ${TEST_COLORS[0]}` }))
+      expect(screen.getAllByRole('button', { name: /Choisir la couleur/ })).toHaveLength(TEST_COLORS.length)
+    })
+
+    it("le clic sur le sélecteur n'incrémente pas le compteur", () => {
+      const { onChange } = renderCard()
+      fireEvent.click(screen.getByRole('button', { name: 'Changer la couleur du compteur' }))
+      expect(onChange).not.toHaveBeenCalled()
+    })
+
+    it("choisir une couleur n'incrémente pas le compteur", () => {
+      const { onChange } = renderCard()
+      fireEvent.click(screen.getByRole('button', { name: 'Changer la couleur du compteur' }))
+      fireEvent.click(screen.getByRole('button', { name: `Choisir la couleur ${TEST_COLORS[0]}` }))
+      expect(onChange).not.toHaveBeenCalled()
+    })
+  })
+
   describe('partage', () => {
     afterEach(() => {
       vi.stubGlobal('navigator', realNavigator)
@@ -668,7 +752,9 @@ describe('CounterCard', () => {
             onRename={vi.fn()}
             onSetOdds={vi.fn()}
             onSetStartDate={vi.fn()}
+            colors={['#2563eb', '#7c3aed']}
             onSetBackgroundImage={vi.fn()}
+            onSetColor={vi.fn()}
             onDelete={vi.fn()}
           />
         </Reorder.Group>
@@ -685,7 +771,9 @@ describe('CounterCard', () => {
             onRename={vi.fn()}
             onSetOdds={vi.fn()}
             onSetStartDate={vi.fn()}
+            colors={['#2563eb', '#7c3aed']}
             onSetBackgroundImage={vi.fn()}
+            onSetColor={vi.fn()}
             onDelete={vi.fn()}
           />
         </Reorder.Group>
@@ -712,7 +800,9 @@ describe('CounterCard', () => {
             onRename={vi.fn()}
             onSetOdds={vi.fn()}
             onSetStartDate={vi.fn()}
+            colors={['#2563eb', '#7c3aed']}
             onSetBackgroundImage={vi.fn()}
+            onSetColor={vi.fn()}
             onDelete={vi.fn()}
           />
         </Reorder.Group>
@@ -727,7 +817,9 @@ describe('CounterCard', () => {
             onRename={vi.fn()}
             onSetOdds={vi.fn()}
             onSetStartDate={vi.fn()}
+            colors={['#2563eb', '#7c3aed']}
             onSetBackgroundImage={vi.fn()}
+            onSetColor={vi.fn()}
             onDelete={vi.fn()}
           />
         </Reorder.Group>

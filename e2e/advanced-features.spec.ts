@@ -51,6 +51,17 @@ test.describe('Fonctionnalités avancées', () => {
     await expect(page.getByText('+ image de fond')).toBeVisible()
   })
 
+  test('change la couleur du compteur via la palette', async ({ page }) => {
+    const swatch = page.getByRole('button', { name: 'Changer la couleur du compteur' })
+    const before = await swatch.evaluate((el) => getComputedStyle(el).backgroundColor)
+    await swatch.click()
+    // Le premier compteur créé utilise toujours la première couleur de la
+    // palette : la deuxième option est donc garantie différente.
+    await page.getByRole('button', { name: /Choisir la couleur/ }).nth(1).click()
+    await expect(page.getByRole('button', { name: /Choisir la couleur/ })).toHaveCount(0)
+    await expect(swatch).not.toHaveCSS('background-color', before)
+  })
+
   test('définit directement une valeur via le crayon', async ({ page }) => {
     await page.getByRole('button', { name: 'Définir la valeur du compteur' }).click()
     const input = page.locator('.counter-value-input')

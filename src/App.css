@@ -298,6 +298,56 @@
   cursor: grabbing;
 }
 
+.counter-color-picker {
+  position: absolute;
+  top: 8px;
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: 3;
+  display: flex;
+  justify-content: center;
+}
+
+.counter-color-swatch {
+  width: 26px;
+  height: 26px;
+  border-radius: 50%;
+  border: 2px solid var(--surface);
+  box-shadow: 0 0 0 1px var(--surface-border);
+  cursor: pointer;
+  padding: 0;
+}
+
+.counter-color-options {
+  position: absolute;
+  top: 34px;
+  left: 50%;
+  transform: translateX(-50%);
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 6px;
+  width: 128px;
+  padding: 8px;
+  background: var(--surface);
+  border: 1px solid var(--surface-border);
+  border-radius: 14px;
+  box-shadow: 0 8px 24px rgba(15, 23, 42, 0.16);
+}
+
+.counter-color-option {
+  width: 26px;
+  height: 26px;
+  border-radius: 50%;
+  border: 2px solid transparent;
+  cursor: pointer;
+  padding: 0;
+}
+
+.counter-color-option.selected {
+  border-color: var(--text);
+}
+
 .counter-value-input {
   width: 100%;
   flex: 1;
@@ -314,7 +364,8 @@
 }
 
 .counter-name {
-  margin: 0;
+  /* Dégage la place du sélecteur de couleur, centré en haut de la carte. */
+  margin: 18px 0 0;
   font-size: 1rem;
   font-weight: 600;
   color: var(--text);
@@ -334,6 +385,7 @@
 
 .counter-name-input {
   width: 100%;
+  margin-top: 18px;
   text-align: center;
   font-size: 1rem;
   font-weight: 600;
