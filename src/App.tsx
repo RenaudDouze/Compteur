@@ -1,6 +1,9 @@
+import { useEffect, useState } from 'react'
 import { AnimatePresence, motion } from 'framer-motion'
 import { useLocalStorage } from './hooks/useLocalStorage'
 import { CounterCard } from './components/CounterCard'
+import { SyncPanel } from './components/SyncPanel'
+import { decodeCountersFromParam } from './sync'
 import type { Counter } from './types'
 import './App.css'
 
@@ -27,6 +30,30 @@ function makeId() {
 
 export default function App() {
   const [counters, setCounters] = useLocalStorage<Counter[]>('compteur.counters.v1', [])
+  const [syncOpen, setSyncOpen] = useState(false)
+
+  // Import automatique si l'app est ouverte via un lien de partage (?import=...).
+  useEffect(() => {
+    const params = new URLSearchParams(window.location.search)
+    const payload = params.get('import')
+    if (!payload) return
+
+    const imported = decodeCountersFromParam(payload)
+    const url = new URL(window.location.href)
+    url.searchParams.delete('import')
+    window.history.replaceState({}, '', url.toString())
+
+    if (!imported || imported.length === 0) return
+
+    setCounters((prev) => {
+      if (prev.length === 0) return imported
+      const replace = window.confirm(
+        `Importer ${imported.length} compteur(s) partagé(s) ?\n\nOK pour remplacer tes ${prev.length} compteur(s) actuel(s), Annuler pour les ajouter à la suite.`
+      )
+      return replace ? imported : [...prev, ...imported]
+    })
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [])
 
   const addCounter = () => {
     const newCounter: Counter = {
@@ -61,13 +88,22 @@ export default function App() {
     setCounters((prev) => prev.filter((c) => c.id !== id))
   }
 
+  const handleImport = (imported: Counter[], mode: 'replace' | 'merge') => {
+    setCounters((prev) => (mode === 'replace' ? imported : [...prev, ...imported]))
+  }
+
   return (
     <div className="app">
       <header className="app-header">
         <h1>Compteur</h1>
-        <button className="add-btn" onClick={addCounter}>
-          + Nouveau compteur
-        </button>
+        <div className="app-header-actions">
+          <button className="add-btn icon-btn" onClick={() => setSyncOpen(true)} aria-label="Synchroniser">
+            ⇄
+          </button>
+          <button className="add-btn" onClick={addCounter}>
+            + Nouveau compteur
+          </button>
+        </div>
       </header>
 
       {counters.length === 0 ? (
@@ -103,6 +139,10 @@ export default function App() {
             ))}
           </AnimatePresence>
         </motion.div>
+      )}
+
+      {syncOpen && (
+        <SyncPanel counters={counters} onClose={() => setSyncOpen(false)} onImport={handleImport} />
       )}
     </div>
   )
