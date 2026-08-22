@@ -6,6 +6,11 @@
   --surface-border: #e2e8f0;
   --text: #0f172a;
   --text-dim: #64748b;
+  /* Opacité du voile posé sur l'image de fond d'un compteur (.counter-bg::after),
+     pour rester lisible par-dessus. Un voile clair estompe beaucoup plus une
+     photo qu'un voile sombre à opacité égale : la valeur est donc plus basse
+     en thème clair pour laisser l'image aussi visible qu'en thème sombre. */
+  --bg-overlay-opacity: 0.55;
   --font-ui: 'Segoe UI', system-ui, -apple-system, sans-serif;
   --font-mono: ui-monospace, 'Cascadia Code', 'JetBrains Mono', 'Roboto Mono', 'SF Mono', Consolas, monospace;
   font-family: var(--font-ui);
@@ -21,6 +26,7 @@
   --surface-border: #2f3b56;
   --text: #f1f5f9;
   --text-dim: #94a3b8;
+  --bg-overlay-opacity: 0.86;
 }
 
 * {
