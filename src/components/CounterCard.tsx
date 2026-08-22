@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState } from 'react'
 import { motion } from 'framer-motion'
 import { Odometer } from './Odometer'
+import { cumulativeOdds, formatOdds } from '../odds'
 import type { Counter } from '../types'
 
 interface CounterCardProps {
@@ -8,12 +9,22 @@ interface CounterCardProps {
   fill?: boolean
   onChange: (delta: number) => void
   onRename: (name: string) => void
+  onSetOdds: (denominator: number | undefined) => void
   onDelete: () => void
 }
 
-export function CounterCard({ counter, fill = false, onChange, onRename, onDelete }: CounterCardProps) {
+export function CounterCard({
+  counter,
+  fill = false,
+  onChange,
+  onRename,
+  onSetOdds,
+  onDelete,
+}: CounterCardProps) {
   const [editing, setEditing] = useState(false)
   const [draftName, setDraftName] = useState(counter.name)
+  const [editingOdds, setEditingOdds] = useState(false)
+  const [draftOdds, setDraftOdds] = useState(counter.oddsDenominator?.toString() ?? '')
   const [direction, setDirection] = useState<1 | -1>(1)
   const [confirmDelete, setConfirmDelete] = useState(false)
   const confirmTimer = useRef<ReturnType<typeof setTimeout> | null>(null)
@@ -29,6 +40,12 @@ export function CounterCard({ counter, fill = false, onChange, onRename, onDelet
     const trimmed = draftName.trim()
     onRename(trimmed || 'Sans nom')
     setEditing(false)
+  }
+
+  const commitOdds = () => {
+    const parsed = parseInt(draftOdds.replace(/[^\d]/g, ''), 10)
+    onSetOdds(Number.isFinite(parsed) && parsed > 0 ? parsed : undefined)
+    setEditingOdds(false)
   }
 
   const handleDeleteClick = (e: React.MouseEvent) => {
@@ -71,6 +88,8 @@ export function CounterCard({ counter, fill = false, onChange, onRename, onDelet
     ro.observe(el)
     return () => ro.disconnect()
   }, [fill, counter.count])
+
+  const odds = counter.oddsDenominator ? cumulativeOdds(counter.oddsDenominator, counter.count) : null
 
   return (
     <motion.article
@@ -126,6 +145,43 @@ export function CounterCard({ counter, fill = false, onChange, onRename, onDelet
         </h2>
       )}
 
+      {editingOdds ? (
+        <div className="counter-odds-edit" onClick={(e) => e.stopPropagation()}>
+          <span>1 chance sur</span>
+          <input
+            className="counter-odds-input"
+            autoFocus
+            inputMode="numeric"
+            pattern="[0-9]*"
+            value={draftOdds}
+            placeholder="4096"
+            onChange={(e) => setDraftOdds(e.target.value)}
+            onBlur={commitOdds}
+            onKeyDown={(e) => {
+              if (e.key === 'Enter') commitOdds()
+              if (e.key === 'Escape') {
+                setDraftOdds(counter.oddsDenominator?.toString() ?? '')
+                setEditingOdds(false)
+              }
+            }}
+          />
+        </div>
+      ) : (
+        <button
+          type="button"
+          className="counter-odds-label"
+          onClick={(e) => {
+            e.stopPropagation()
+            setDraftOdds(counter.oddsDenominator?.toString() ?? '')
+            setEditingOdds(true)
+          }}
+        >
+          {counter.oddsDenominator
+            ? `1 chance sur ${counter.oddsDenominator.toLocaleString('fr-FR')}`
+            : '+ probabilité'}
+        </button>
+      )}
+
       <div
         className="counter-value"
         ref={valueRef}
@@ -133,6 +189,10 @@ export function CounterCard({ counter, fill = false, onChange, onRename, onDelet
       >
         <Odometer value={counter.count} direction={direction} />
       </div>
+
+      {odds !== null && (
+        <p className="counter-odds-result">{formatOdds(odds)} d'avoir déjà eu l'événement</p>
+      )}
 
       <div className="counter-actions">
         <button

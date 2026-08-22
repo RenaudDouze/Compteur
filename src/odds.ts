@@ -1,0 +1,25 @@
+/**
+ * Probabilité cumulée d'avoir obtenu au moins une fois un événement de
+ * probabilité 1/denominator après `attempts` essais indépendants.
+ * (ex: chasse aux shasses/loot rares : 1 - (1 - 1/N)^n)
+ */
+export function cumulativeOdds(denominator: number, attempts: number): number {
+  if (!denominator || denominator <= 0) return 0
+  const n = Math.max(attempts, 0)
+  const p = 1 / denominator
+  return 1 - Math.pow(1 - p, n)
+}
+
+/** Formate une probabilité (0..1) en pourcentage lisible, avec plus de
+ * décimales quand la valeur est très petite pour rester informatif. */
+export function formatOdds(ratio: number): string {
+  const pct = ratio * 100
+  if (pct <= 0) return '0 %'
+  if (pct >= 99.995) return '> 99,99 %'
+
+  const decimals = pct < 0.1 ? 4 : pct < 1 ? 3 : pct < 10 ? 2 : 1
+  return `${pct.toLocaleString('fr-FR', {
+    minimumFractionDigits: decimals,
+    maximumFractionDigits: decimals,
+  })} %`
+}

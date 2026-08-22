@@ -218,6 +218,63 @@
   padding: 4px 8px;
 }
 
+.counter-odds-label {
+  border: none;
+  background: transparent;
+  color: var(--text-dim);
+  font-size: 0.78rem;
+  font-weight: 500;
+  padding: 3px 10px;
+  border-radius: 999px;
+  margin-top: -6px;
+  max-width: 100%;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.counter-odds-label:hover {
+  background: var(--bg-2);
+}
+
+.counter-odds-edit {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 0.8rem;
+  color: var(--text-dim);
+  margin-top: -6px;
+}
+
+.counter-odds-input {
+  width: 5.5em;
+  text-align: center;
+  font-family: var(--font-mono);
+  font-size: 0.85rem;
+  background: var(--bg-1);
+  border: 1px solid var(--accent, #2563eb);
+  color: var(--text);
+  border-radius: 6px;
+  padding: 3px 6px;
+}
+
+.counter-odds-result {
+  margin: 0;
+  font-size: 0.85rem;
+  font-weight: 600;
+  color: var(--accent);
+  text-align: center;
+  background: color-mix(in srgb, var(--accent) 12%, transparent);
+  padding: 4px 12px;
+  border-radius: 999px;
+}
+
+.counter-grid--solo .counter-odds-result,
+.counter-grid--duo .counter-odds-result {
+  font-size: 1.1rem;
+  padding: 6px 16px;
+}
+
 .counter-value {
   font-size: 2.6rem;
   font-weight: 700;

@@ -49,6 +49,10 @@ export default function App() {
     setCounters((prev) => prev.map((c) => (c.id === id ? { ...c, name } : c)))
   }
 
+  const setOdds = (id: string, oddsDenominator: number | undefined) => {
+    setCounters((prev) => prev.map((c) => (c.id === id ? { ...c, oddsDenominator } : c)))
+  }
+
   const deleteCounter = (id: string) => {
     setCounters((prev) => prev.filter((c) => c.id !== id))
   }
@@ -88,6 +92,7 @@ export default function App() {
                 fill={counters.length <= 2}
                 onChange={(delta) => updateCount(counter.id, delta)}
                 onRename={(name) => renameCounter(counter.id, name)}
+                onSetOdds={(denominator) => setOdds(counter.id, denominator)}
                 onDelete={() => deleteCounter(counter.id)}
               />
             ))}
