@@ -204,6 +204,18 @@ describe('parseBackupJson', () => {
     expect(result?.[0].oddsDenominator).toBeUndefined()
     expect(result?.[0].startDate).toBeUndefined()
   })
+
+  it('conserve backgroundImageUrl optionnel', () => {
+    const result = parseBackupJson(
+      JSON.stringify([{ name: 'A', count: 1, backgroundImageUrl: 'https://exemple.com/x.jpg' }])
+    )
+    expect(result?.[0].backgroundImageUrl).toBe('https://exemple.com/x.jpg')
+  })
+
+  it('laisse backgroundImageUrl indéfini si absent', () => {
+    const result = parseBackupJson(JSON.stringify([{ name: 'A', count: 1 }]))
+    expect(result?.[0].backgroundImageUrl).toBeUndefined()
+  })
 })
 
 describe('encodeCountersToParam / decodeCountersFromParam', () => {
@@ -214,7 +226,13 @@ describe('encodeCountersToParam / decodeCountersFromParam', () => {
 
   it('fait un aller-retour fidèle avec tous les champs renseignés', () => {
     const counters = [
-      makeCounter({ name: 'Complet', count: 42, oddsDenominator: 4096, startDate: '2026-08-01' }),
+      makeCounter({
+        name: 'Complet',
+        count: 42,
+        oddsDenominator: 4096,
+        startDate: '2026-08-01',
+        backgroundImageUrl: 'https://exemple.com/fond.jpg',
+      }),
     ]
     const encoded = encodeCountersToParam(counters)
     const decoded = decodeCountersFromParam(encoded)
@@ -226,15 +244,19 @@ describe('encodeCountersToParam / decodeCountersFromParam', () => {
       createdAt: counters[0].createdAt,
       oddsDenominator: 4096,
       startDate: '2026-08-01',
+      backgroundImageUrl: 'https://exemple.com/fond.jpg',
     })
   })
 
   it('omet les champs optionnels absents lors de l\'aller-retour', () => {
-    const counters = [makeCounter({ oddsDenominator: undefined, startDate: undefined })]
+    const counters = [
+      makeCounter({ oddsDenominator: undefined, startDate: undefined, backgroundImageUrl: undefined }),
+    ]
     const encoded = encodeCountersToParam(counters)
     const decoded = decodeCountersFromParam(encoded)
     expect(decoded?.[0].oddsDenominator).toBeUndefined()
     expect(decoded?.[0].startDate).toBeUndefined()
+    expect(decoded?.[0].backgroundImageUrl).toBeUndefined()
   })
 
   it('applique count=0 si le champ "c" décodé n\'est pas un nombre (payload corrompu)', () => {

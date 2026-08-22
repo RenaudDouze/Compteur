@@ -227,6 +227,23 @@
   pointer-events: none;
 }
 
+.counter-bg {
+  position: absolute;
+  inset: 0;
+  z-index: -1;
+  background-size: cover;
+  background-position: center;
+  pointer-events: none;
+}
+
+.counter-bg::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: var(--surface);
+  opacity: 0.86;
+}
+
 .counter-delete {
   position: absolute;
   top: 8px;
@@ -383,6 +400,24 @@
   border: 1px solid var(--accent, #2563eb);
   border-radius: 6px;
   padding: 2px 6px;
+}
+
+.counter-bg-edit {
+  display: flex;
+  align-items: center;
+  width: 100%;
+  max-width: 260px;
+}
+
+.counter-bg-input {
+  width: 100%;
+  font-size: 0.78rem;
+  font-family: inherit;
+  color: var(--text);
+  background: var(--bg-1);
+  border: 1px solid var(--accent, #2563eb);
+  border-radius: 6px;
+  padding: 3px 8px;
 }
 
 .counter-odds-result {

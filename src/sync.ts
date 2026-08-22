@@ -31,6 +31,7 @@ function normalizeCounter(raw: Partial<Counter>): Counter {
     createdAt: typeof raw.createdAt === 'number' ? raw.createdAt : Date.now(),
     oddsDenominator: raw.oddsDenominator,
     startDate: raw.startDate,
+    backgroundImageUrl: raw.backgroundImageUrl,
   }
 }
 
@@ -57,6 +58,7 @@ interface CompactCounter {
   t: number
   d?: number
   s?: string
+  i?: string
 }
 
 function toCompact(counter: Counter): CompactCounter {
@@ -67,6 +69,7 @@ function toCompact(counter: Counter): CompactCounter {
     t: counter.createdAt,
     ...(counter.oddsDenominator ? { d: counter.oddsDenominator } : {}),
     ...(counter.startDate ? { s: counter.startDate } : {}),
+    ...(counter.backgroundImageUrl ? { i: counter.backgroundImageUrl } : {}),
   }
 }
 
@@ -78,6 +81,7 @@ function fromCompact(raw: CompactCounter): Counter {
     createdAt: raw.t,
     oddsDenominator: raw.d,
     startDate: raw.s,
+    backgroundImageUrl: raw.i,
   })
 }
 

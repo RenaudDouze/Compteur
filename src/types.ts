@@ -8,4 +8,6 @@ export interface Counter {
   oddsDenominator?: number
   /** Date de début du comptage (YYYY-MM-DD). Absent = utiliser createdAt par défaut. */
   startDate?: string
+  /** URL d'une image de fond pour la carte du compteur. Absent = pas d'image. */
+  backgroundImageUrl?: string
 }
