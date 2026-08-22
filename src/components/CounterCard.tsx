@@ -2,6 +2,7 @@ import { useEffect, useRef, useState } from 'react'
 import { motion } from 'framer-motion'
 import { Odometer } from './Odometer'
 import { cumulativeOdds, formatOdds } from '../odds'
+import { formatStartDate, toIsoDate, todayIsoDate } from '../date'
 import type { Counter } from '../types'
 
 interface CounterCardProps {
@@ -10,6 +11,7 @@ interface CounterCardProps {
   onChange: (delta: number) => void
   onRename: (name: string) => void
   onSetOdds: (denominator: number | undefined) => void
+  onSetStartDate: (isoDate: string | undefined) => void
   onDelete: () => void
 }
 
@@ -19,12 +21,14 @@ export function CounterCard({
   onChange,
   onRename,
   onSetOdds,
+  onSetStartDate,
   onDelete,
 }: CounterCardProps) {
   const [editing, setEditing] = useState(false)
   const [draftName, setDraftName] = useState(counter.name)
   const [editingOdds, setEditingOdds] = useState(false)
   const [draftOdds, setDraftOdds] = useState(counter.oddsDenominator?.toString() ?? '')
+  const [editingDate, setEditingDate] = useState(false)
   const [direction, setDirection] = useState<1 | -1>(1)
   const [confirmDelete, setConfirmDelete] = useState(false)
   const confirmTimer = useRef<ReturnType<typeof setTimeout> | null>(null)
@@ -90,6 +94,7 @@ export function CounterCard({
   }, [fill, counter.count])
 
   const odds = counter.oddsDenominator ? cumulativeOdds(counter.oddsDenominator, counter.count) : null
+  const startDate = counter.startDate ?? toIsoDate(counter.createdAt)
 
   return (
     <motion.article
@@ -145,42 +150,74 @@ export function CounterCard({
         </h2>
       )}
 
-      {editingOdds ? (
-        <div className="counter-odds-edit" onClick={(e) => e.stopPropagation()}>
-          <span>1 chance sur</span>
-          <input
-            className="counter-odds-input"
-            autoFocus
-            inputMode="numeric"
-            pattern="[0-9]*"
-            value={draftOdds}
-            placeholder="4096"
-            onChange={(e) => setDraftOdds(e.target.value)}
-            onBlur={commitOdds}
-            onKeyDown={(e) => {
-              if (e.key === 'Enter') commitOdds()
-              if (e.key === 'Escape') {
-                setDraftOdds(counter.oddsDenominator?.toString() ?? '')
-                setEditingOdds(false)
-              }
+      <div className="counter-meta">
+        {editingOdds ? (
+          <div className="counter-odds-edit" onClick={(e) => e.stopPropagation()}>
+            <span>1 chance sur</span>
+            <input
+              className="counter-odds-input"
+              autoFocus
+              inputMode="numeric"
+              pattern="[0-9]*"
+              value={draftOdds}
+              placeholder="4096"
+              onChange={(e) => setDraftOdds(e.target.value)}
+              onBlur={commitOdds}
+              onKeyDown={(e) => {
+                if (e.key === 'Enter') commitOdds()
+                if (e.key === 'Escape') {
+                  setDraftOdds(counter.oddsDenominator?.toString() ?? '')
+                  setEditingOdds(false)
+                }
+              }}
+            />
+          </div>
+        ) : (
+          <button
+            type="button"
+            className="counter-meta-label"
+            onClick={(e) => {
+              e.stopPropagation()
+              setDraftOdds(counter.oddsDenominator?.toString() ?? '')
+              setEditingOdds(true)
             }}
+          >
+            {counter.oddsDenominator
+              ? fill
+                ? `1 chance sur ${counter.oddsDenominator.toLocaleString('fr-FR')}`
+                : `1/${counter.oddsDenominator.toLocaleString('fr-FR')}`
+              : '+ probabilité'}
+          </button>
+        )}
+
+        {editingDate ? (
+          <input
+            type="date"
+            className="counter-date-input"
+            autoFocus
+            defaultValue={startDate}
+            max={todayIsoDate()}
+            onClick={(e) => e.stopPropagation()}
+            onChange={(e) => {
+              onSetStartDate(e.target.value || undefined)
+              setEditingDate(false)
+            }}
+            onBlur={() => setEditingDate(false)}
           />
-        </div>
-      ) : (
-        <button
-          type="button"
-          className="counter-odds-label"
-          onClick={(e) => {
-            e.stopPropagation()
-            setDraftOdds(counter.oddsDenominator?.toString() ?? '')
-            setEditingOdds(true)
-          }}
-        >
-          {counter.oddsDenominator
-            ? `1 chance sur ${counter.oddsDenominator.toLocaleString('fr-FR')}`
-            : '+ probabilité'}
-        </button>
-      )}
+        ) : (
+          <button
+            type="button"
+            className="counter-meta-label"
+            onClick={(e) => {
+              e.stopPropagation()
+              setEditingDate(true)
+            }}
+            title="Toucher pour changer la date de début"
+          >
+            {formatStartDate(startDate, !fill)}
+          </button>
+        )}
+      </div>
 
       <div
         className="counter-value"
