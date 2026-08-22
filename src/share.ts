@@ -9,7 +9,7 @@ export function buildShareText(counter: Counter): string {
   if (counter.oddsDenominator) {
     const odds = cumulativeOdds(counter.oddsDenominator, counter.count)
     lines.push(
-      `1 chance sur ${counter.oddsDenominator.toLocaleString('fr-FR')} · ${formatOdds(odds)} d'avoir déjà eu l'événement`
+      `1 chance sur ${counter.oddsDenominator.toLocaleString('fr-FR')} · ${formatOdds(odds)} de chances de l'avoir obtenu avant ce stade`
     )
   }
 

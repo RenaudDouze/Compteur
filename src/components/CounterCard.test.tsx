@@ -302,12 +302,12 @@ describe('CounterCard', () => {
 
     it('affiche le taux de réussite cumulé quand une probabilité est définie', () => {
       renderCard({ count: 500, oddsDenominator: 4096 })
-      expect(screen.getByText(/d'avoir déjà eu l'événement/)).toBeInTheDocument()
+      expect(screen.getByText(/de l'avoir obtenu avant ce stade/)).toBeInTheDocument()
     })
 
     it("n'affiche pas de taux de réussite sans probabilité définie", () => {
       renderCard()
-      expect(screen.queryByText(/d'avoir déjà eu l'événement/)).not.toBeInTheDocument()
+      expect(screen.queryByText(/de l'avoir obtenu avant ce stade/)).not.toBeInTheDocument()
     })
   })
 

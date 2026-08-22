@@ -338,7 +338,7 @@ export function CounterCard({
       )}
 
       {odds !== null && (
-        <p className="counter-odds-result">{formatOdds(odds)} d'avoir déjà eu l'événement</p>
+        <p className="counter-odds-result">{formatOdds(odds)} de chances de l'avoir obtenu avant ce stade</p>
       )}
 
       <div className="counter-actions">
