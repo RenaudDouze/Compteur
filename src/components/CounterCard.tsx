@@ -4,6 +4,7 @@ import { Odometer } from './Odometer'
 import { cumulativeOdds, formatOdds } from '../odds'
 import { formatStartDate, toIsoDate, todayIsoDate } from '../date'
 import { buildShareText } from '../share'
+import { useNarrowScreen } from '../hooks/useNarrowScreen'
 import type { Counter } from '../types'
 
 interface CounterCardProps {
@@ -151,6 +152,10 @@ export function CounterCard({
 
   const odds = counter.oddsDenominator ? cumulativeOdds(counter.oddsDenominator, counter.count) : null
   const startDate = counter.startDate ?? toIsoDate(counter.createdAt)
+  // Sur un petit écran, on garde le format compact même en affichage géant
+  // (1-2 compteurs) pour laisser plus de place au chiffre lui-même.
+  const isNarrowScreen = useNarrowScreen()
+  const compactMeta = !fill || isNarrowScreen
 
   return (
     <motion.article
@@ -252,9 +257,9 @@ export function CounterCard({
             }}
           >
             {counter.oddsDenominator
-              ? fill
-                ? `1 chance sur ${counter.oddsDenominator.toLocaleString('fr-FR')}`
-                : `1/${counter.oddsDenominator.toLocaleString('fr-FR')}`
+              ? compactMeta
+                ? `1/${counter.oddsDenominator.toLocaleString('fr-FR')}`
+                : `1 chance sur ${counter.oddsDenominator.toLocaleString('fr-FR')}`
               : '+ probabilité'}
           </button>
         )}
@@ -283,7 +288,7 @@ export function CounterCard({
             }}
             title="Toucher pour changer la date de début"
           >
-            {formatStartDate(startDate, !fill)}
+            {formatStartDate(startDate, compactMeta)}
           </button>
         )}
 
@@ -293,7 +298,7 @@ export function CounterCard({
           onClick={handleShare}
           title="Copier ou partager ce compteur (texte, sans lien)"
         >
-          {shared ? 'Copié ✓' : '⇪ Partager'}
+          {shared ? 'Copié ✓' : compactMeta ? '⇪' : '⇪ Partager'}
         </button>
       </div>
 
