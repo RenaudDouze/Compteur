@@ -13,6 +13,9 @@ const HOLD_REPEAT_MS = 100
 interface CounterCardProps {
   counter: Counter
   fill?: boolean
+  // Masque la poignée de glisser (ex: pendant une recherche, où `values` du
+  // Reorder.Group ne porte que sur le sous-ensemble filtré affiché).
+  draggable?: boolean
   colors: string[]
   onChange: (delta: number) => void
   onSetCount: (count: number) => void
@@ -28,6 +31,7 @@ interface CounterCardProps {
 export function CounterCard({
   counter,
   fill = false,
+  draggable = true,
   colors,
   onChange,
   onSetCount,
@@ -212,18 +216,20 @@ export function CounterCard({
         {confirmDelete ? '✓' : '✕'}
       </button>
 
-      <button
-        className="counter-drag-handle"
-        onPointerDown={(e) => {
-          e.stopPropagation()
-          dragControls.start(e)
-        }}
-        onClick={(e) => e.stopPropagation()}
-        aria-label="Réordonner le compteur"
-        title="Glisser pour réordonner"
-      >
-        ⠿
-      </button>
+      {draggable && (
+        <button
+          className="counter-drag-handle"
+          onPointerDown={(e) => {
+            e.stopPropagation()
+            dragControls.start(e)
+          }}
+          onClick={(e) => e.stopPropagation()}
+          aria-label="Réordonner le compteur"
+          title="Glisser pour réordonner"
+        >
+          ⠿
+        </button>
+      )}
 
       <button
         className="counter-settings-btn"

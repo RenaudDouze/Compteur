@@ -30,6 +30,17 @@
   gap: 8px;
 }
 
+.search-bar {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 20px;
+}
+
+.modal-input.search-input {
+  max-width: none;
+}
+
 .icon-btn {
   padding: 10px 14px;
   font-size: 1.1rem;
