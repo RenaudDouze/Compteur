@@ -44,7 +44,7 @@ test.describe('PWA et fonctionnement hors-ligne', () => {
   test('les compteurs restent disponibles hors-ligne (localStorage local)', async ({ page, context }) => {
     await gotoFresh(page)
     await addCounter(page)
-    await page.getByText('Compteur 1').click()
+    await page.getByText('Compteur 1', { exact: true }).click()
     await page.locator('.counter-name-input').fill('Hors-ligne')
     await page.locator('.counter-name-input').press('Enter')
 
@@ -55,7 +55,7 @@ test.describe('PWA et fonctionnement hors-ligne', () => {
 
     await context.setOffline(true)
     await page.reload()
-    await expect(page.getByText('Hors-ligne')).toBeVisible()
+    await expect(page.getByText('Hors-ligne', { exact: true })).toBeVisible()
 
     // Toujours utilisable hors-ligne : incrémenter fonctionne normalement.
     await page.locator('.counter-card').click()

@@ -47,6 +47,10 @@ export function CounterCard({
 
   const bump = (delta: number) => {
     setDirection(delta > 0 ? 1 : -1)
+    // Absent sur la plupart des navigateurs desktop et sur iOS Safari :
+    // l'appel optionnel évite une erreur silencieuse, le retour haptique
+    // est un bonus, pas un pré-requis.
+    navigator.vibrate?.(15)
     onChange(delta)
   }
 
@@ -139,7 +143,22 @@ export function CounterCard({
       style={{ '--accent': counter.color } as React.CSSProperties}
       onClick={() => bump(1)}
       role="button"
+      tabIndex={0}
       aria-label={`Incrémenter ${counter.name}`}
+      onKeyDown={(e) => {
+        // Ignore les touches qui bouillonnent depuis un enfant (bouton,
+        // champ...) : seule une touche appuyée sur la carte elle-même doit
+        // déclencher +1/-1, sinon un Entrée sur un bouton enfant doublerait
+        // l'action déjà gérée par son propre onClick.
+        if (e.target !== e.currentTarget) return
+        if (['Enter', ' ', 'ArrowUp', '+', '='].includes(e.key)) {
+          e.preventDefault()
+          bump(1)
+        } else if (['ArrowDown', '-'].includes(e.key)) {
+          e.preventDefault()
+          bump(-1)
+        }
+      }}
     >
       {counter.backgroundImageUrl && (
         <div
@@ -239,10 +258,19 @@ export function CounterCard({
           ref={valueRef}
           style={fillFontSize ? { fontSize: `${fillFontSize}px` } : undefined}
           animate={pulseControls}
+          aria-hidden="true"
         >
           <Odometer value={counter.count} direction={direction} />
         </motion.div>
       )}
+
+      {/* Les chiffres de l'odomètre se montent/démontent en continu pour
+          l'animation de défilement (visuellement clair, mais illisible pour
+          un lecteur d'écran) : cette région annonce la valeur à jour sous
+          une forme stable et silencieuse jusqu'au prochain changement. */}
+      <span className="sr-only" aria-live="polite">
+        {counter.name} : {counter.count}
+      </span>
 
       <div className="counter-actions">
         <button

@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { AnimatePresence, Reorder } from 'framer-motion'
 import { useLocalStorage } from './hooks/useLocalStorage'
 import { CounterCard } from './components/CounterCard'
@@ -9,9 +9,30 @@ import { COLORS, pickColor } from './colors'
 import type { Counter } from './types'
 import './App.css'
 
+const UNDO_TIMEOUT_MS = 5000
+
 export default function App() {
   const [counters, setCounters] = useLocalStorage<Counter[]>('compteur.counters.v1', [])
   const [syncOpen, setSyncOpen] = useState(false)
+  const [undo, setUndo] = useState<{ label: string; counters: Counter[] } | null>(null)
+  const undoTimer = useRef<ReturnType<typeof setTimeout> | undefined>(undefined)
+
+  // Garde un instantané des compteurs avant une action destructrice (ou
+  // difficile à corriger à la main), pour permettre de l'annuler pendant
+  // quelques secondes via le message qui apparaît en bas d'écran.
+  const pushUndo = (label: string) => {
+    setUndo({ label, counters })
+    clearTimeout(undoTimer.current)
+    undoTimer.current = setTimeout(() => setUndo(null), UNDO_TIMEOUT_MS)
+  }
+
+  // N'est rendu accessible que via le bouton du message d'annulation, qui
+  // n'existe dans le DOM que lorsque `undo` est déjà défini.
+  const handleUndo = () => {
+    setCounters(undo!.counters)
+    setUndo(null)
+    clearTimeout(undoTimer.current)
+  }
 
   // Import automatique si l'app est ouverte via un lien de partage (?import=...).
   useEffect(() => {
@@ -54,6 +75,8 @@ export default function App() {
   }
 
   const setCount = (id: string, count: number) => {
+    const target = counters.find((c) => c.id === id)!
+    if (target.count !== count) pushUndo(`Valeur de « ${target.name} » modifiée`)
     setCounters((prev) => prev.map((c) => (c.id === id ? { ...c, count } : c)))
   }
 
@@ -78,6 +101,8 @@ export default function App() {
   }
 
   const deleteCounter = (id: string) => {
+    const target = counters.find((c) => c.id === id)!
+    pushUndo(`Compteur « ${target.name} » supprimé`)
     setCounters((prev) => prev.filter((c) => c.id !== id))
   }
 
@@ -143,6 +168,13 @@ export default function App() {
 
       {syncOpen && (
         <SyncPanel counters={counters} onClose={() => setSyncOpen(false)} onImport={handleImport} />
+      )}
+
+      {undo && (
+        <div className="undo-toast" role="status">
+          <span>{undo.label}</span>
+          <button onClick={handleUndo}>Annuler</button>
+        </div>
       )}
     </div>
   )

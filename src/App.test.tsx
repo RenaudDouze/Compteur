@@ -163,6 +163,69 @@ describe('App', () => {
     expect(screen.getByText("Aucun compteur pour l'instant.")).toBeInTheDocument()
   })
 
+  describe('annulation', () => {
+    afterEach(() => {
+      vi.useRealTimers()
+    })
+
+    it("propose d'annuler après une suppression et restaure le compteur", () => {
+      render(<App />)
+      fireEvent.click(screen.getByRole('button', { name: '+ Nouveau compteur' }))
+      fireEvent.click(screen.getByText('Compteur 1'))
+      fireEvent.change(screen.getByDisplayValue('Compteur 1'), { target: { value: 'À restaurer' } })
+      fireEvent.keyDown(screen.getByDisplayValue('À restaurer'), { key: 'Enter' })
+
+      const deleteBtn = screen.getByRole('button', { name: 'Supprimer le compteur' })
+      fireEvent.click(deleteBtn)
+      fireEvent.click(deleteBtn)
+      expect(screen.getByText("Aucun compteur pour l'instant.")).toBeInTheDocument()
+      expect(screen.getByText('Compteur « À restaurer » supprimé')).toBeInTheDocument()
+
+      fireEvent.click(screen.getByRole('button', { name: 'Annuler' }))
+      expect(screen.getByText('À restaurer')).toBeInTheDocument()
+      expect(screen.queryByRole('button', { name: 'Annuler' })).not.toBeInTheDocument()
+    })
+
+    it("propose d'annuler après une modification directe de la valeur", async () => {
+      render(<App />)
+      fireEvent.click(screen.getByRole('button', { name: '+ Nouveau compteur' }))
+      fireEvent.click(screen.getByRole('button', { name: 'Définir la valeur du compteur' }))
+      const input = screen.getByDisplayValue('0')
+      fireEvent.change(input, { target: { value: '99' } })
+      fireEvent.keyDown(input, { key: 'Enter' })
+
+      expect(screen.getByText('Valeur de « Compteur 1 » modifiée')).toBeInTheDocument()
+      fireEvent.click(screen.getByRole('button', { name: 'Annuler' }))
+      // Les chiffres qui quittent l'affichage restent brièvement montés le
+      // temps de leur animation de sortie (AnimatePresence) : le texte
+      // combiné ancien/nouveau ne se stabilise qu'une fois celle-ci terminée.
+      await waitFor(() => expect(document.querySelector('.counter-value')).toHaveTextContent('0'))
+    })
+
+    it("ne propose pas d'annuler si la valeur éditée est identique", () => {
+      render(<App />)
+      fireEvent.click(screen.getByRole('button', { name: '+ Nouveau compteur' }))
+      fireEvent.click(screen.getByRole('button', { name: 'Définir la valeur du compteur' }))
+      const input = screen.getByDisplayValue('0')
+      fireEvent.keyDown(input, { key: 'Enter' })
+      expect(screen.queryByRole('button', { name: 'Annuler' })).not.toBeInTheDocument()
+    })
+
+    it("le message d'annulation disparaît après le délai", () => {
+      vi.useFakeTimers({ shouldAdvanceTime: true })
+      render(<App />)
+      fireEvent.click(screen.getByRole('button', { name: '+ Nouveau compteur' }))
+      const deleteBtn = screen.getByRole('button', { name: 'Supprimer le compteur' })
+      fireEvent.click(deleteBtn)
+      fireEvent.click(deleteBtn)
+      expect(screen.getByRole('button', { name: 'Annuler' })).toBeInTheDocument()
+      act(() => {
+        vi.advanceTimersByTime(5100)
+      })
+      expect(screen.queryByRole('button', { name: 'Annuler' })).not.toBeInTheDocument()
+    })
+  })
+
   it('persiste les compteurs dans le localStorage', () => {
     render(<App />)
     fireEvent.click(screen.getByRole('button', { name: '+ Nouveau compteur' }))
