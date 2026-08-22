@@ -2,6 +2,7 @@ import { act, fireEvent, render, screen, waitFor, within } from '@testing-librar
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import App from './App'
 import { encodeCountersToParam } from './sync'
+import { COLORS } from './colors'
 import type { Counter } from './types'
 
 vi.mock('qrcode', () => ({
@@ -137,6 +138,16 @@ describe('App', () => {
     expect(document.querySelector('.counter-bg')).toBeInTheDocument()
   })
 
+  it('change la couleur du compteur', () => {
+    render(<App />)
+    fireEvent.click(screen.getByRole('button', { name: '+ Nouveau compteur' }))
+    fireEvent.click(screen.getByRole('button', { name: 'Changer la couleur du compteur' }))
+    fireEvent.click(screen.getByRole('button', { name: `Choisir la couleur ${COLORS[1]}` }))
+    fireEvent.click(screen.getByRole('button', { name: 'Changer la couleur du compteur' }))
+    const selected = screen.getByRole('button', { name: `Choisir la couleur ${COLORS[1]}` })
+    expect(selected.className).toContain('selected')
+  })
+
   it('supprime un compteur après confirmation', () => {
     render(<App />)
     fireEvent.click(screen.getByRole('button', { name: '+ Nouveau compteur' }))
@@ -200,6 +211,13 @@ describe('App', () => {
     fireEvent.keyDown(within(firstCard).getByPlaceholderText('https://exemple.com/image.jpg'), { key: 'Enter' })
     expect(firstCard.querySelector('.counter-bg')).toBeInTheDocument()
     expect(secondCard.querySelector('.counter-bg')).not.toBeInTheDocument()
+
+    // Change la couleur uniquement sur le premier.
+    fireEvent.click(within(firstCard).getByRole('button', { name: 'Changer la couleur du compteur' }))
+    fireEvent.click(within(firstCard).getByRole('button', { name: `Choisir la couleur ${COLORS[1]}` }))
+    fireEvent.click(within(secondCard).getByRole('button', { name: 'Changer la couleur du compteur' }))
+    const secondSelected = within(secondCard).getByRole('button', { name: `Choisir la couleur ${COLORS[0]}` })
+    expect(secondSelected.className).toContain('selected')
 
     // Définit directement la valeur uniquement sur le premier.
     fireEvent.click(within(firstCard).getByRole('button', { name: 'Définir la valeur du compteur' }))

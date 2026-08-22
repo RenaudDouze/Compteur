@@ -5,23 +5,9 @@ import { CounterCard } from './components/CounterCard'
 import { SyncPanel } from './components/SyncPanel'
 import { decodeCountersFromParam } from './sync'
 import { makeId } from './id'
+import { COLORS, pickColor } from './colors'
 import type { Counter } from './types'
 import './App.css'
-
-const COLORS = [
-  '#2563eb', // bleu
-  '#7c3aed', // violet
-  '#0d9488', // sarcelle
-  '#db2777', // fuchsia
-  '#16a34a', // vert
-  '#4f46e5', // indigo
-  '#0891b2', // cyan
-  '#9333ea', // pourpre
-]
-
-function pickColor(existing: Counter[]) {
-  return COLORS[existing.length % COLORS.length]
-}
 
 export default function App() {
   const [counters, setCounters] = useLocalStorage<Counter[]>('compteur.counters.v1', [])
@@ -55,7 +41,7 @@ export default function App() {
       id: makeId(),
       name: `Compteur ${counters.length + 1}`,
       count: 0,
-      color: pickColor(counters),
+      color: pickColor(counters.length),
       createdAt: Date.now(),
     }
     setCounters((prev) => [...prev, newCounter])
@@ -85,6 +71,10 @@ export default function App() {
 
   const setBackgroundImage = (id: string, backgroundImageUrl: string | undefined) => {
     setCounters((prev) => prev.map((c) => (c.id === id ? { ...c, backgroundImageUrl } : c)))
+  }
+
+  const setColor = (id: string, color: string) => {
+    setCounters((prev) => prev.map((c) => (c.id === id ? { ...c, color } : c)))
   }
 
   const deleteCounter = (id: string) => {
@@ -136,12 +126,14 @@ export default function App() {
                 key={counter.id}
                 counter={counter}
                 fill={counters.length <= 2}
+                colors={COLORS}
                 onChange={(delta) => updateCount(counter.id, delta)}
                 onSetCount={(count) => setCount(counter.id, count)}
                 onRename={(name) => renameCounter(counter.id, name)}
                 onSetOdds={(denominator) => setOdds(counter.id, denominator)}
                 onSetStartDate={(date) => setStartDate(counter.id, date)}
                 onSetBackgroundImage={(url) => setBackgroundImage(counter.id, url)}
+                onSetColor={(color) => setColor(counter.id, color)}
                 onDelete={() => deleteCounter(counter.id)}
               />
             ))}

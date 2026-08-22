@@ -11,7 +11,7 @@
   },
   "reporters": ["html", "clear-text", "progress"],
   "coverageAnalysis": "perTest",
-  "mutate": ["src/odds.ts", "src/date.ts", "src/sync.ts", "src/share.ts", "src/id.ts", "src/url.ts"],
+  "mutate": ["src/odds.ts", "src/date.ts", "src/sync.ts", "src/share.ts", "src/id.ts", "src/url.ts", "src/colors.ts"],
   "thresholds": {
     "high": 100,
     "low": 100,

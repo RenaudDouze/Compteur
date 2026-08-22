@@ -11,24 +11,28 @@ import type { Counter } from '../types'
 interface CounterCardProps {
   counter: Counter
   fill?: boolean
+  colors: string[]
   onChange: (delta: number) => void
   onSetCount: (count: number) => void
   onRename: (name: string) => void
   onSetOdds: (denominator: number | undefined) => void
   onSetStartDate: (isoDate: string | undefined) => void
   onSetBackgroundImage: (url: string | undefined) => void
+  onSetColor: (color: string) => void
   onDelete: () => void
 }
 
 export function CounterCard({
   counter,
   fill = false,
+  colors,
   onChange,
   onSetCount,
   onRename,
   onSetOdds,
   onSetStartDate,
   onSetBackgroundImage,
+  onSetColor,
   onDelete,
 }: CounterCardProps) {
   const [editing, setEditing] = useState(false)
@@ -38,6 +42,7 @@ export function CounterCard({
   const [editingDate, setEditingDate] = useState(false)
   const [editingBackground, setEditingBackground] = useState(false)
   const [draftBackground, setDraftBackground] = useState(counter.backgroundImageUrl ?? '')
+  const [editingColor, setEditingColor] = useState(false)
   const [editingCount, setEditingCount] = useState(false)
   const [draftCount, setDraftCount] = useState(counter.count.toString())
   const [direction, setDirection] = useState<1 | -1>(1)
@@ -46,6 +51,7 @@ export function CounterCard({
   const confirmTimer = useRef<ReturnType<typeof setTimeout> | undefined>(undefined)
   const shareTimer = useRef<ReturnType<typeof setTimeout> | undefined>(undefined)
   const valueRef = useRef<HTMLDivElement>(null)
+  const colorPickerRef = useRef<HTMLDivElement>(null)
   const [fillFontSize, setFillFontSize] = useState<number | null>(null)
   const pulseControls = useAnimationControls()
   const isFirstCount = useRef(true)
@@ -168,6 +174,21 @@ export function CounterCard({
     })
   }, [counter.count, pulseControls])
 
+  // Ferme le sélecteur de couleur au clic en dehors (le sélecteur n'a pas de
+  // champ à "blur" comme les autres éditeurs, contrairement à un <input>).
+  useEffect(() => {
+    if (!editingColor) return
+    // Le conteneur du sélecteur est toujours monté (contrairement à valueRef,
+    // absent en mode édition) : `.current` est garanti non nul ici.
+    const handleClickOutside = (e: MouseEvent) => {
+      if (!colorPickerRef.current!.contains(e.target as Node)) {
+        setEditingColor(false)
+      }
+    }
+    document.addEventListener('mousedown', handleClickOutside)
+    return () => document.removeEventListener('mousedown', handleClickOutside)
+  }, [editingColor])
+
   const odds = counter.oddsDenominator ? cumulativeOdds(counter.oddsDenominator, counter.count) : null
   const startDate = counter.startDate ?? toIsoDate(counter.createdAt)
   // Sur un petit écran, on garde le format compact même en affichage géant
@@ -224,6 +245,34 @@ export function CounterCard({
       >
         ⠿
       </button>
+
+      <div className="counter-color-picker" ref={colorPickerRef} onClick={(e) => e.stopPropagation()}>
+        <button
+          type="button"
+          className="counter-color-swatch"
+          style={{ background: counter.color }}
+          onClick={() => setEditingColor((prev) => !prev)}
+          aria-label="Changer la couleur du compteur"
+          title="Toucher pour changer la couleur"
+        />
+        {editingColor && (
+          <div className="counter-color-options">
+            {colors.map((c) => (
+              <button
+                key={c}
+                type="button"
+                className={`counter-color-option${c === counter.color ? ' selected' : ''}`}
+                style={{ background: c }}
+                aria-label={`Choisir la couleur ${c}`}
+                onClick={() => {
+                  onSetColor(c)
+                  setEditingColor(false)
+                }}
+              />
+            ))}
+          </div>
+        )}
+      </div>
 
       {editing ? (
         <input
