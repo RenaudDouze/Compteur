@@ -188,16 +188,16 @@ export function CounterCard({
       </button>
 
       <button
-        className="counter-edit-value"
-        onClick={(e) => {
+        className="counter-drag-handle"
+        onPointerDown={(e) => {
           e.stopPropagation()
-          setDraftCount(counter.count.toString())
-          setEditingCount(true)
+          dragControls.start(e)
         }}
-        aria-label="Définir la valeur du compteur"
-        title="Définir la valeur du compteur"
+        onClick={(e) => e.stopPropagation()}
+        aria-label="Réordonner le compteur"
+        title="Glisser pour réordonner"
       >
-        ✎
+        ⠿
       </button>
 
       {editing ? (
@@ -232,20 +232,6 @@ export function CounterCard({
       )}
 
       <div className="counter-meta">
-        <button
-          type="button"
-          className="counter-drag-handle"
-          onPointerDown={(e) => {
-            e.stopPropagation()
-            dragControls.start(e)
-          }}
-          onClick={(e) => e.stopPropagation()}
-          aria-label="Réordonner le compteur"
-          title="Glisser pour réordonner"
-        >
-          ⠿
-        </button>
-
         {editingOdds ? (
           <div className="counter-odds-edit" onClick={(e) => e.stopPropagation()}>
             <span>1 chance sur</span>
@@ -358,6 +344,18 @@ export function CounterCard({
       )}
 
       <div className="counter-actions">
+        <button
+          className="counter-btn edit"
+          onClick={(e) => {
+            e.stopPropagation()
+            setDraftCount(counter.count.toString())
+            setEditingCount(true)
+          }}
+          aria-label="Définir la valeur du compteur"
+          title="Définir la valeur du compteur"
+        >
+          ✎
+        </button>
         <button
           className="counter-btn minus"
           onClick={(e) => {
