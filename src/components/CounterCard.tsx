@@ -132,8 +132,12 @@ export function CounterCard({
     return () => ro.disconnect()
   }, [fill, counter.count])
 
-  // Petit rebond élastique + flash lumineux à chaque incrément/décrément,
-  // en plus du défilement des chiffres.
+  // Petit rebond élastique à chaque incrément/décrément, en plus du
+  // défilement des chiffres. N'anime que `scale` (accéléré par le
+  // compositeur) : une version précédente animait aussi `filter`
+  // (drop-shadow/brightness), qui force un repaint à chaque frame et
+  // causait des lags visibles sur les appareils moins puissants, en plus
+  // du texte à dégradé déjà coûteux à peindre.
   useEffect(() => {
     if (isFirstCount.current) {
       isFirstCount.current = false
@@ -141,13 +145,7 @@ export function CounterCard({
     }
     pulseControls.start({
       scale: [1, 1.16, 0.97, 1],
-      filter: [
-        'drop-shadow(0 4px 14px color-mix(in srgb, var(--accent) 55%, transparent)) brightness(1)',
-        'drop-shadow(0 8px 28px color-mix(in srgb, var(--accent) 85%, transparent)) brightness(1.4)',
-        'drop-shadow(0 4px 14px color-mix(in srgb, var(--accent) 55%, transparent)) brightness(1)',
-        'drop-shadow(0 4px 14px color-mix(in srgb, var(--accent) 55%, transparent)) brightness(1)',
-      ],
-      transition: { duration: 0.45, ease: 'easeOut', times: [0, 0.3, 0.7, 1] },
+      transition: { duration: 0.35, ease: 'easeOut', times: [0, 0.3, 0.7, 1] },
     })
   }, [counter.count, pulseControls])
 
