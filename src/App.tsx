@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState } from 'react'
 import { AnimatePresence, Reorder } from 'framer-motion'
 import { useLocalStorage } from './hooks/useLocalStorage'
+import { useSystemDarkMode } from './hooks/useSystemDarkMode'
 import { CounterCard } from './components/CounterCard'
 import { SyncPanel } from './components/SyncPanel'
 import { decodeCountersFromParam } from './sync'
@@ -11,11 +12,31 @@ import './App.css'
 
 const UNDO_TIMEOUT_MS = 5000
 
+type ThemePreference = 'system' | 'light' | 'dark'
+
+const THEME_ICON: Record<ThemePreference, string> = { system: '🌓', light: '☀️', dark: '🌙' }
+const THEME_LABEL: Record<ThemePreference, string> = { system: 'Auto', light: 'Clair', dark: 'Sombre' }
+const NEXT_THEME: Record<ThemePreference, ThemePreference> = { system: 'light', light: 'dark', dark: 'system' }
+
 export default function App() {
   const [counters, setCounters] = useLocalStorage<Counter[]>('compteur.counters.v1', [])
   const [syncOpen, setSyncOpen] = useState(false)
   const [undo, setUndo] = useState<{ label: string; counters: Counter[] } | null>(null)
   const undoTimer = useRef<ReturnType<typeof setTimeout> | undefined>(undefined)
+
+  const [themePreference, setThemePreference] = useLocalStorage<ThemePreference>('compteur.theme.v1', 'system')
+  const systemDark = useSystemDarkMode()
+  const activeTheme = themePreference === 'system' ? (systemDark ? 'dark' : 'light') : themePreference
+
+  // Applique le thème au document (déjà posé une première fois par le script
+  // inline de index.html, pour éviter un flash) et adapte la couleur de la
+  // barre de statut du navigateur/PWA en conséquence.
+  useEffect(() => {
+    document.documentElement.dataset.theme = activeTheme
+    document
+      .querySelector('meta[name="theme-color"]')
+      ?.setAttribute('content', activeTheme === 'dark' ? '#0f172a' : '#f8fafc')
+  }, [activeTheme])
 
   // Garde un instantané des compteurs avant une action destructrice (ou
   // difficile à corriger à la main), pour permettre de l'annuler pendant
@@ -115,6 +136,13 @@ export default function App() {
       <header className="app-header">
         <h1>Compteur</h1>
         <div className="app-header-actions">
+          <button
+            className="add-btn icon-btn"
+            onClick={() => setThemePreference(NEXT_THEME[themePreference])}
+            aria-label={`Thème : ${THEME_LABEL[themePreference]}`}
+          >
+            {THEME_ICON[themePreference]}
+          </button>
           <button className="add-btn icon-btn" onClick={() => setSyncOpen(true)} aria-label="Synchroniser">
             ⇄
           </button>

@@ -11,6 +11,18 @@
   font-family: var(--font-ui);
 }
 
+/* data-theme est posé par App.tsx, d'après le choix de l'utilisateur ou,
+   par défaut, la préférence système (prefers-color-scheme). */
+:root[data-theme='dark'] {
+  color-scheme: dark;
+  --bg-1: #0f172a;
+  --bg-2: #131c2e;
+  --surface: #1c2740;
+  --surface-border: #2f3b56;
+  --text: #f1f5f9;
+  --text-dim: #94a3b8;
+}
+
 * {
   box-sizing: border-box;
 }
