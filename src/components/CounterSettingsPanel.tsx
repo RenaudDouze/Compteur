@@ -4,6 +4,7 @@ import { cumulativeOdds, formatOdds } from '../odds'
 import { formatStartDate, toIsoDate, todayIsoDate } from '../date'
 import { buildShareText } from '../share'
 import { isValidImageUrl } from '../url'
+import { Sparkline } from './Sparkline'
 import type { Counter } from '../types'
 
 interface CounterSettingsPanelProps {
@@ -186,6 +187,23 @@ export function CounterSettingsPanel({
             onChange={(e) => onSetStartDate(e.target.value || undefined)}
           />
           <p className="modal-hint">{formatStartDate(startDate)}</p>
+        </section>
+
+        <section className="modal-section">
+          <h3>Historique</h3>
+          {counter.history && counter.history.length >= 2 ? (
+            <>
+              <Sparkline points={counter.history} color={counter.color} />
+              <p className="modal-hint">
+                Min : {Math.min(...counter.history.map((p) => p.v))} · Max :{' '}
+                {Math.max(...counter.history.map((p) => p.v))}
+              </p>
+            </>
+          ) : (
+            <p className="modal-hint">
+              Pas encore assez d'historique : incrémente ou décrémente le compteur pour le voir apparaître.
+            </p>
+          )}
         </section>
 
         <section className="modal-section">

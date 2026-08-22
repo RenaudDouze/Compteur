@@ -33,6 +33,7 @@ function normalizeCounter(raw: Partial<Counter>): Counter {
     startDate: raw.startDate,
     backgroundImageUrl: raw.backgroundImageUrl,
     step: raw.step,
+    history: raw.history,
   }
 }
 

@@ -5,6 +5,7 @@ import { useSystemDarkMode } from './hooks/useSystemDarkMode'
 import { CounterCard } from './components/CounterCard'
 import { SyncPanel } from './components/SyncPanel'
 import { decodeCountersFromParam } from './sync'
+import { appendHistoryPoint } from './history'
 import { makeId } from './id'
 import { COLORS, pickColor } from './colors'
 import type { Counter } from './types'
@@ -85,6 +86,7 @@ export default function App() {
       count: 0,
       color: pickColor(counters.length),
       createdAt: Date.now(),
+      history: appendHistoryPoint(undefined, 0),
     }
     setCounters((prev) => [...prev, newCounter])
   }
@@ -107,14 +109,18 @@ export default function App() {
 
   const updateCount = (id: string, delta: number) => {
     setCounters((prev) =>
-      prev.map((c) => (c.id === id ? { ...c, count: c.count + delta } : c))
+      prev.map((c) =>
+        c.id === id ? { ...c, count: c.count + delta, history: appendHistoryPoint(c.history, c.count + delta) } : c
+      )
     )
   }
 
   const setCount = (id: string, count: number) => {
     const target = counters.find((c) => c.id === id)!
     if (target.count !== count) pushUndo(`Valeur de « ${target.name} » modifiée`)
-    setCounters((prev) => prev.map((c) => (c.id === id ? { ...c, count } : c)))
+    setCounters((prev) =>
+      prev.map((c) => (c.id === id ? { ...c, count, history: appendHistoryPoint(c.history, count) } : c))
+    )
   }
 
   const renameCounter = (id: string, name: string) => {

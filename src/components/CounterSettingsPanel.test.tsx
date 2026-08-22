@@ -337,6 +337,32 @@ describe('CounterSettingsPanel', () => {
     })
   })
 
+  describe('historique', () => {
+    it("indique l'absence d'historique suffisant sans historique du tout", () => {
+      renderPanel({ history: undefined })
+      expect(screen.getByText(/Pas encore assez d'historique/)).toBeInTheDocument()
+      expect(document.querySelector('.sparkline')).not.toBeInTheDocument()
+    })
+
+    it("indique l'absence d'historique suffisant avec un seul point", () => {
+      renderPanel({ history: [{ t: 1000, v: 0 }] })
+      expect(screen.getByText(/Pas encore assez d'historique/)).toBeInTheDocument()
+      expect(document.querySelector('.sparkline')).not.toBeInTheDocument()
+    })
+
+    it('affiche le sparkline et les extrêmes avec au moins deux points', () => {
+      renderPanel({
+        history: [
+          { t: 1000, v: 0 },
+          { t: 2000, v: 5 },
+          { t: 3000, v: 2 },
+        ],
+      })
+      expect(document.querySelector('.sparkline')).toBeInTheDocument()
+      expect(screen.getByText('Min : 0 · Max : 5')).toBeInTheDocument()
+    })
+  })
+
   describe('partage', () => {
     afterEach(() => {
       vi.stubGlobal('navigator', realNavigator)
