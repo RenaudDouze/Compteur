@@ -9,6 +9,24 @@ test.describe('PWA et fonctionnement hors-ligne', () => {
     expect(manifest.name).toBe('Compteur')
     expect(manifest.display).toBe('standalone')
     expect(manifest.icons.length).toBeGreaterThan(0)
+    expect(manifest.shortcuts).toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({ name: 'Nouveau compteur', url: expect.stringContaining('action=new') }),
+        expect.objectContaining({ name: 'Synchroniser', url: expect.stringContaining('action=sync') }),
+      ])
+    )
+  })
+
+  test('le raccourci "Nouveau compteur" crée un compteur au chargement', async ({ page, baseURL }) => {
+    await page.goto(`${baseURL}/?action=new`)
+    await expect(page.getByText('Compteur 1', { exact: true })).toBeVisible()
+    expect(new URL(page.url()).search).toBe('')
+  })
+
+  test('le raccourci "Synchroniser" ouvre le panneau au chargement', async ({ page, baseURL }) => {
+    await page.goto(`${baseURL}/?action=sync`)
+    await expect(page.getByText('Synchroniser mes compteurs')).toBeVisible()
+    expect(new URL(page.url()).search).toBe('')
   })
 
   test('enregistre un service worker', async ({ page }) => {

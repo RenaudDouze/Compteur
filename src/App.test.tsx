@@ -496,4 +496,32 @@ describe('App', () => {
       expect(screen.getByText('Nouveau')).toBeInTheDocument()
     })
   })
+
+  describe("raccourcis d'app PWA (?action=)", () => {
+    it("ne fait rien sans paramètre action dans l'URL", () => {
+      render(<App />)
+      expect(screen.getByText("Aucun compteur pour l'instant.")).toBeInTheDocument()
+    })
+
+    it('?action=new crée un compteur et retire le paramètre de l\'URL', () => {
+      window.history.pushState({}, '', '/?action=new')
+      render(<App />)
+      expect(screen.getByText('Compteur 1')).toBeInTheDocument()
+      expect(window.location.search).toBe('')
+    })
+
+    it('?action=sync ouvre le panneau de synchronisation et retire le paramètre de l\'URL', () => {
+      window.history.pushState({}, '', '/?action=sync')
+      render(<App />)
+      expect(screen.getByText('Synchroniser mes compteurs')).toBeInTheDocument()
+      expect(window.location.search).toBe('')
+    })
+
+    it('ignore une valeur inconnue de action et retire quand même le paramètre', () => {
+      window.history.pushState({}, '', '/?action=inconnu')
+      render(<App />)
+      expect(screen.getByText("Aucun compteur pour l'instant.")).toBeInTheDocument()
+      expect(window.location.search).toBe('')
+    })
+  })
 })
