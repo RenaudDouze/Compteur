@@ -524,4 +524,79 @@ describe('App', () => {
       expect(window.location.search).toBe('')
     })
   })
+
+  describe('recherche', () => {
+    it("n'affiche pas le bouton de recherche sans compteur", () => {
+      render(<App />)
+      expect(screen.queryByRole('button', { name: 'Rechercher' })).not.toBeInTheDocument()
+    })
+
+    it('aucun champ de recherche visible avant un clic sur le bouton', () => {
+      window.localStorage.setItem('compteur.counters.v1', JSON.stringify([makeCounter({ name: 'Un' })]))
+      render(<App />)
+      expect(screen.getByRole('button', { name: 'Rechercher' })).toBeInTheDocument()
+      expect(screen.queryByPlaceholderText('Rechercher un compteur…')).not.toBeInTheDocument()
+    })
+
+    it('révèle le champ au clic et filtre les compteurs par nom', async () => {
+      window.localStorage.setItem(
+        'compteur.counters.v1',
+        JSON.stringify([makeCounter({ id: 'a', name: 'Pompes' }), makeCounter({ id: 'b', name: 'Squats' })])
+      )
+      render(<App />)
+      fireEvent.click(screen.getByRole('button', { name: 'Rechercher' }))
+      const input = screen.getByPlaceholderText('Rechercher un compteur…')
+      fireEvent.change(input, { target: { value: 'pom' } })
+      expect(screen.getByText('Pompes')).toBeInTheDocument()
+      // La carte masquée reste montée le temps de son animation de sortie
+      // (AnimatePresence) : on attend qu'elle ait fini de disparaître.
+      await waitFor(() => expect(screen.queryByText('Squats')).not.toBeInTheDocument())
+    })
+
+    it("affiche un message dédié quand aucun compteur ne correspond", () => {
+      window.localStorage.setItem('compteur.counters.v1', JSON.stringify([makeCounter({ name: 'Pompes' })]))
+      render(<App />)
+      fireEvent.click(screen.getByRole('button', { name: 'Rechercher' }))
+      fireEvent.change(screen.getByPlaceholderText('Rechercher un compteur…'), { target: { value: 'zzz' } })
+      expect(screen.getByText('Aucun compteur ne correspond à « zzz ».')).toBeInTheDocument()
+      expect(screen.queryByText('Créer mon premier compteur')).not.toBeInTheDocument()
+    })
+
+    it('ferme et réinitialise la recherche au clic sur la croix', () => {
+      window.localStorage.setItem(
+        'compteur.counters.v1',
+        JSON.stringify([makeCounter({ id: 'a', name: 'Pompes' }), makeCounter({ id: 'b', name: 'Squats' })])
+      )
+      render(<App />)
+      fireEvent.click(screen.getByRole('button', { name: 'Rechercher' }))
+      fireEvent.change(screen.getByPlaceholderText('Rechercher un compteur…'), { target: { value: 'pom' } })
+      fireEvent.click(screen.getByRole('button', { name: 'Fermer la recherche' }))
+      expect(screen.queryByPlaceholderText('Rechercher un compteur…')).not.toBeInTheDocument()
+      expect(screen.getByText('Pompes')).toBeInTheDocument()
+      expect(screen.getByText('Squats')).toBeInTheDocument()
+    })
+
+    it('ferme et réinitialise la recherche sur Échap', () => {
+      window.localStorage.setItem(
+        'compteur.counters.v1',
+        JSON.stringify([makeCounter({ id: 'a', name: 'Pompes' }), makeCounter({ id: 'b', name: 'Squats' })])
+      )
+      render(<App />)
+      fireEvent.click(screen.getByRole('button', { name: 'Rechercher' }))
+      const input = screen.getByPlaceholderText('Rechercher un compteur…')
+      fireEvent.change(input, { target: { value: 'pom' } })
+      fireEvent.keyDown(input, { key: 'Escape' })
+      expect(screen.queryByPlaceholderText('Rechercher un compteur…')).not.toBeInTheDocument()
+      expect(screen.getByText('Squats')).toBeInTheDocument()
+    })
+
+    it("ignore une touche sans effet dans le champ de recherche", () => {
+      window.localStorage.setItem('compteur.counters.v1', JSON.stringify([makeCounter({ name: 'Pompes' })]))
+      render(<App />)
+      fireEvent.click(screen.getByRole('button', { name: 'Rechercher' }))
+      const input = screen.getByPlaceholderText('Rechercher un compteur…')
+      fireEvent.keyDown(input, { key: 'a' })
+      expect(screen.getByPlaceholderText('Rechercher un compteur…')).toBeInTheDocument()
+    })
+  })
 })

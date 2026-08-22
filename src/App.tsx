@@ -25,6 +25,18 @@ export default function App() {
   const [undo, setUndo] = useState<{ label: string; counters: Counter[] } | null>(null)
   const undoTimer = useRef<ReturnType<typeof setTimeout> | undefined>(undefined)
 
+  const [searchOpen, setSearchOpen] = useState(false)
+  const [searchQuery, setSearchQuery] = useState('')
+  const closeSearch = () => {
+    setSearchOpen(false)
+    setSearchQuery('')
+  }
+  const matchesSearch = (c: Counter) => {
+    const query = searchQuery.trim().toLowerCase()
+    return query === '' || c.name.toLowerCase().includes(query)
+  }
+  const filteredCounters = counters.filter(matchesSearch)
+
   const [themePreference, setThemePreference] = useLocalStorage<ThemePreference>('compteur.theme.v1', 'system')
   const systemDark = useSystemDarkMode()
   const activeTheme = themePreference === 'system' ? (systemDark ? 'dark' : 'light') : themePreference
@@ -169,6 +181,15 @@ export default function App() {
           >
             {THEME_ICON[themePreference]}
           </button>
+          {counters.length > 0 && (
+            <button
+              className="add-btn icon-btn"
+              onClick={() => setSearchOpen((v) => !v)}
+              aria-label="Rechercher"
+            >
+              🔍
+            </button>
+          )}
           <button className="add-btn icon-btn" onClick={() => setSyncOpen(true)} aria-label="Synchroniser">
             ⇄
           </button>
@@ -178,33 +199,59 @@ export default function App() {
         </div>
       </header>
 
-      {counters.length === 0 ? (
-        <div className="empty-state">
-          <p>Aucun compteur pour l'instant.</p>
-          <button className="add-btn large" onClick={addCounter}>
-            Créer mon premier compteur
+      {searchOpen && counters.length > 0 && (
+        <div className="search-bar">
+          <input
+            autoFocus
+            type="text"
+            className="modal-input search-input"
+            placeholder="Rechercher un compteur…"
+            value={searchQuery}
+            onChange={(e) => setSearchQuery(e.target.value)}
+            onKeyDown={(e) => {
+              if (e.key === 'Escape') closeSearch()
+            }}
+          />
+          <button className="modal-close" onClick={closeSearch} aria-label="Fermer la recherche">
+            ✕
           </button>
+        </div>
+      )}
+
+      {filteredCounters.length === 0 ? (
+        <div className="empty-state">
+          {counters.length === 0 ? (
+            <>
+              <p>Aucun compteur pour l'instant.</p>
+              <button className="add-btn large" onClick={addCounter}>
+                Créer mon premier compteur
+              </button>
+            </>
+          ) : (
+            <p>Aucun compteur ne correspond à « {searchQuery.trim()} ».</p>
+          )}
         </div>
       ) : (
         <Reorder.Group
           as="div"
           axis="y"
-          values={counters}
+          values={filteredCounters}
           onReorder={setCounters}
           className={`counter-grid ${
-            counters.length === 1
+            filteredCounters.length === 1
               ? 'counter-grid--solo'
-              : counters.length === 2
+              : filteredCounters.length === 2
                 ? 'counter-grid--duo'
                 : 'counter-grid--pack'
           }`}
         >
           <AnimatePresence mode="popLayout">
-            {counters.map((counter) => (
+            {filteredCounters.map((counter) => (
               <CounterCard
                 key={counter.id}
                 counter={counter}
-                fill={counters.length <= 2}
+                fill={filteredCounters.length <= 2}
+                draggable={searchQuery.trim() === ''}
                 colors={COLORS}
                 onChange={(delta) => updateCount(counter.id, delta)}
                 onSetCount={(count) => setCount(counter.id, count)}

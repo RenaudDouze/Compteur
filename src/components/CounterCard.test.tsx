@@ -302,6 +302,11 @@ describe('CounterCard', () => {
       fireEvent.pointerDown(screen.getByRole('button', { name: 'Réordonner le compteur' }))
       expect(onChange).not.toHaveBeenCalled()
     })
+
+    it('masque la poignée quand draggable=false (ex: recherche active)', () => {
+      renderCard({}, { draggable: false })
+      expect(screen.queryByRole('button', { name: 'Réordonner le compteur' })).not.toBeInTheDocument()
+    })
   })
 
   describe('renommage', () => {
