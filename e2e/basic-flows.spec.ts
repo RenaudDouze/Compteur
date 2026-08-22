@@ -34,6 +34,19 @@ test.describe('Parcours de base', () => {
     await expect(page.locator('.counter-value')).toHaveText('1')
   })
 
+  test('un appui long sur + incrémente en rafale', async ({ page }) => {
+    await addCounter(page)
+    const plus = page.getByRole('button', { name: 'Incrémenter', exact: true })
+    const box = await plus.boundingBox()
+    await page.mouse.move(box!.x + box!.width / 2, box!.y + box!.height / 2)
+    await page.mouse.down()
+    // Délai de maintien (350ms) + plusieurs répétitions à 100ms.
+    await page.waitForTimeout(900)
+    await page.mouse.up()
+    const value = Number(await page.locator('.counter-value').textContent())
+    expect(value).toBeGreaterThanOrEqual(3)
+  })
+
   test('autorise un compteur négatif', async ({ page }) => {
     await addCounter(page)
     await page.getByRole('button', { name: 'Décrémenter' }).click()

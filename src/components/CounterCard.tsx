@@ -5,6 +5,11 @@ import { CounterSettingsPanel } from './CounterSettingsPanel'
 import { cumulativeOdds, formatOdds } from '../odds'
 import type { Counter } from '../types'
 
+// Délai avant qu'un appui maintenu sur +/- déclenche la répétition, puis
+// intervalle entre chaque répétition (comptage en rafale).
+const HOLD_DELAY_MS = 350
+const HOLD_REPEAT_MS = 100
+
 interface CounterCardProps {
   counter: Counter
   fill?: boolean
@@ -47,6 +52,9 @@ export function CounterCard({
   const pulseControls = useAnimationControls()
   const isFirstCount = useRef(true)
   const dragControls = useDragControls()
+  const holdTimer = useRef<ReturnType<typeof setTimeout> | undefined>(undefined)
+  const holdInterval = useRef<ReturnType<typeof setInterval> | undefined>(undefined)
+  const longPressFired = useRef(false)
 
   // `sign` indique juste le sens (+1/-1) : l'amplitude réelle appliquée est
   // le pas personnalisable du compteur (par défaut 1).
@@ -57,6 +65,26 @@ export function CounterCard({
     // est un bonus, pas un pré-requis.
     navigator.vibrate?.(15)
     onChange(sign * (counter.step ?? 1))
+  }
+
+  const stopHold = () => {
+    clearTimeout(holdTimer.current)
+    clearInterval(holdInterval.current)
+  }
+
+  // Un appui bref reste un simple tap (géré par le onClick du bouton, qui
+  // continue de fonctionner normalement au clavier et au clic/tap
+  // classique). Passé le délai, on bascule en répétition continue et on
+  // marque `longPressFired` pour que le onClick qui suivra le relâchement
+  // (toujours émis par le navigateur) n'applique pas un incrément en trop.
+  const startHold = (sign: 1 | -1) => {
+    stopHold()
+    longPressFired.current = false
+    holdTimer.current = setTimeout(() => {
+      longPressFired.current = true
+      bump(sign)
+      holdInterval.current = setInterval(() => bump(sign), HOLD_REPEAT_MS)
+    }, HOLD_DELAY_MS)
   }
 
   const commitName = () => {
@@ -300,8 +328,19 @@ export function CounterCard({
           className="counter-btn minus"
           onClick={(e) => {
             e.stopPropagation()
+            if (longPressFired.current) {
+              longPressFired.current = false
+              return
+            }
             bump(-1)
           }}
+          onPointerDown={(e) => {
+            e.stopPropagation()
+            startHold(-1)
+          }}
+          onPointerUp={stopHold}
+          onPointerLeave={stopHold}
+          onPointerCancel={stopHold}
           aria-label="Décrémenter"
         >
           −
@@ -310,8 +349,19 @@ export function CounterCard({
           className="counter-btn plus"
           onClick={(e) => {
             e.stopPropagation()
+            if (longPressFired.current) {
+              longPressFired.current = false
+              return
+            }
             bump(1)
           }}
+          onPointerDown={(e) => {
+            e.stopPropagation()
+            startHold(1)
+          }}
+          onPointerUp={stopHold}
+          onPointerLeave={stopHold}
+          onPointerCancel={stopHold}
           aria-label="Incrémenter"
         >
           +
