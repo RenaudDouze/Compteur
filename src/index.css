@@ -6,7 +6,9 @@
   --surface-border: #e2e8f0;
   --text: #0f172a;
   --text-dim: #64748b;
-  font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
+  --font-ui: 'Segoe UI', system-ui, -apple-system, sans-serif;
+  --font-mono: ui-monospace, 'Cascadia Code', 'JetBrains Mono', 'Roboto Mono', 'SF Mono', Consolas, monospace;
+  font-family: var(--font-ui);
 }
 
 * {

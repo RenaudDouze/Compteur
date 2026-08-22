@@ -221,6 +221,7 @@
 .counter-value {
   font-size: 2.6rem;
   font-weight: 700;
+  font-family: var(--font-mono);
   font-variant-numeric: tabular-nums;
   color: var(--accent);
   display: flex;
