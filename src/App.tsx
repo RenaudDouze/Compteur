@@ -5,14 +5,14 @@ import type { Counter } from './types'
 import './App.css'
 
 const COLORS = [
-  '#38bdf8', // sky
-  '#a78bfa', // violet
-  '#fb7185', // rose
-  '#4ade80', // green
-  '#facc15', // yellow
-  '#fb923c', // orange
-  '#2dd4bf', // teal
-  '#f472b6', // pink
+  '#2563eb', // bleu
+  '#7c3aed', // violet
+  '#0d9488', // sarcelle
+  '#db2777', // fuchsia
+  '#16a34a', // vert
+  '#4f46e5', // indigo
+  '#0891b2', // cyan
+  '#9333ea', // pourpre
 ]
 
 function pickColor(existing: Counter[]) {
@@ -70,12 +70,22 @@ export default function App() {
           </button>
         </div>
       ) : (
-        <motion.div layout className="counter-grid">
+        <motion.div
+          layout
+          className={`counter-grid ${
+            counters.length === 1
+              ? 'counter-grid--solo'
+              : counters.length === 2
+                ? 'counter-grid--duo'
+                : 'counter-grid--pack'
+          }`}
+        >
           <AnimatePresence mode="popLayout">
             {counters.map((counter) => (
               <CounterCard
                 key={counter.id}
                 counter={counter}
+                fill={counters.length <= 2}
                 onChange={(delta) => updateCount(counter.id, delta)}
                 onRename={(name) => renameCounter(counter.id, name)}
                 onDelete={() => deleteCounter(counter.id)}

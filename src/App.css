@@ -1,7 +1,10 @@
 .app {
   max-width: 960px;
   margin: 0 auto;
-  padding: max(16px, env(safe-area-inset-top)) 16px 40px;
+  padding: max(16px, env(safe-area-inset-top)) 16px calc(16px + env(safe-area-inset-bottom));
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
 }
 
 .app-header {
@@ -10,18 +13,16 @@
   justify-content: space-between;
   gap: 12px;
   flex-wrap: wrap;
-  margin-bottom: 24px;
+  margin-bottom: 20px;
   padding-top: 8px;
+  flex-shrink: 0;
 }
 
 .app-header h1 {
   font-size: 1.6rem;
   margin: 0;
   letter-spacing: -0.02em;
-  background: linear-gradient(90deg, #38bdf8, #a78bfa);
-  -webkit-background-clip: text;
-  background-clip: text;
-  color: transparent;
+  color: var(--text);
 }
 
 .add-btn {
@@ -32,12 +33,12 @@
   border-radius: 999px;
   font-size: 0.9rem;
   font-weight: 600;
-  backdrop-filter: blur(8px);
+  box-shadow: 0 1px 2px rgba(15, 23, 42, 0.06);
   transition: transform 0.15s ease, background 0.15s ease;
 }
 
 .add-btn:hover {
-  background: rgba(255, 255, 255, 0.12);
+  background: var(--bg-2);
 }
 
 .add-btn:active {
@@ -48,9 +49,13 @@
   padding: 14px 24px;
   font-size: 1rem;
   margin-top: 16px;
+  background: #2563eb;
+  color: #fff;
+  border-color: transparent;
 }
 
 .empty-state {
+  flex: 1;
   display: flex;
   flex-direction: column;
   align-items: center;
@@ -61,33 +66,100 @@
 }
 
 .counter-grid {
+  flex: 1;
+  min-height: 0;
+}
+
+/* 3 compteurs ou plus : grille compacte */
+.counter-grid--pack {
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
+  grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));
+  gap: 14px;
+  align-content: start;
+}
+
+.counter-grid--pack .counter-value {
+  font-size: 2.6rem;
+}
+
+.counter-grid--pack .counter-card {
+  padding: 18px 14px 14px;
+}
+
+.counter-grid--pack .counter-btn {
+  height: 46px;
+  font-size: 1.3rem;
+}
+
+.counter-grid--pack .counter-btn.minus {
+  flex: 0 0 42px;
+  width: 42px;
+}
+
+/* 1 ou 2 compteurs : affichage géant, empilé en pleine hauteur */
+.counter-grid--solo,
+.counter-grid--duo {
+  display: flex;
+  flex-direction: column;
   gap: 16px;
+}
+
+.counter-grid--solo .counter-card,
+.counter-grid--duo .counter-card {
+  flex: 1;
+  min-height: 0;
+  justify-content: center;
+}
+
+.counter-grid--solo .counter-value {
+  font-size: clamp(6rem, min(46vw, 32vh), 18rem);
+}
+
+.counter-grid--duo .counter-value {
+  font-size: clamp(4rem, min(36vw, 16vh), 11rem);
+}
+
+.counter-grid--solo .counter-btn,
+.counter-grid--duo .counter-btn {
+  height: 72px;
+  font-size: 2rem;
+  border-radius: 18px;
+}
+
+.counter-grid--solo .counter-btn.minus,
+.counter-grid--duo .counter-btn.minus {
+  flex: 0 0 64px;
+  width: 64px;
+}
+
+.counter-grid--solo .counter-name,
+.counter-grid--duo .counter-name {
+  font-size: 1.2rem;
 }
 
 .counter-card {
   position: relative;
   background: var(--surface);
   border: 1px solid var(--surface-border);
-  border-radius: 20px;
+  border-radius: 22px;
   padding: 20px 16px 16px;
   display: flex;
   flex-direction: column;
   align-items: center;
   gap: 14px;
-  backdrop-filter: blur(10px);
-  box-shadow:
-    0 1px 0 rgba(255, 255, 255, 0.06) inset,
-    0 12px 30px rgba(0, 0, 0, 0.25);
+  box-shadow: 0 1px 2px rgba(15, 23, 42, 0.04), 0 8px 24px rgba(15, 23, 42, 0.06);
   overflow: hidden;
+  cursor: pointer;
 }
 
 .counter-card::before {
   content: '';
   position: absolute;
-  inset: 0;
-  background: linear-gradient(180deg, color-mix(in srgb, var(--accent) 18%, transparent), transparent 60%);
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 4px;
+  background: var(--accent);
   pointer-events: none;
 }
 
@@ -99,7 +171,7 @@
   height: 26px;
   border-radius: 50%;
   border: none;
-  background: rgba(255, 255, 255, 0.08);
+  background: var(--bg-2);
   color: var(--text-dim);
   font-size: 0.8rem;
   line-height: 1;
@@ -111,8 +183,8 @@
 }
 
 .counter-delete:hover {
-  background: rgba(248, 113, 113, 0.25);
-  color: #fecaca;
+  background: #fee2e2;
+  color: #dc2626;
 }
 
 .counter-name {
@@ -131,7 +203,7 @@
 }
 
 .counter-name:hover {
-  background: rgba(255, 255, 255, 0.06);
+  background: var(--bg-2);
 }
 
 .counter-name-input {
@@ -139,8 +211,8 @@
   text-align: center;
   font-size: 1rem;
   font-weight: 600;
-  background: rgba(0, 0, 0, 0.25);
-  border: 1px solid var(--accent, #38bdf8);
+  background: var(--bg-1);
+  border: 1px solid var(--accent, #2563eb);
   color: var(--text);
   border-radius: 8px;
   padding: 4px 8px;
@@ -151,7 +223,16 @@
   font-weight: 700;
   font-variant-numeric: tabular-nums;
   color: var(--accent);
-  text-shadow: 0 0 24px color-mix(in srgb, var(--accent) 60%, transparent);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.counter-grid--solo .counter-value,
+.counter-grid--duo .counter-value {
+  flex: 1;
+  min-height: 0;
+  width: 100%;
 }
 
 .odometer {
@@ -178,23 +259,29 @@
 }
 
 .counter-btn {
-  flex: 1;
   border: none;
   border-radius: 14px;
   height: 48px;
   font-size: 1.4rem;
   font-weight: 700;
-  color: #0b1020;
-  background: var(--accent);
   transition: transform 0.1s ease, filter 0.1s ease;
 }
 
+.counter-btn.plus {
+  flex: 1;
+  background: var(--accent);
+  color: #fff;
+}
+
 .counter-btn.minus {
-  background: rgba(255, 255, 255, 0.12);
-  color: var(--text);
+  flex: 0 0 44px;
+  width: 44px;
+  background: var(--bg-2);
+  color: var(--text-dim);
+  font-size: 1.1rem;
 }
 
 .counter-btn:active {
   transform: scale(0.92);
-  filter: brightness(0.9);
+  filter: brightness(0.92);
 }

@@ -4,8 +4,8 @@ const path = require('path')
 
 function drawIcon(size) {
   const png = new PNG({ width: size, height: size })
-  const bg = [15, 23, 42] // slate-900
-  const accent = [56, 189, 248] // sky-400
+  const bg = [248, 250, 252] // slate-50
+  const accent = [37, 99, 235] // blue-600
 
   for (let y = 0; y < size; y++) {
     for (let x = 0; x < size; x++) {
