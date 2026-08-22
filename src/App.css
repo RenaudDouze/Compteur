@@ -472,9 +472,17 @@
 .counter-btn.edit {
   flex: 0 0 44px;
   width: 44px;
+  font-size: 1.1rem;
+}
+
+.counter-btn.minus {
+  background: color-mix(in srgb, var(--accent) 16%, var(--surface));
+  color: var(--accent);
+}
+
+.counter-btn.edit {
   background: var(--bg-2);
   color: var(--text-dim);
-  font-size: 1.1rem;
 }
 
 .counter-btn:active {
