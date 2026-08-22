@@ -4,6 +4,7 @@ import { useLocalStorage } from './hooks/useLocalStorage'
 import { CounterCard } from './components/CounterCard'
 import { SyncPanel } from './components/SyncPanel'
 import { decodeCountersFromParam } from './sync'
+import { makeId } from './id'
 import type { Counter } from './types'
 import './App.css'
 
@@ -20,12 +21,6 @@ const COLORS = [
 
 function pickColor(existing: Counter[]) {
   return COLORS[existing.length % COLORS.length]
-}
-
-function makeId() {
-  return typeof crypto !== 'undefined' && 'randomUUID' in crypto
-    ? crypto.randomUUID()
-    : `id-${Date.now()}-${Math.random().toString(16).slice(2)}`
 }
 
 export default function App() {

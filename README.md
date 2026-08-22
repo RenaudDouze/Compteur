@@ -36,3 +36,39 @@ npm run preview
 3. Utilisez « Ajouter à l'écran d'accueil » / « Installer l'application ».
 4. L'application se lance ensuite comme une app native, et fonctionne hors-ligne
    grâce au service worker.
+
+## Qualité du code
+
+| Commande               | Rôle                                                         |
+| ----------------------- | ------------------------------------------------------------ |
+| `npm run lint`          | Linter (oxlint)                                               |
+| `npm run typecheck`     | Vérification des types TypeScript                             |
+| `npm run test`          | Tests unitaires (Vitest)                                      |
+| `npm run test:watch`    | Tests unitaires en mode watch                                 |
+| `npm run test:coverage` | Tests unitaires + couverture de code (seuil 100% sur tout)    |
+| `npm run test:e2e`      | Tests fonctionnels (Playwright, build + preview automatiques) |
+| `npm run test:mutation` | Mutation testing (Stryker, logique pure uniquement)           |
+
+- **Couverture de code** : seuil 100% (lignes, branches, fonctions, statements)
+  sur l'ensemble du code source.
+- **Mutation testing** : seuil 100%, mais scopé volontairement aux modules de
+  logique pure sans JSX/animation (`src/odds.ts`, `src/date.ts`, `src/sync.ts`,
+  `src/share.ts`, `src/id.ts`) — un score de 100% strict sur les composants
+  React (drag & drop, animations, QR code...) n'est pas un objectif réaliste
+  (mutants équivalents, contenu visuel difficile à mutation-tester utilement).
+- **Tests fonctionnels** : `e2e/` couvre les parcours de base, les
+  fonctionnalités avancées (probabilité, date, glisser-déposer), la
+  synchronisation/partage, et le fonctionnement PWA/hors-ligne.
+
+## Intégration continue
+
+Le workflow `.github/workflows/ci.yml` exécute lint, typecheck, tests
+unitaires + couverture, tests E2E et mutation testing sur chaque pull
+request. Pour bloquer réellement la fusion tant que ces vérifications ne
+sont pas au vert, active les *required status checks* du dépôt :
+
+**Settings → Branches → Branch protection rules → `main`** → coche
+« Require status checks to pass before merging » et sélectionne les jobs
+`Linter`, `Vérification des types`, `Tests unitaires + couverture`, `Tests
+fonctionnels (Playwright)`, `Mutation testing (logique pure)` et `Build de
+production`.

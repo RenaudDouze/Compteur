@@ -10,9 +10,6 @@ export function todayIsoDate(): string {
   return toIsoDate(Date.now())
 }
 
-const dateFormatter = new Intl.DateTimeFormat('fr-FR', { day: 'numeric', month: 'short', year: 'numeric' })
-const compactDateFormatter = new Intl.DateTimeFormat('fr-FR', { day: '2-digit', month: '2-digit' })
-
 /** Nombre de jours écoulés entre une date ISO (YYYY-MM-DD) et aujourd'hui. */
 export function daysSince(isoDate: string): number {
   const start = new Date(`${isoDate}T00:00:00`)
@@ -28,12 +25,12 @@ export function formatStartDate(isoDate: string, compact = false): string {
   const date = new Date(`${isoDate}T00:00:00`)
 
   if (compact) {
-    const label = compactDateFormatter.format(date)
+    const label = new Intl.DateTimeFormat('fr-FR', { day: '2-digit', month: '2-digit' }).format(date)
     const suffix = days === 0 ? 'auj.' : `${days} j`
     return `${label} · ${suffix}`
   }
 
-  const label = dateFormatter.format(date)
+  const label = new Intl.DateTimeFormat('fr-FR', { day: 'numeric', month: 'short', year: 'numeric' }).format(date)
   const suffix = days === 0 ? "aujourd'hui" : days === 1 ? '1 jour' : `${days} jours`
   return `${label} · ${suffix}`
 }

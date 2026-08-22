@@ -38,8 +38,8 @@ export function CounterCard({
   const [direction, setDirection] = useState<1 | -1>(1)
   const [confirmDelete, setConfirmDelete] = useState(false)
   const [shared, setShared] = useState(false)
-  const confirmTimer = useRef<ReturnType<typeof setTimeout> | null>(null)
-  const shareTimer = useRef<ReturnType<typeof setTimeout> | null>(null)
+  const confirmTimer = useRef<ReturnType<typeof setTimeout> | undefined>(undefined)
+  const shareTimer = useRef<ReturnType<typeof setTimeout> | undefined>(undefined)
   const valueRef = useRef<HTMLDivElement>(null)
   const [fillFontSize, setFillFontSize] = useState<number | null>(null)
   const pulseControls = useAnimationControls()
@@ -84,7 +84,7 @@ export function CounterCard({
     try {
       await navigator.clipboard.writeText(text)
       setShared(true)
-      if (shareTimer.current) clearTimeout(shareTimer.current)
+      clearTimeout(shareTimer.current)
       shareTimer.current = setTimeout(() => setShared(false), 2000)
     } catch {
       // copie impossible (permissions navigateur) : on ignore silencieusement
@@ -94,7 +94,7 @@ export function CounterCard({
   const handleDeleteClick = (e: React.MouseEvent) => {
     e.stopPropagation()
     if (confirmDelete) {
-      if (confirmTimer.current) clearTimeout(confirmTimer.current)
+      clearTimeout(confirmTimer.current)
       onDelete()
       return
     }

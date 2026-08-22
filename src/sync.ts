@@ -1,10 +1,5 @@
+import { makeId } from './id'
 import type { Counter } from './types'
-
-function makeId() {
-  return typeof crypto !== 'undefined' && 'randomUUID' in crypto
-    ? crypto.randomUUID()
-    : `id-${Date.now()}-${Math.random().toString(16).slice(2)}`
-}
 
 /** Déclenche le téléchargement d'un fichier JSON contenant tous les compteurs. */
 export function downloadBackup(counters: Counter[]) {
@@ -21,7 +16,7 @@ export function downloadBackup(counters: Counter[]) {
 }
 
 function isValidCounter(value: unknown): value is Partial<Counter> {
-  if (!value || typeof value !== 'object') return false
+  if (!value) return false
   const c = value as Record<string, unknown>
   return typeof c.name === 'string' && typeof c.count === 'number'
 }
@@ -43,7 +38,9 @@ function normalizeCounter(raw: Partial<Counter>): Counter {
 export function parseBackupJson(text: string): Counter[] | null {
   try {
     const data = JSON.parse(text)
-    if (!Array.isArray(data)) return null
+    // Pas de vérification explicite Array.isArray : un `data` qui n'est pas
+    // un tableau (objet, nombre...) fait échouer `.filter` juste en dessous,
+    // ce qui est intercepté par le catch et retourne null tout de même.
     const valid = data.filter(isValidCounter)
     if (valid.length === 0) return null
     return valid.map(normalizeCounter)
@@ -90,7 +87,9 @@ export function encodeCountersToParam(counters: Counter[]): string {
   const bytes = new TextEncoder().encode(json)
   let binary = ''
   bytes.forEach((b) => (binary += String.fromCharCode(b)))
-  return btoa(binary).replace(/\+/g, '-').replace(/\//g, '_').replace(/=+$/, '')
+  // Les caractères `=` de bourrage base64 n'apparaissent jamais qu'en fin de
+  // chaîne : pas besoin d'ancrer `$` explicitement.
+  return btoa(binary).replace(/\+/g, '-').replace(/\//g, '_').replace(/=+/, '')
 }
 
 export function decodeCountersFromParam(param: string): Counter[] | null {
@@ -100,7 +99,8 @@ export function decodeCountersFromParam(param: string): Counter[] | null {
     const bytes = Uint8Array.from(binary, (c) => c.charCodeAt(0))
     const json = new TextDecoder().decode(bytes)
     const compact = JSON.parse(json) as CompactCounter[]
-    if (!Array.isArray(compact)) return null
+    // Idem : un `compact` qui n'est pas un tableau fait échouer `.map`,
+    // intercepté par le catch ci-dessous (retourne null dans les deux cas).
     return compact.map(fromCompact)
   } catch {
     return null

@@ -4,7 +4,6 @@ on:
   push:
     branches:
       - main
-      - claude/mobile-local-counters-app-ktz52i
   workflow_dispatch:
 
 permissions:

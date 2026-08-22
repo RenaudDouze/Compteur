@@ -4,7 +4,7 @@
  * (ex: chasse aux shasses/loot rares : 1 - (1 - 1/N)^n)
  */
 export function cumulativeOdds(denominator: number, attempts: number): number {
-  if (!denominator || denominator <= 0) return 0
+  if (!(denominator > 0)) return 0
   const n = Math.max(attempts, 0)
   const p = 1 / denominator
   return 1 - Math.pow(1 - p, n)

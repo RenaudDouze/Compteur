@@ -16,6 +16,9 @@ export function SyncPanel({ counters, onClose, onImport }: SyncPanelProps) {
   const [copied, setCopied] = useState(false)
   const [error, setError] = useState<string | null>(null)
 
+  // oxlint-disable react/set-state-in-effect -- synchronise avec la
+  // génération asynchrone du QR code (dépend de `counters`, ne peut pas être
+  // dérivé pendant le rendu).
   useEffect(() => {
     if (counters.length === 0) {
       setQrDataUrl(null)
@@ -27,6 +30,7 @@ export function SyncPanel({ counters, onClose, onImport }: SyncPanelProps) {
       .then(setQrDataUrl)
       .catch(() => setQrDataUrl(null))
   }, [counters])
+  // oxlint-enable react/set-state-in-effect
 
   useEffect(() => {
     const onKeyDown = (e: KeyboardEvent) => {
