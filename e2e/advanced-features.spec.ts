@@ -25,6 +25,20 @@ test.describe('Fonctionnalités avancées', () => {
     await expect(page.locator('.modal-hint', { hasText: '%' })).toHaveText(/25,0\s?%/)
   })
 
+  test("définit un pas d'incrément personnalisé et l'applique aux boutons +/-", async ({ page }) => {
+    await page.getByRole('button', { name: 'Personnaliser le compteur' }).click()
+    const input = page.getByPlaceholder('1')
+    await input.fill('5')
+    await input.press('Enter')
+    await expect(page.getByText('+5 / −5 à chaque appui')).toBeVisible()
+    await page.getByRole('button', { name: 'Fermer' }).click()
+
+    await page.getByRole('button', { name: 'Incrémenter', exact: true }).click()
+    await expect(page.locator('.counter-value')).toHaveText('5')
+    await page.getByRole('button', { name: 'Décrémenter' }).click()
+    await expect(page.locator('.counter-value')).toHaveText('0')
+  })
+
   test('modifie la date de début et affiche un rappel textuel', async ({ page }) => {
     await page.getByRole('button', { name: 'Personnaliser le compteur' }).click()
     const hint = page.locator('.modal-section:has(input[type="date"]) .modal-hint')

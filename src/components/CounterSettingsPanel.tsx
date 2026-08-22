@@ -14,6 +14,7 @@ interface CounterSettingsPanelProps {
   onSetStartDate: (isoDate: string | undefined) => void
   onSetBackgroundImage: (url: string | undefined) => void
   onSetColor: (color: string) => void
+  onSetStep: (step: number | undefined) => void
 }
 
 export function CounterSettingsPanel({
@@ -24,9 +25,11 @@ export function CounterSettingsPanel({
   onSetStartDate,
   onSetBackgroundImage,
   onSetColor,
+  onSetStep,
 }: CounterSettingsPanelProps) {
   const [draftOdds, setDraftOdds] = useState(counter.oddsDenominator?.toString() ?? '')
   const [draftBackground, setDraftBackground] = useState(counter.backgroundImageUrl ?? '')
+  const [draftStep, setDraftStep] = useState(counter.step?.toString() ?? '')
   const [shared, setShared] = useState(false)
   const shareTimer = useRef<ReturnType<typeof setTimeout> | undefined>(undefined)
 
@@ -41,6 +44,11 @@ export function CounterSettingsPanel({
   const commitOdds = () => {
     const parsed = parseInt(draftOdds.replace(/[^\d]/g, ''), 10)
     onSetOdds(Number.isFinite(parsed) && parsed > 0 ? parsed : undefined)
+  }
+
+  const commitStep = () => {
+    const parsed = parseInt(draftStep.replace(/[^\d]/g, ''), 10)
+    onSetStep(Number.isFinite(parsed) && parsed > 0 ? parsed : undefined)
   }
 
   const commitBackground = () => {
@@ -109,6 +117,25 @@ export function CounterSettingsPanel({
               />
             ))}
           </div>
+        </section>
+
+        <section className="modal-section">
+          <h3>Pas d'incrément</h3>
+          <input
+            className="modal-input modal-input--odds"
+            inputMode="numeric"
+            pattern="[0-9]*"
+            value={draftStep}
+            placeholder="1"
+            onChange={(e) => setDraftStep(e.target.value)}
+            onBlur={commitStep}
+            onKeyDown={(e) => {
+              if (e.key === 'Enter') commitStep()
+            }}
+          />
+          <p className="modal-hint">
+            +{counter.step ?? 1} / −{counter.step ?? 1} à chaque appui
+          </p>
         </section>
 
         <section className="modal-section">

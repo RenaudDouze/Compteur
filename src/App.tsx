@@ -121,6 +121,10 @@ export default function App() {
     setCounters((prev) => prev.map((c) => (c.id === id ? { ...c, color } : c)))
   }
 
+  const setStep = (id: string, step: number | undefined) => {
+    setCounters((prev) => prev.map((c) => (c.id === id ? { ...c, step } : c)))
+  }
+
   const deleteCounter = (id: string) => {
     const target = counters.find((c) => c.id === id)!
     pushUndo(`Compteur « ${target.name} » supprimé`)
@@ -187,6 +191,7 @@ export default function App() {
                 onSetStartDate={(date) => setStartDate(counter.id, date)}
                 onSetBackgroundImage={(url) => setBackgroundImage(counter.id, url)}
                 onSetColor={(color) => setColor(counter.id, color)}
+                onSetStep={(step) => setStep(counter.id, step)}
                 onDelete={() => deleteCounter(counter.id)}
               />
             ))}

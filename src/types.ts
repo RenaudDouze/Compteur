@@ -10,4 +10,6 @@ export interface Counter {
   startDate?: string
   /** URL d'une image de fond pour la carte du compteur. Absent = pas d'image. */
   backgroundImageUrl?: string
+  /** Incrément appliqué à chaque +/- ou clic sur la carte. Absent = 1. */
+  step?: number
 }

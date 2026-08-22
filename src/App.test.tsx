@@ -121,6 +121,23 @@ describe('App', () => {
     expect(screen.getByDisplayValue('10')).toBeInTheDocument()
   })
 
+  it("définit un pas d'incrément personnalisé et l'applique au clic", () => {
+    render(<App />)
+    fireEvent.click(screen.getByRole('button', { name: '+ Nouveau compteur' }))
+    fireEvent.click(screen.getByRole('button', { name: 'Personnaliser le compteur' }))
+    const input = screen.getByPlaceholderText('1')
+    fireEvent.change(input, { target: { value: '5' } })
+    fireEvent.keyDown(input, { key: 'Enter' })
+    fireEvent.click(screen.getByRole('button', { name: 'Fermer' }))
+
+    fireEvent.click(screen.getByRole('button', { name: 'Personnaliser le compteur' }))
+    expect(screen.getByDisplayValue('5')).toBeInTheDocument()
+    fireEvent.click(screen.getByRole('button', { name: 'Fermer' }))
+
+    fireEvent.click(screen.getByRole('button', { name: /Incrémenter Compteur 1/ }))
+    expect(document.querySelector('.counter-value')).toHaveTextContent('5')
+  })
+
   it('définit une date de début', () => {
     render(<App />)
     fireEvent.click(screen.getByRole('button', { name: '+ Nouveau compteur' }))
@@ -367,6 +384,16 @@ describe('App', () => {
     fireEvent.click(within(secondCard).getByRole('button', { name: 'Personnaliser le compteur' }))
     const secondSelected = screen.getByRole('button', { name: `Choisir la couleur ${COLORS[0]}` })
     expect(secondSelected.className).toContain('selected')
+    fireEvent.click(screen.getByRole('button', { name: 'Fermer' }))
+
+    // Définit un pas d'incrément uniquement sur le premier.
+    fireEvent.click(within(firstCard).getByRole('button', { name: 'Personnaliser le compteur' }))
+    fireEvent.change(screen.getByPlaceholderText('1'), { target: { value: '5' } })
+    fireEvent.keyDown(screen.getByPlaceholderText('1'), { key: 'Enter' })
+    fireEvent.click(screen.getByRole('button', { name: 'Fermer' }))
+
+    fireEvent.click(within(secondCard).getByRole('button', { name: 'Personnaliser le compteur' }))
+    expect(screen.queryByDisplayValue('5')).not.toBeInTheDocument()
     fireEvent.click(screen.getByRole('button', { name: 'Fermer' }))
 
     // Définit directement la valeur uniquement sur le premier.

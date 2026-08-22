@@ -28,6 +28,7 @@ function renderCard(counterOverrides: Partial<Counter> = {}, props: Partial<Para
     onSetStartDate: vi.fn(),
     onSetBackgroundImage: vi.fn(),
     onSetColor: vi.fn(),
+    onSetStep: vi.fn(),
     onDelete: vi.fn(),
     ...props,
   }
@@ -72,6 +73,26 @@ describe('CounterCard', () => {
     fireEvent.click(screen.getByRole('button', { name: 'Incrémenter' }))
     expect(onChange).toHaveBeenCalledTimes(1)
     expect(onChange).toHaveBeenCalledWith(1)
+  })
+
+  describe("pas d'incrément personnalisé", () => {
+    it('applique le pas au clic sur la carte', () => {
+      const { onChange } = renderCard({ step: 5 })
+      fireEvent.click(screen.getByRole('button', { name: /Incrémenter Compteur 1/ }))
+      expect(onChange).toHaveBeenCalledWith(5)
+    })
+
+    it('applique le pas au clic sur le bouton -', () => {
+      const { onChange } = renderCard({ step: 5 })
+      fireEvent.click(screen.getByRole('button', { name: 'Décrémenter' }))
+      expect(onChange).toHaveBeenCalledWith(-5)
+    })
+
+    it('applique le pas via les raccourcis clavier', () => {
+      const { onChange } = renderCard({ step: 5 })
+      fireEvent.keyDown(screen.getByRole('button', { name: /Incrémenter Compteur 1/ }), { key: 'ArrowUp' })
+      expect(onChange).toHaveBeenCalledWith(5)
+    })
   })
 
   it('affiche le calque d\'image de fond quand une URL est définie', () => {
@@ -385,6 +406,7 @@ describe('CounterCard', () => {
             colors={['#2563eb', '#7c3aed']}
             onSetBackgroundImage={vi.fn()}
             onSetColor={vi.fn()}
+            onSetStep={vi.fn()}
             onDelete={vi.fn()}
           />
         </Reorder.Group>
@@ -404,6 +426,7 @@ describe('CounterCard', () => {
             colors={['#2563eb', '#7c3aed']}
             onSetBackgroundImage={vi.fn()}
             onSetColor={vi.fn()}
+            onSetStep={vi.fn()}
             onDelete={vi.fn()}
           />
         </Reorder.Group>
@@ -433,6 +456,7 @@ describe('CounterCard', () => {
             colors={['#2563eb', '#7c3aed']}
             onSetBackgroundImage={vi.fn()}
             onSetColor={vi.fn()}
+            onSetStep={vi.fn()}
             onDelete={vi.fn()}
           />
         </Reorder.Group>
@@ -450,6 +474,7 @@ describe('CounterCard', () => {
             colors={['#2563eb', '#7c3aed']}
             onSetBackgroundImage={vi.fn()}
             onSetColor={vi.fn()}
+            onSetStep={vi.fn()}
             onDelete={vi.fn()}
           />
         </Reorder.Group>
