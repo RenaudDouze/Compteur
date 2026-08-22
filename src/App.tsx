@@ -89,6 +89,22 @@ export default function App() {
     setCounters((prev) => [...prev, newCounter])
   }
 
+  // Action rapide depuis un raccourci de l'app installée (?action=new|sync),
+  // déclarés dans le manifest PWA (voir vite.config.ts).
+  useEffect(() => {
+    const params = new URLSearchParams(window.location.search)
+    const action = params.get('action')
+    if (!action) return
+
+    const url = new URL(window.location.href)
+    url.searchParams.delete('action')
+    window.history.replaceState({}, '', url.toString())
+
+    if (action === 'new') addCounter()
+    if (action === 'sync') setSyncOpen(true)
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [])
+
   const updateCount = (id: string, delta: number) => {
     setCounters((prev) =>
       prev.map((c) => (c.id === id ? { ...c, count: c.count + delta } : c))

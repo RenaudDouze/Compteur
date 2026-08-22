@@ -37,6 +37,22 @@ export default defineConfig({
             purpose: 'maskable',
           },
         ],
+        // Accès rapides via un appui long sur l'icône de l'app installée.
+        // Lus par App.tsx au chargement via le paramètre ?action=.
+        shortcuts: [
+          {
+            name: 'Nouveau compteur',
+            short_name: 'Nouveau',
+            url: './?action=new',
+            icons: [{ src: 'pwa-192x192.png', sizes: '192x192', type: 'image/png' }],
+          },
+          {
+            name: 'Synchroniser',
+            short_name: 'Synchroniser',
+            url: './?action=sync',
+            icons: [{ src: 'pwa-192x192.png', sizes: '192x192', type: 'image/png' }],
+          },
+        ],
       },
       workbox: {
         globPatterns: ['**/*.{js,css,html,ico,png,svg}'],
