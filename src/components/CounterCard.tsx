@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from 'react'
-import { motion } from 'framer-motion'
+import { motion, useAnimationControls } from 'framer-motion'
 import { Odometer } from './Odometer'
 import { cumulativeOdds, formatOdds } from '../odds'
 import { formatStartDate, toIsoDate, todayIsoDate } from '../date'
@@ -34,6 +34,8 @@ export function CounterCard({
   const confirmTimer = useRef<ReturnType<typeof setTimeout> | null>(null)
   const valueRef = useRef<HTMLDivElement>(null)
   const [fillFontSize, setFillFontSize] = useState<number | null>(null)
+  const pulseControls = useAnimationControls()
+  const isFirstCount = useRef(true)
 
   const bump = (delta: number) => {
     setDirection(delta > 0 ? 1 : -1)
@@ -92,6 +94,25 @@ export function CounterCard({
     ro.observe(el)
     return () => ro.disconnect()
   }, [fill, counter.count])
+
+  // Petit rebond élastique + flash lumineux à chaque incrément/décrément,
+  // en plus du défilement des chiffres.
+  useEffect(() => {
+    if (isFirstCount.current) {
+      isFirstCount.current = false
+      return
+    }
+    pulseControls.start({
+      scale: [1, 1.16, 0.97, 1],
+      filter: [
+        'drop-shadow(0 4px 14px color-mix(in srgb, var(--accent) 55%, transparent)) brightness(1)',
+        'drop-shadow(0 8px 28px color-mix(in srgb, var(--accent) 85%, transparent)) brightness(1.4)',
+        'drop-shadow(0 4px 14px color-mix(in srgb, var(--accent) 55%, transparent)) brightness(1)',
+        'drop-shadow(0 4px 14px color-mix(in srgb, var(--accent) 55%, transparent)) brightness(1)',
+      ],
+      transition: { duration: 0.45, ease: 'easeOut', times: [0, 0.3, 0.7, 1] },
+    })
+  }, [counter.count, pulseControls])
 
   const odds = counter.oddsDenominator ? cumulativeOdds(counter.oddsDenominator, counter.count) : null
   const startDate = counter.startDate ?? toIsoDate(counter.createdAt)
@@ -219,13 +240,14 @@ export function CounterCard({
         )}
       </div>
 
-      <div
+      <motion.div
         className="counter-value"
         ref={valueRef}
         style={fillFontSize ? { fontSize: `${fillFontSize}px` } : undefined}
+        animate={pulseControls}
       >
         <Odometer value={counter.count} direction={direction} />
-      </div>
+      </motion.div>
 
       {odds !== null && (
         <p className="counter-odds-result">{formatOdds(odds)} d'avoir déjà eu l'événement</p>

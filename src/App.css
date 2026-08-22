@@ -313,6 +313,7 @@
   display: flex;
   align-items: center;
   justify-content: center;
+  filter: drop-shadow(0 4px 14px color-mix(in srgb, var(--accent) 55%, transparent));
 }
 
 .counter-grid--solo .counter-value,
@@ -337,6 +338,15 @@
 
 .odometer-digit-inner {
   display: block;
+  background: linear-gradient(
+    135deg,
+    color-mix(in srgb, var(--accent) 85%, black 12%),
+    var(--accent) 55%,
+    color-mix(in srgb, var(--accent) 55%, white 55%)
+  );
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
 }
 
 .counter-actions {
