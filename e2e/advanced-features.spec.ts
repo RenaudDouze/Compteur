@@ -7,7 +7,7 @@ test.describe('Fonctionnalités avancées', () => {
     await addCounter(page)
   })
 
-  test('définit une probabilité et affiche le taux de réussite cumulé', async ({ page }) => {
+  test('définit une probabilité et affiche le taux de réussite cumulé sous le nombre', async ({ page }) => {
     await page.getByRole('button', { name: 'Personnaliser le compteur' }).click()
     const input = page.getByPlaceholder('4096')
     await input.fill('4')
@@ -17,8 +17,12 @@ test.describe('Fonctionnalités avancées', () => {
     const plus = page.getByRole('button', { name: 'Incrémenter', exact: true })
     await plus.click()
     // 1 - (1 - 1/4)^1 = 0.25 => arrondi affiché à 1 décimale : 25,0 %
+    await expect(page.locator('.counter-odds-hint')).toHaveText(/25,0\s?%/)
+
+    // Le panneau affiche aussi le même rappel, indépendamment de la carte
+    // (`.modal-hint` a un second usage pour la date de début : on filtre sur le %).
     await page.getByRole('button', { name: 'Personnaliser le compteur' }).click()
-    await expect(page.getByText(/25,0\s?%/)).toBeVisible()
+    await expect(page.locator('.modal-hint', { hasText: '%' })).toHaveText(/25,0\s?%/)
   })
 
   test('modifie la date de début et affiche un rappel textuel', async ({ page }) => {
