@@ -258,7 +258,7 @@
   position: absolute;
   inset: 0;
   background: var(--surface);
-  opacity: 0.86;
+  opacity: var(--bg-overlay-opacity);
 }
 
 .counter-delete {
