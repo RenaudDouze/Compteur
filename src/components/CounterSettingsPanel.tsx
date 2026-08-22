@@ -1,0 +1,173 @@
+import { useEffect, useRef, useState } from 'react'
+import { createPortal } from 'react-dom'
+import { cumulativeOdds, formatOdds } from '../odds'
+import { formatStartDate, toIsoDate, todayIsoDate } from '../date'
+import { buildShareText } from '../share'
+import { isValidImageUrl } from '../url'
+import type { Counter } from '../types'
+
+interface CounterSettingsPanelProps {
+  counter: Counter
+  colors: string[]
+  onClose: () => void
+  onSetOdds: (denominator: number | undefined) => void
+  onSetStartDate: (isoDate: string | undefined) => void
+  onSetBackgroundImage: (url: string | undefined) => void
+  onSetColor: (color: string) => void
+}
+
+export function CounterSettingsPanel({
+  counter,
+  colors,
+  onClose,
+  onSetOdds,
+  onSetStartDate,
+  onSetBackgroundImage,
+  onSetColor,
+}: CounterSettingsPanelProps) {
+  const [draftOdds, setDraftOdds] = useState(counter.oddsDenominator?.toString() ?? '')
+  const [draftBackground, setDraftBackground] = useState(counter.backgroundImageUrl ?? '')
+  const [shared, setShared] = useState(false)
+  const shareTimer = useRef<ReturnType<typeof setTimeout> | undefined>(undefined)
+
+  useEffect(() => {
+    const onKeyDown = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') onClose()
+    }
+    document.addEventListener('keydown', onKeyDown)
+    return () => document.removeEventListener('keydown', onKeyDown)
+  }, [onClose])
+
+  const commitOdds = () => {
+    const parsed = parseInt(draftOdds.replace(/[^\d]/g, ''), 10)
+    onSetOdds(Number.isFinite(parsed) && parsed > 0 ? parsed : undefined)
+  }
+
+  const commitBackground = () => {
+    const trimmed = draftBackground.trim()
+    if (!trimmed) {
+      onSetBackgroundImage(undefined)
+    } else if (isValidImageUrl(trimmed)) {
+      onSetBackgroundImage(trimmed)
+    } else {
+      // URL invalide : on ignore la saisie et on revient à la valeur actuelle
+      // plutôt que d'effacer une image déjà définie sur une simple faute de frappe.
+      setDraftBackground(counter.backgroundImageUrl ?? '')
+    }
+  }
+
+  const handleShare = async () => {
+    const text = buildShareText(counter)
+    if (navigator.share) {
+      try {
+        await navigator.share({ text })
+      } catch {
+        // partage annulé par l'utilisateur : rien à faire
+      }
+      return
+    }
+    try {
+      await navigator.clipboard.writeText(text)
+      setShared(true)
+      clearTimeout(shareTimer.current)
+      shareTimer.current = setTimeout(() => setShared(false), 2000)
+    } catch {
+      // copie impossible (permissions navigateur) : on ignore silencieusement
+    }
+  }
+
+  const odds = counter.oddsDenominator ? cumulativeOdds(counter.oddsDenominator, counter.count) : null
+  const startDate = counter.startDate ?? toIsoDate(counter.createdAt)
+
+  return createPortal(
+    <div
+      className="modal-overlay"
+      onClick={(e) => {
+        e.stopPropagation()
+        onClose()
+      }}
+    >
+      <div className="modal-panel" onClick={(e) => e.stopPropagation()}>
+        <div className="modal-panel-header">
+          <h2>Personnaliser « {counter.name} »</h2>
+          <button className="modal-close" onClick={onClose} aria-label="Fermer">
+            ✕
+          </button>
+        </div>
+
+        <section className="modal-section">
+          <h3>Couleur</h3>
+          <div className="settings-color-grid">
+            {colors.map((c) => (
+              <button
+                key={c}
+                type="button"
+                className={`counter-color-option${c === counter.color ? ' selected' : ''}`}
+                style={{ background: c }}
+                aria-label={`Choisir la couleur ${c}`}
+                onClick={() => onSetColor(c)}
+              />
+            ))}
+          </div>
+        </section>
+
+        <section className="modal-section">
+          <h3>Image de fond</h3>
+          <input
+            type="url"
+            inputMode="url"
+            className="modal-input"
+            value={draftBackground}
+            placeholder="https://exemple.com/image.jpg"
+            onChange={(e) => setDraftBackground(e.target.value)}
+            onBlur={commitBackground}
+            onKeyDown={(e) => {
+              if (e.key === 'Enter') commitBackground()
+            }}
+          />
+        </section>
+
+        <section className="modal-section">
+          <h3>Probabilité</h3>
+          <div className="modal-row">
+            <span>1 chance sur</span>
+            <input
+              className="modal-input modal-input--odds"
+              inputMode="numeric"
+              pattern="[0-9]*"
+              value={draftOdds}
+              placeholder="4096"
+              onChange={(e) => setDraftOdds(e.target.value)}
+              onBlur={commitOdds}
+              onKeyDown={(e) => {
+                if (e.key === 'Enter') commitOdds()
+              }}
+            />
+          </div>
+          {odds !== null && (
+            <p className="modal-hint">{formatOdds(odds)} de chances de l'avoir obtenu avant ce stade</p>
+          )}
+        </section>
+
+        <section className="modal-section">
+          <h3>Date de début</h3>
+          <input
+            type="date"
+            className="modal-input"
+            defaultValue={startDate}
+            max={todayIsoDate()}
+            onChange={(e) => onSetStartDate(e.target.value || undefined)}
+          />
+          <p className="modal-hint">{formatStartDate(startDate)}</p>
+        </section>
+
+        <section className="modal-section">
+          <button className="modal-btn" onClick={handleShare}>
+            {shared ? 'Copié ✓' : '⇪ Partager ce compteur'}
+          </button>
+        </section>
+      </div>
+    </div>,
+    document.body
+  )
+}

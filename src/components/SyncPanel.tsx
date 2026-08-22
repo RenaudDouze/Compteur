@@ -67,39 +67,39 @@ export function SyncPanel({ counters, onClose, onImport }: SyncPanelProps) {
   }
 
   return (
-    <div className="sync-overlay" onClick={onClose}>
-      <div className="sync-panel" onClick={(e) => e.stopPropagation()}>
-        <div className="sync-panel-header">
+    <div className="modal-overlay" onClick={onClose}>
+      <div className="modal-panel" onClick={(e) => e.stopPropagation()}>
+        <div className="modal-panel-header">
           <h2>Synchroniser mes compteurs</h2>
-          <button className="sync-close" onClick={onClose} aria-label="Fermer">
+          <button className="modal-close" onClick={onClose} aria-label="Fermer">
             ✕
           </button>
         </div>
 
-        <section className="sync-section">
+        <section className="modal-section">
           <h3>Vers un autre appareil</h3>
-          <p className="sync-hint">
+          <p className="modal-hint">
             Scanne ce QR code depuis l'autre appareil (appareil photo ou navigateur), ou copie le lien.
           </p>
           {qrDataUrl ? (
             <img className="sync-qr" src={qrDataUrl} alt="QR code de tes compteurs" width={200} height={200} />
           ) : (
-            <p className="sync-hint">Ajoute au moins un compteur pour générer un QR code.</p>
+            <p className="modal-hint">Ajoute au moins un compteur pour générer un QR code.</p>
           )}
           {shareUrl && (
-            <button className="sync-btn" onClick={copyLink}>
+            <button className="modal-btn" onClick={copyLink}>
               {copied ? 'Lien copié ✓' : 'Copier le lien'}
             </button>
           )}
         </section>
 
-        <section className="sync-section">
+        <section className="modal-section">
           <h3>Fichier de sauvegarde</h3>
-          <div className="sync-row">
-            <button className="sync-btn" onClick={() => downloadBackup(counters)} disabled={counters.length === 0}>
+          <div className="modal-row">
+            <button className="modal-btn" onClick={() => downloadBackup(counters)} disabled={counters.length === 0}>
               Exporter
             </button>
-            <button className="sync-btn" onClick={() => fileInputRef.current?.click()}>
+            <button className="modal-btn" onClick={() => fileInputRef.current?.click()}>
               Importer
             </button>
             <input
@@ -116,7 +116,7 @@ export function SyncPanel({ counters, onClose, onImport }: SyncPanelProps) {
           </div>
         </section>
 
-        {error && <p className="sync-error">{error}</p>}
+        {error && <p className="modal-error">{error}</p>}
       </div>
     </div>
   )

@@ -1,11 +1,7 @@
 import { useEffect, useRef, useState } from 'react'
 import { motion, Reorder, useAnimationControls, useDragControls } from 'framer-motion'
 import { Odometer } from './Odometer'
-import { cumulativeOdds, formatOdds } from '../odds'
-import { formatStartDate, toIsoDate, todayIsoDate } from '../date'
-import { buildShareText } from '../share'
-import { isValidImageUrl } from '../url'
-import { useNarrowScreen } from '../hooks/useNarrowScreen'
+import { CounterSettingsPanel } from './CounterSettingsPanel'
 import type { Counter } from '../types'
 
 interface CounterCardProps {
@@ -37,21 +33,13 @@ export function CounterCard({
 }: CounterCardProps) {
   const [editing, setEditing] = useState(false)
   const [draftName, setDraftName] = useState(counter.name)
-  const [editingOdds, setEditingOdds] = useState(false)
-  const [draftOdds, setDraftOdds] = useState(counter.oddsDenominator?.toString() ?? '')
-  const [editingDate, setEditingDate] = useState(false)
-  const [editingBackground, setEditingBackground] = useState(false)
-  const [draftBackground, setDraftBackground] = useState(counter.backgroundImageUrl ?? '')
-  const [editingColor, setEditingColor] = useState(false)
+  const [settingsOpen, setSettingsOpen] = useState(false)
   const [editingCount, setEditingCount] = useState(false)
   const [draftCount, setDraftCount] = useState(counter.count.toString())
   const [direction, setDirection] = useState<1 | -1>(1)
   const [confirmDelete, setConfirmDelete] = useState(false)
-  const [shared, setShared] = useState(false)
   const confirmTimer = useRef<ReturnType<typeof setTimeout> | undefined>(undefined)
-  const shareTimer = useRef<ReturnType<typeof setTimeout> | undefined>(undefined)
   const valueRef = useRef<HTMLDivElement>(null)
-  const colorPickerRef = useRef<HTMLDivElement>(null)
   const [fillFontSize, setFillFontSize] = useState<number | null>(null)
   const pulseControls = useAnimationControls()
   const isFirstCount = useRef(true)
@@ -68,52 +56,11 @@ export function CounterCard({
     setEditing(false)
   }
 
-  const commitOdds = () => {
-    const parsed = parseInt(draftOdds.replace(/[^\d]/g, ''), 10)
-    onSetOdds(Number.isFinite(parsed) && parsed > 0 ? parsed : undefined)
-    setEditingOdds(false)
-  }
-
-  const commitBackground = () => {
-    const trimmed = draftBackground.trim()
-    if (!trimmed) {
-      onSetBackgroundImage(undefined)
-    } else if (isValidImageUrl(trimmed)) {
-      onSetBackgroundImage(trimmed)
-    } else {
-      // URL invalide : on ignore la saisie et on revient à la valeur actuelle
-      // plutôt que d'effacer une image déjà définie sur une simple faute de frappe.
-      setDraftBackground(counter.backgroundImageUrl ?? '')
-    }
-    setEditingBackground(false)
-  }
-
   const commitCount = () => {
     const parsed = parseInt(draftCount.replace(/[^-\d]/g, ''), 10)
     setDirection(Number.isFinite(parsed) && parsed >= counter.count ? 1 : -1)
     onSetCount(Number.isFinite(parsed) ? parsed : counter.count)
     setEditingCount(false)
-  }
-
-  const handleShare = async (e: React.MouseEvent) => {
-    e.stopPropagation()
-    const text = buildShareText(counter)
-    if (navigator.share) {
-      try {
-        await navigator.share({ text })
-      } catch {
-        // partage annulé par l'utilisateur : rien à faire
-      }
-      return
-    }
-    try {
-      await navigator.clipboard.writeText(text)
-      setShared(true)
-      clearTimeout(shareTimer.current)
-      shareTimer.current = setTimeout(() => setShared(false), 2000)
-    } catch {
-      // copie impossible (permissions navigateur) : on ignore silencieusement
-    }
   }
 
   const handleDeleteClick = (e: React.MouseEvent) => {
@@ -174,28 +121,6 @@ export function CounterCard({
     })
   }, [counter.count, pulseControls])
 
-  // Ferme le sélecteur de couleur au clic en dehors (le sélecteur n'a pas de
-  // champ à "blur" comme les autres éditeurs, contrairement à un <input>).
-  useEffect(() => {
-    if (!editingColor) return
-    // Le conteneur du sélecteur est toujours monté (contrairement à valueRef,
-    // absent en mode édition) : `.current` est garanti non nul ici.
-    const handleClickOutside = (e: MouseEvent) => {
-      if (!colorPickerRef.current!.contains(e.target as Node)) {
-        setEditingColor(false)
-      }
-    }
-    document.addEventListener('mousedown', handleClickOutside)
-    return () => document.removeEventListener('mousedown', handleClickOutside)
-  }, [editingColor])
-
-  const odds = counter.oddsDenominator ? cumulativeOdds(counter.oddsDenominator, counter.count) : null
-  const startDate = counter.startDate ?? toIsoDate(counter.createdAt)
-  // Sur un petit écran, on garde le format compact même en affichage géant
-  // (1-2 compteurs) pour laisser plus de place au chiffre lui-même.
-  const isNarrowScreen = useNarrowScreen()
-  const compactMeta = !fill || isNarrowScreen
-
   return (
     <Reorder.Item
       as="article"
@@ -246,33 +171,17 @@ export function CounterCard({
         ⠿
       </button>
 
-      <div className="counter-color-picker" ref={colorPickerRef} onClick={(e) => e.stopPropagation()}>
-        <button
-          type="button"
-          className="counter-color-swatch"
-          style={{ background: counter.color }}
-          onClick={() => setEditingColor((prev) => !prev)}
-          aria-label="Changer la couleur du compteur"
-          title="Toucher pour changer la couleur"
-        />
-        {editingColor && (
-          <div className="counter-color-options">
-            {colors.map((c) => (
-              <button
-                key={c}
-                type="button"
-                className={`counter-color-option${c === counter.color ? ' selected' : ''}`}
-                style={{ background: c }}
-                aria-label={`Choisir la couleur ${c}`}
-                onClick={() => {
-                  onSetColor(c)
-                  setEditingColor(false)
-                }}
-              />
-            ))}
-          </div>
-        )}
-      </div>
+      <button
+        className="counter-settings-btn"
+        onClick={(e) => {
+          e.stopPropagation()
+          setSettingsOpen(true)
+        }}
+        aria-label="Personnaliser le compteur"
+        title="Couleur, image de fond, probabilité, date de début, partage"
+      >
+        ⚙
+      </button>
 
       {editing ? (
         <input
@@ -305,123 +214,6 @@ export function CounterCard({
         </h2>
       )}
 
-      <div className="counter-meta">
-        {editingOdds ? (
-          <div className="counter-odds-edit" onClick={(e) => e.stopPropagation()}>
-            <span>1 chance sur</span>
-            <input
-              className="counter-odds-input"
-              autoFocus
-              inputMode="numeric"
-              pattern="[0-9]*"
-              value={draftOdds}
-              placeholder="4096"
-              onChange={(e) => setDraftOdds(e.target.value)}
-              onBlur={commitOdds}
-              onKeyDown={(e) => {
-                if (e.key === 'Enter') commitOdds()
-                if (e.key === 'Escape') {
-                  setDraftOdds(counter.oddsDenominator?.toString() ?? '')
-                  setEditingOdds(false)
-                }
-              }}
-            />
-          </div>
-        ) : (
-          <button
-            type="button"
-            className="counter-meta-label"
-            onClick={(e) => {
-              e.stopPropagation()
-              setDraftOdds(counter.oddsDenominator?.toString() ?? '')
-              setEditingOdds(true)
-            }}
-          >
-            {counter.oddsDenominator
-              ? compactMeta
-                ? `1/${counter.oddsDenominator.toLocaleString('fr-FR')}`
-                : `1 chance sur ${counter.oddsDenominator.toLocaleString('fr-FR')}`
-              : '+ probabilité'}
-          </button>
-        )}
-
-        {editingDate ? (
-          <input
-            type="date"
-            className="counter-date-input"
-            autoFocus
-            defaultValue={startDate}
-            max={todayIsoDate()}
-            onClick={(e) => e.stopPropagation()}
-            onChange={(e) => {
-              onSetStartDate(e.target.value || undefined)
-              setEditingDate(false)
-            }}
-            onBlur={() => setEditingDate(false)}
-          />
-        ) : (
-          <button
-            type="button"
-            className="counter-meta-label"
-            onClick={(e) => {
-              e.stopPropagation()
-              setEditingDate(true)
-            }}
-            title="Toucher pour changer la date de début"
-          >
-            {formatStartDate(startDate, compactMeta)}
-          </button>
-        )}
-
-        <button
-          type="button"
-          className="counter-meta-label"
-          onClick={handleShare}
-          title="Copier ou partager ce compteur (texte, sans lien)"
-        >
-          {shared ? 'Copié ✓' : compactMeta ? '⇪' : '⇪ Partager'}
-        </button>
-
-        {editingBackground ? (
-          <div className="counter-bg-edit" onClick={(e) => e.stopPropagation()}>
-            <input
-              type="url"
-              inputMode="url"
-              className="counter-bg-input"
-              autoFocus
-              value={draftBackground}
-              placeholder="https://exemple.com/image.jpg"
-              onChange={(e) => setDraftBackground(e.target.value)}
-              onBlur={commitBackground}
-              onKeyDown={(e) => {
-                if (e.key === 'Enter') commitBackground()
-                if (e.key === 'Escape') {
-                  setDraftBackground(counter.backgroundImageUrl ?? '')
-                  setEditingBackground(false)
-                }
-              }}
-            />
-          </div>
-        ) : (
-          <button
-            type="button"
-            className="counter-meta-label"
-            onClick={(e) => {
-              e.stopPropagation()
-              setDraftBackground(counter.backgroundImageUrl ?? '')
-              setEditingBackground(true)
-            }}
-            title="Toucher pour définir une image de fond (URL)"
-          >
-            {counter.backgroundImageUrl
-              ? compactMeta
-                ? '🖼'
-                : 'Image de fond ✓'
-              : '+ image de fond'}
-          </button>
-        )}
-      </div>
-
       {editingCount ? (
         <input
           className="counter-value-input"
@@ -450,10 +242,6 @@ export function CounterCard({
         >
           <Odometer value={counter.count} direction={direction} />
         </motion.div>
-      )}
-
-      {odds !== null && (
-        <p className="counter-odds-result">{formatOdds(odds)} de chances de l'avoir obtenu avant ce stade</p>
       )}
 
       <div className="counter-actions">
@@ -490,6 +278,18 @@ export function CounterCard({
           +
         </button>
       </div>
+
+      {settingsOpen && (
+        <CounterSettingsPanel
+          counter={counter}
+          colors={colors}
+          onClose={() => setSettingsOpen(false)}
+          onSetOdds={onSetOdds}
+          onSetStartDate={onSetStartDate}
+          onSetBackgroundImage={onSetBackgroundImage}
+          onSetColor={onSetColor}
+        />
+      )}
     </Reorder.Item>
   )
 }

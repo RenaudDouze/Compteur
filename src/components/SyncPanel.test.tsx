@@ -93,14 +93,14 @@ describe('SyncPanel', () => {
   it("ferme le panneau au clic sur l'arrière-plan", () => {
     const onClose = vi.fn()
     const { container } = render(<SyncPanel counters={[]} onClose={onClose} onImport={vi.fn()} />)
-    fireEvent.click(container.querySelector('.sync-overlay')!)
+    fireEvent.click(container.querySelector('.modal-overlay')!)
     expect(onClose).toHaveBeenCalledTimes(1)
   })
 
   it("ne ferme pas le panneau au clic à l'intérieur", () => {
     const onClose = vi.fn()
     const { container } = render(<SyncPanel counters={[]} onClose={onClose} onImport={vi.fn()} />)
-    fireEvent.click(container.querySelector('.sync-panel')!)
+    fireEvent.click(container.querySelector('.modal-panel')!)
     expect(onClose).not.toHaveBeenCalled()
   })
 
