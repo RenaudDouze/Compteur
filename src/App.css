@@ -202,6 +202,9 @@
   user-select: none;
   -webkit-user-select: none;
   -webkit-touch-callout: none;
+  /* Évite le délai de désambiguïsation tap/scroll de certains navigateurs
+     mobiles, qui peut retarder ou perdre un tap rapide sur le chiffre. */
+  touch-action: manipulation;
 }
 
 /* Les champs de saisie doivent rester sélectionnables/éditables normalement. */
@@ -390,6 +393,12 @@
   align-items: center;
   justify-content: center;
   filter: drop-shadow(0 4px 14px color-mix(in srgb, var(--accent) 55%, transparent));
+  /* Le rebond anime `scale` sur cet élément : s'il reste la cible du
+     pointeur, un tap rapide pendant l'animation d'un tap précédent peut se
+     retrouver sur une cible qui a bougé sous le doigt et être ignoré par le
+     navigateur (heuristique tap-vs-scroll). Le clic reste géré par la carte
+     parente (toujours immobile), donc ce n'est jamais nécessaire ici. */
+  pointer-events: none;
 }
 
 .counter-grid--solo .counter-value,
