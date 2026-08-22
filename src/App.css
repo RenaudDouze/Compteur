@@ -1,0 +1,200 @@
+.app {
+  max-width: 960px;
+  margin: 0 auto;
+  padding: max(16px, env(safe-area-inset-top)) 16px 40px;
+}
+
+.app-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  flex-wrap: wrap;
+  margin-bottom: 24px;
+  padding-top: 8px;
+}
+
+.app-header h1 {
+  font-size: 1.6rem;
+  margin: 0;
+  letter-spacing: -0.02em;
+  background: linear-gradient(90deg, #38bdf8, #a78bfa);
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+}
+
+.add-btn {
+  border: 1px solid var(--surface-border);
+  background: var(--surface);
+  color: var(--text);
+  padding: 10px 16px;
+  border-radius: 999px;
+  font-size: 0.9rem;
+  font-weight: 600;
+  backdrop-filter: blur(8px);
+  transition: transform 0.15s ease, background 0.15s ease;
+}
+
+.add-btn:hover {
+  background: rgba(255, 255, 255, 0.12);
+}
+
+.add-btn:active {
+  transform: scale(0.95);
+}
+
+.add-btn.large {
+  padding: 14px 24px;
+  font-size: 1rem;
+  margin-top: 16px;
+}
+
+.empty-state {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+  color: var(--text-dim);
+  padding: 80px 16px;
+}
+
+.counter-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
+  gap: 16px;
+}
+
+.counter-card {
+  position: relative;
+  background: var(--surface);
+  border: 1px solid var(--surface-border);
+  border-radius: 20px;
+  padding: 20px 16px 16px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 14px;
+  backdrop-filter: blur(10px);
+  box-shadow:
+    0 1px 0 rgba(255, 255, 255, 0.06) inset,
+    0 12px 30px rgba(0, 0, 0, 0.25);
+  overflow: hidden;
+}
+
+.counter-card::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(180deg, color-mix(in srgb, var(--accent) 18%, transparent), transparent 60%);
+  pointer-events: none;
+}
+
+.counter-delete {
+  position: absolute;
+  top: 8px;
+  right: 8px;
+  width: 26px;
+  height: 26px;
+  border-radius: 50%;
+  border: none;
+  background: rgba(255, 255, 255, 0.08);
+  color: var(--text-dim);
+  font-size: 0.8rem;
+  line-height: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: background 0.15s ease, color 0.15s ease;
+  z-index: 2;
+}
+
+.counter-delete:hover {
+  background: rgba(248, 113, 113, 0.25);
+  color: #fecaca;
+}
+
+.counter-name {
+  margin: 0;
+  font-size: 1rem;
+  font-weight: 600;
+  color: var(--text);
+  text-align: center;
+  cursor: text;
+  max-width: 100%;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  padding: 2px 4px;
+  border-radius: 6px;
+}
+
+.counter-name:hover {
+  background: rgba(255, 255, 255, 0.06);
+}
+
+.counter-name-input {
+  width: 100%;
+  text-align: center;
+  font-size: 1rem;
+  font-weight: 600;
+  background: rgba(0, 0, 0, 0.25);
+  border: 1px solid var(--accent, #38bdf8);
+  color: var(--text);
+  border-radius: 8px;
+  padding: 4px 8px;
+}
+
+.counter-value {
+  font-size: 2.6rem;
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+  color: var(--accent);
+  text-shadow: 0 0 24px color-mix(in srgb, var(--accent) 60%, transparent);
+}
+
+.odometer {
+  display: inline-flex;
+}
+
+.odometer-digit {
+  display: inline-block;
+  position: relative;
+  height: 1em;
+  line-height: 1;
+  overflow: hidden;
+  vertical-align: bottom;
+}
+
+.odometer-digit-inner {
+  display: block;
+}
+
+.counter-actions {
+  display: flex;
+  gap: 10px;
+  width: 100%;
+}
+
+.counter-btn {
+  flex: 1;
+  border: none;
+  border-radius: 14px;
+  height: 48px;
+  font-size: 1.4rem;
+  font-weight: 700;
+  color: #0b1020;
+  background: var(--accent);
+  transition: transform 0.1s ease, filter 0.1s ease;
+}
+
+.counter-btn.minus {
+  background: rgba(255, 255, 255, 0.12);
+  color: var(--text);
+}
+
+.counter-btn:active {
+  transform: scale(0.92);
+  filter: brightness(0.9);
+}

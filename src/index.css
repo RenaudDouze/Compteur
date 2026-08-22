@@ -1,0 +1,37 @@
+:root {
+  color-scheme: dark;
+  --bg-1: #0b1020;
+  --bg-2: #151b32;
+  --surface: rgba(255, 255, 255, 0.06);
+  --surface-border: rgba(255, 255, 255, 0.1);
+  --text: #f1f5f9;
+  --text-dim: #94a3b8;
+  font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+html,
+body,
+#root {
+  height: 100%;
+}
+
+body {
+  margin: 0;
+  color: var(--text);
+  background:
+    radial-gradient(circle at 15% 10%, rgba(56, 189, 248, 0.15), transparent 40%),
+    radial-gradient(circle at 85% 0%, rgba(167, 139, 250, 0.15), transparent 45%),
+    linear-gradient(160deg, var(--bg-1), var(--bg-2));
+  min-height: 100vh;
+  -webkit-tap-highlight-color: transparent;
+  overscroll-behavior-y: contain;
+}
+
+button {
+  font-family: inherit;
+  cursor: pointer;
+}
