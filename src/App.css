@@ -130,6 +130,14 @@
   font-size: clamp(4rem, min(36vw, 16vh), 11rem);
 }
 
+.counter-grid--solo .counter-value-input {
+  font-size: clamp(4rem, min(30vw, 24vh), 12rem);
+}
+
+.counter-grid--duo .counter-value-input {
+  font-size: clamp(3rem, min(22vw, 12vh), 7rem);
+}
+
 .counter-grid--solo .counter-btn,
 .counter-grid--duo .counter-btn {
   height: 72px;
@@ -161,6 +169,17 @@
   box-shadow: 0 1px 2px rgba(15, 23, 42, 0.04), 0 8px 24px rgba(15, 23, 42, 0.06);
   overflow: hidden;
   cursor: pointer;
+  user-select: none;
+  -webkit-user-select: none;
+  -webkit-touch-callout: none;
+}
+
+/* Les champs de saisie doivent rester sélectionnables/éditables normalement. */
+.counter-card input {
+  user-select: text;
+  -webkit-user-select: text;
+  -webkit-touch-callout: default;
+  cursor: text;
 }
 
 .counter-card::before {
@@ -196,6 +215,45 @@
 .counter-delete:hover {
   background: #fee2e2;
   color: #dc2626;
+}
+
+.counter-edit-value {
+  position: absolute;
+  top: 8px;
+  left: 8px;
+  width: 26px;
+  height: 26px;
+  border-radius: 50%;
+  border: none;
+  background: var(--bg-2);
+  color: var(--text-dim);
+  font-size: 0.8rem;
+  line-height: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: background 0.15s ease, color 0.15s ease;
+  z-index: 2;
+}
+
+.counter-edit-value:hover {
+  background: color-mix(in srgb, var(--accent) 18%, var(--bg-2));
+  color: var(--accent);
+}
+
+.counter-value-input {
+  width: 100%;
+  flex: 1;
+  min-height: 80px;
+  text-align: center;
+  font-family: var(--font-mono);
+  font-weight: 700;
+  font-size: clamp(2.5rem, 16vw, 6rem);
+  background: var(--bg-1);
+  border: 2px solid var(--accent, #2563eb);
+  color: var(--accent);
+  border-radius: 16px;
+  padding: 8px;
 }
 
 .counter-name {

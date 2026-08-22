@@ -72,6 +72,10 @@ export default function App() {
     )
   }
 
+  const setCount = (id: string, count: number) => {
+    setCounters((prev) => prev.map((c) => (c.id === id ? { ...c, count } : c)))
+  }
+
   const renameCounter = (id: string, name: string) => {
     setCounters((prev) => prev.map((c) => (c.id === id ? { ...c, name } : c)))
   }
@@ -131,6 +135,7 @@ export default function App() {
                 counter={counter}
                 fill={counters.length <= 2}
                 onChange={(delta) => updateCount(counter.id, delta)}
+                onSetCount={(count) => setCount(counter.id, count)}
                 onRename={(name) => renameCounter(counter.id, name)}
                 onSetOdds={(denominator) => setOdds(counter.id, denominator)}
                 onSetStartDate={(date) => setStartDate(counter.id, date)}

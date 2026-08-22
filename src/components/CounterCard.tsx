@@ -3,12 +3,14 @@ import { motion, useAnimationControls } from 'framer-motion'
 import { Odometer } from './Odometer'
 import { cumulativeOdds, formatOdds } from '../odds'
 import { formatStartDate, toIsoDate, todayIsoDate } from '../date'
+import { buildShareText } from '../share'
 import type { Counter } from '../types'
 
 interface CounterCardProps {
   counter: Counter
   fill?: boolean
   onChange: (delta: number) => void
+  onSetCount: (count: number) => void
   onRename: (name: string) => void
   onSetOdds: (denominator: number | undefined) => void
   onSetStartDate: (isoDate: string | undefined) => void
@@ -19,6 +21,7 @@ export function CounterCard({
   counter,
   fill = false,
   onChange,
+  onSetCount,
   onRename,
   onSetOdds,
   onSetStartDate,
@@ -29,9 +32,13 @@ export function CounterCard({
   const [editingOdds, setEditingOdds] = useState(false)
   const [draftOdds, setDraftOdds] = useState(counter.oddsDenominator?.toString() ?? '')
   const [editingDate, setEditingDate] = useState(false)
+  const [editingCount, setEditingCount] = useState(false)
+  const [draftCount, setDraftCount] = useState(counter.count.toString())
   const [direction, setDirection] = useState<1 | -1>(1)
   const [confirmDelete, setConfirmDelete] = useState(false)
+  const [shared, setShared] = useState(false)
   const confirmTimer = useRef<ReturnType<typeof setTimeout> | null>(null)
+  const shareTimer = useRef<ReturnType<typeof setTimeout> | null>(null)
   const valueRef = useRef<HTMLDivElement>(null)
   const [fillFontSize, setFillFontSize] = useState<number | null>(null)
   const pulseControls = useAnimationControls()
@@ -52,6 +59,34 @@ export function CounterCard({
     const parsed = parseInt(draftOdds.replace(/[^\d]/g, ''), 10)
     onSetOdds(Number.isFinite(parsed) && parsed > 0 ? parsed : undefined)
     setEditingOdds(false)
+  }
+
+  const commitCount = () => {
+    const parsed = parseInt(draftCount.replace(/[^-\d]/g, ''), 10)
+    setDirection(Number.isFinite(parsed) && parsed >= counter.count ? 1 : -1)
+    onSetCount(Number.isFinite(parsed) ? parsed : counter.count)
+    setEditingCount(false)
+  }
+
+  const handleShare = async (e: React.MouseEvent) => {
+    e.stopPropagation()
+    const text = buildShareText(counter)
+    if (navigator.share) {
+      try {
+        await navigator.share({ text })
+      } catch {
+        // partage annulé par l'utilisateur : rien à faire
+      }
+      return
+    }
+    try {
+      await navigator.clipboard.writeText(text)
+      setShared(true)
+      if (shareTimer.current) clearTimeout(shareTimer.current)
+      shareTimer.current = setTimeout(() => setShared(false), 2000)
+    } catch {
+      // copie impossible (permissions navigateur) : on ignore silencieusement
+    }
   }
 
   const handleDeleteClick = (e: React.MouseEvent) => {
@@ -138,6 +173,19 @@ export function CounterCard({
         title={confirmDelete ? 'Cliquer à nouveau pour confirmer' : 'Supprimer'}
       >
         {confirmDelete ? '✓' : '✕'}
+      </button>
+
+      <button
+        className="counter-edit-value"
+        onClick={(e) => {
+          e.stopPropagation()
+          setDraftCount(counter.count.toString())
+          setEditingCount(true)
+        }}
+        aria-label="Définir la valeur du compteur"
+        title="Définir la valeur du compteur"
+      >
+        ✎
       </button>
 
       {editing ? (
@@ -238,16 +286,46 @@ export function CounterCard({
             {formatStartDate(startDate, !fill)}
           </button>
         )}
+
+        <button
+          type="button"
+          className="counter-meta-label"
+          onClick={handleShare}
+          title="Copier ou partager ce compteur (texte, sans lien)"
+        >
+          {shared ? 'Copié ✓' : '⇪ Partager'}
+        </button>
       </div>
 
-      <motion.div
-        className="counter-value"
-        ref={valueRef}
-        style={fillFontSize ? { fontSize: `${fillFontSize}px` } : undefined}
-        animate={pulseControls}
-      >
-        <Odometer value={counter.count} direction={direction} />
-      </motion.div>
+      {editingCount ? (
+        <input
+          className="counter-value-input"
+          autoFocus
+          inputMode="numeric"
+          pattern="-?[0-9]*"
+          value={draftCount}
+          onClick={(e) => e.stopPropagation()}
+          onFocus={(e) => e.currentTarget.select()}
+          onChange={(e) => setDraftCount(e.target.value)}
+          onBlur={commitCount}
+          onKeyDown={(e) => {
+            if (e.key === 'Enter') commitCount()
+            if (e.key === 'Escape') {
+              setDraftCount(counter.count.toString())
+              setEditingCount(false)
+            }
+          }}
+        />
+      ) : (
+        <motion.div
+          className="counter-value"
+          ref={valueRef}
+          style={fillFontSize ? { fontSize: `${fillFontSize}px` } : undefined}
+          animate={pulseControls}
+        >
+          <Odometer value={counter.count} direction={direction} />
+        </motion.div>
+      )}
 
       {odds !== null && (
         <p className="counter-odds-result">{formatOdds(odds)} d'avoir déjà eu l'événement</p>
