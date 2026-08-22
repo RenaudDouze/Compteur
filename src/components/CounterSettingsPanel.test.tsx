@@ -29,6 +29,7 @@ function renderPanel(
     onSetStartDate: vi.fn(),
     onSetBackgroundImage: vi.fn(),
     onSetColor: vi.fn(),
+    onSetStep: vi.fn(),
     ...props,
   }
   const utils = render(<CounterSettingsPanel counter={counter} {...handlers} {...props} />)
@@ -108,6 +109,77 @@ describe('CounterSettingsPanel', () => {
       const { onClose } = renderPanel()
       fireEvent.click(screen.getByRole('button', { name: `Choisir la couleur ${TEST_COLORS[1]}` }))
       expect(onClose).not.toHaveBeenCalled()
+    })
+  })
+
+  describe("pas d'incrément", () => {
+    it('préremplit le champ avec le pas actuel', () => {
+      renderPanel({ step: 5 })
+      expect(screen.getByDisplayValue('5')).toBeInTheDocument()
+    })
+
+    it('champ vide sans pas personnalisé', () => {
+      renderPanel()
+      const input = screen.getByPlaceholderText('1') as HTMLInputElement
+      expect(input.value).toBe('')
+    })
+
+    it('définit un pas personnalisé (Entrée)', () => {
+      const { onSetStep } = renderPanel()
+      const input = screen.getByPlaceholderText('1')
+      fireEvent.change(input, { target: { value: '5' } })
+      fireEvent.keyDown(input, { key: 'Enter' })
+      expect(onSetStep).toHaveBeenCalledWith(5)
+    })
+
+    it('valide aussi au blur', () => {
+      const { onSetStep } = renderPanel()
+      const input = screen.getByPlaceholderText('1')
+      fireEvent.change(input, { target: { value: '10' } })
+      fireEvent.blur(input)
+      expect(onSetStep).toHaveBeenCalledWith(10)
+    })
+
+    it('ignore les caractères non numériques dans la saisie', () => {
+      const { onSetStep } = renderPanel()
+      const input = screen.getByPlaceholderText('1')
+      fireEvent.change(input, { target: { value: '1a0b' } })
+      fireEvent.keyDown(input, { key: 'Enter' })
+      expect(onSetStep).toHaveBeenCalledWith(10)
+    })
+
+    it('revient au pas par défaut si la saisie est vide', () => {
+      const { onSetStep } = renderPanel({ step: 5 })
+      const input = screen.getByDisplayValue('5')
+      fireEvent.change(input, { target: { value: '' } })
+      fireEvent.keyDown(input, { key: 'Enter' })
+      expect(onSetStep).toHaveBeenCalledWith(undefined)
+    })
+
+    it('revient au pas par défaut si la saisie est 0', () => {
+      const { onSetStep } = renderPanel({ step: 5 })
+      const input = screen.getByDisplayValue('5')
+      fireEvent.change(input, { target: { value: '0' } })
+      fireEvent.keyDown(input, { key: 'Enter' })
+      expect(onSetStep).toHaveBeenCalledWith(undefined)
+    })
+
+    it("ne commite pas sur une touche autre qu'Entrée", () => {
+      const { onSetStep } = renderPanel()
+      const input = screen.getByPlaceholderText('1')
+      fireEvent.change(input, { target: { value: '5' } })
+      fireEvent.keyDown(input, { key: 'a' })
+      expect(onSetStep).not.toHaveBeenCalled()
+    })
+
+    it('affiche un rappel du pas effectif (défaut 1)', () => {
+      renderPanel()
+      expect(screen.getByText('+1 / −1 à chaque appui')).toBeInTheDocument()
+    })
+
+    it('affiche un rappel du pas effectif personnalisé', () => {
+      renderPanel({ step: 5 })
+      expect(screen.getByText('+5 / −5 à chaque appui')).toBeInTheDocument()
     })
   })
 

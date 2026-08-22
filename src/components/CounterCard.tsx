@@ -16,6 +16,7 @@ interface CounterCardProps {
   onSetStartDate: (isoDate: string | undefined) => void
   onSetBackgroundImage: (url: string | undefined) => void
   onSetColor: (color: string) => void
+  onSetStep: (step: number | undefined) => void
   onDelete: () => void
 }
 
@@ -30,6 +31,7 @@ export function CounterCard({
   onSetStartDate,
   onSetBackgroundImage,
   onSetColor,
+  onSetStep,
   onDelete,
 }: CounterCardProps) {
   const [editing, setEditing] = useState(false)
@@ -46,13 +48,15 @@ export function CounterCard({
   const isFirstCount = useRef(true)
   const dragControls = useDragControls()
 
-  const bump = (delta: number) => {
-    setDirection(delta > 0 ? 1 : -1)
+  // `sign` indique juste le sens (+1/-1) : l'amplitude réelle appliquée est
+  // le pas personnalisable du compteur (par défaut 1).
+  const bump = (sign: 1 | -1) => {
+    setDirection(sign)
     // Absent sur la plupart des navigateurs desktop et sur iOS Safari :
     // l'appel optionnel évite une erreur silencieuse, le retour haptique
     // est un bonus, pas un pré-requis.
     navigator.vibrate?.(15)
-    onChange(delta)
+    onChange(sign * (counter.step ?? 1))
   }
 
   const commitName = () => {
@@ -323,6 +327,7 @@ export function CounterCard({
           onSetStartDate={onSetStartDate}
           onSetBackgroundImage={onSetBackgroundImage}
           onSetColor={onSetColor}
+          onSetStep={onSetStep}
         />
       )}
     </Reorder.Item>

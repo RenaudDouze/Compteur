@@ -216,6 +216,16 @@ describe('parseBackupJson', () => {
     const result = parseBackupJson(JSON.stringify([{ name: 'A', count: 1 }]))
     expect(result?.[0].backgroundImageUrl).toBeUndefined()
   })
+
+  it('conserve step optionnel', () => {
+    const result = parseBackupJson(JSON.stringify([{ name: 'A', count: 1, step: 5 }]))
+    expect(result?.[0].step).toBe(5)
+  })
+
+  it('laisse step indéfini si absent', () => {
+    const result = parseBackupJson(JSON.stringify([{ name: 'A', count: 1 }]))
+    expect(result?.[0].step).toBeUndefined()
+  })
 })
 
 describe('encodeCountersToParam / decodeCountersFromParam', () => {
@@ -232,6 +242,7 @@ describe('encodeCountersToParam / decodeCountersFromParam', () => {
         oddsDenominator: 4096,
         startDate: '2026-08-01',
         backgroundImageUrl: 'https://exemple.com/fond.jpg',
+        step: 5,
       }),
     ]
     const encoded = encodeCountersToParam(counters)
@@ -245,18 +256,20 @@ describe('encodeCountersToParam / decodeCountersFromParam', () => {
       oddsDenominator: 4096,
       startDate: '2026-08-01',
       backgroundImageUrl: 'https://exemple.com/fond.jpg',
+      step: 5,
     })
   })
 
   it('omet les champs optionnels absents lors de l\'aller-retour', () => {
     const counters = [
-      makeCounter({ oddsDenominator: undefined, startDate: undefined, backgroundImageUrl: undefined }),
+      makeCounter({ oddsDenominator: undefined, startDate: undefined, backgroundImageUrl: undefined, step: undefined }),
     ]
     const encoded = encodeCountersToParam(counters)
     const decoded = decodeCountersFromParam(encoded)
     expect(decoded?.[0].oddsDenominator).toBeUndefined()
     expect(decoded?.[0].startDate).toBeUndefined()
     expect(decoded?.[0].backgroundImageUrl).toBeUndefined()
+    expect(decoded?.[0].step).toBeUndefined()
   })
 
   it('applique count=0 si le champ "c" décodé n\'est pas un nombre (payload corrompu)', () => {
