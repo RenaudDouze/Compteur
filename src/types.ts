@@ -1,3 +1,8 @@
+export interface HistoryPoint {
+  t: number
+  v: number
+}
+
 export interface Counter {
   id: string
   name: string
@@ -12,4 +17,6 @@ export interface Counter {
   backgroundImageUrl?: string
   /** Incrément appliqué à chaque +/- ou clic sur la carte. Absent = 1. */
   step?: number
+  /** Historique des valeurs dans le temps, pour l'aperçu (sparkline). Absent = pas encore suivi. */
+  history?: HistoryPoint[]
 }

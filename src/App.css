@@ -585,6 +585,12 @@
   color: var(--text-dim);
 }
 
+.sparkline {
+  width: 100%;
+  height: 56px;
+  display: block;
+}
+
 .sync-qr {
   border-radius: 12px;
   border: 1px solid var(--surface-border);

@@ -226,9 +226,31 @@ describe('parseBackupJson', () => {
     const result = parseBackupJson(JSON.stringify([{ name: 'A', count: 1 }]))
     expect(result?.[0].step).toBeUndefined()
   })
+
+  it('conserve history optionnel', () => {
+    const result = parseBackupJson(
+      JSON.stringify([{ name: 'A', count: 1, history: [{ t: 1000, v: 0 }, { t: 2000, v: 1 }] }])
+    )
+    expect(result?.[0].history).toEqual([
+      { t: 1000, v: 0 },
+      { t: 2000, v: 1 },
+    ])
+  })
+
+  it('laisse history indéfini si absent', () => {
+    const result = parseBackupJson(JSON.stringify([{ name: 'A', count: 1 }]))
+    expect(result?.[0].history).toBeUndefined()
+  })
 })
 
 describe('encodeCountersToParam / decodeCountersFromParam', () => {
+  it("n'inclut pas l'historique dans le lien/QR (garde le format compact)", () => {
+    const counters = [makeCounter({ history: [{ t: 1000, v: 0 }, { t: 2000, v: 1 }] })]
+    const encoded = encodeCountersToParam(counters)
+    const decoded = decodeCountersFromParam(encoded)
+    expect(decoded?.[0].history).toBeUndefined()
+  })
+
   it('fait un aller-retour fidèle avec un tableau vide', () => {
     const encoded = encodeCountersToParam([])
     expect(decodeCountersFromParam(encoded)).toEqual([])
