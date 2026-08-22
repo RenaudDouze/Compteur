@@ -34,3 +34,12 @@ if (!('randomUUID' in crypto)) {
     value: () => '00000000-0000-4000-8000-000000000000',
   })
 }
+
+// jsdom part d'un <head> vide : index.html n'est pas chargé en test, donc on
+// reproduit la balise que App.tsx met à jour selon le thème actif.
+if (!document.querySelector('meta[name="theme-color"]')) {
+  const meta = document.createElement('meta')
+  meta.name = 'theme-color'
+  meta.content = '#f8fafc'
+  document.head.appendChild(meta)
+}

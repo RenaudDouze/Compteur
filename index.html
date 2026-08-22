@@ -11,6 +11,26 @@
     <meta name="apple-mobile-web-app-status-bar-style" content="default" />
     <meta name="description" content="Compteurs locaux avec incrément, décrément et effet de défilement." />
     <title>Compteur</title>
+    <script>
+      // Pose le thème avant le premier rendu, pour éviter un flash du thème
+      // clair par défaut le temps que React s'hydrate. Miroir de la logique
+      // de src/App.tsx (clé de stockage et repli sur la préférence système).
+      ;(function () {
+        try {
+          var stored = localStorage.getItem('compteur.theme.v1')
+          var pref = stored ? JSON.parse(stored) : 'system'
+          var theme =
+            pref === 'system'
+              ? window.matchMedia('(prefers-color-scheme: dark)').matches
+                ? 'dark'
+                : 'light'
+              : pref
+          document.documentElement.dataset.theme = theme
+        } catch {
+          // stockage indisponible : reste sur le thème clair par défaut.
+        }
+      })()
+    </script>
   </head>
   <body>
     <div id="root"></div>

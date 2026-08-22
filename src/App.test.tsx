@@ -226,6 +226,73 @@ describe('App', () => {
     })
   })
 
+  describe('thème', () => {
+    afterEach(() => {
+      document.documentElement.removeAttribute('data-theme')
+    })
+
+    it('démarre en mode automatique et suit la préférence système', () => {
+      render(<App />)
+      expect(screen.getByRole('button', { name: 'Thème : Auto' })).toBeInTheDocument()
+      // matchMedia est mocké sur `matches: false` (clair) dans le setup des tests.
+      expect(document.documentElement.dataset.theme).toBe('light')
+    })
+
+    it('applique le thème sombre en mode automatique si le système le préfère', () => {
+      // vi.spyOn(window, 'matchMedia').mockRestore() ne restaure pas
+      // proprement le mock déjà posé par setup.ts : on sauvegarde/remplace
+      // la référence à la main pour ne pas casser les tests suivants.
+      const original = window.matchMedia
+      window.matchMedia = ((query: string) => ({
+        matches: query === '(prefers-color-scheme: dark)',
+        media: query,
+        onchange: null,
+        addListener: vi.fn(),
+        removeListener: vi.fn(),
+        addEventListener: vi.fn(),
+        removeEventListener: vi.fn(),
+        dispatchEvent: vi.fn(),
+      })) as typeof window.matchMedia
+      render(<App />)
+      expect(document.documentElement.dataset.theme).toBe('dark')
+      window.matchMedia = original
+    })
+
+    it('permet de forcer le thème clair puis sombre puis de revenir en automatique', () => {
+      render(<App />)
+      const toggle = screen.getByRole('button', { name: 'Thème : Auto' })
+
+      fireEvent.click(toggle)
+      expect(screen.getByRole('button', { name: 'Thème : Clair' })).toBeInTheDocument()
+      expect(document.documentElement.dataset.theme).toBe('light')
+
+      fireEvent.click(screen.getByRole('button', { name: 'Thème : Clair' }))
+      expect(screen.getByRole('button', { name: 'Thème : Sombre' })).toBeInTheDocument()
+      expect(document.documentElement.dataset.theme).toBe('dark')
+
+      fireEvent.click(screen.getByRole('button', { name: 'Thème : Sombre' }))
+      expect(screen.getByRole('button', { name: 'Thème : Auto' })).toBeInTheDocument()
+    })
+
+    it('retient le thème choisi après rechargement', () => {
+      const { unmount } = render(<App />)
+      fireEvent.click(screen.getByRole('button', { name: 'Thème : Auto' }))
+      expect(screen.getByRole('button', { name: 'Thème : Clair' })).toBeInTheDocument()
+      unmount()
+
+      render(<App />)
+      expect(screen.getByRole('button', { name: 'Thème : Clair' })).toBeInTheDocument()
+    })
+
+    it('adapte la couleur de la barre de statut au thème actif', () => {
+      render(<App />)
+      const meta = document.querySelector('meta[name="theme-color"]')
+      fireEvent.click(screen.getByRole('button', { name: 'Thème : Auto' }))
+      fireEvent.click(screen.getByRole('button', { name: 'Thème : Clair' }))
+      expect(meta?.getAttribute('content')).toBe('#0f172a')
+    })
+  })
+
   it('persiste les compteurs dans le localStorage', () => {
     render(<App />)
     fireEvent.click(screen.getByRole('button', { name: '+ Nouveau compteur' }))
