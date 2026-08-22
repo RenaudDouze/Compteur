@@ -270,6 +270,22 @@
   color: var(--accent);
 }
 
+.counter-drag-handle {
+  border: none;
+  background: var(--bg-2);
+  color: var(--text-dim);
+  font-size: 0.9rem;
+  line-height: 1;
+  padding: 3px 10px;
+  border-radius: 999px;
+  cursor: grab;
+  touch-action: none;
+}
+
+.counter-drag-handle:active {
+  cursor: grabbing;
+}
+
 .counter-value-input {
   width: 100%;
   flex: 1;

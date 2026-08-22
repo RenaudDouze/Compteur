@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react'
-import { AnimatePresence, motion } from 'framer-motion'
+import { AnimatePresence, Reorder } from 'framer-motion'
 import { useLocalStorage } from './hooks/useLocalStorage'
 import { CounterCard } from './components/CounterCard'
 import { SyncPanel } from './components/SyncPanel'
@@ -118,8 +118,11 @@ export default function App() {
           </button>
         </div>
       ) : (
-        <motion.div
-          layout
+        <Reorder.Group
+          as="div"
+          axis="y"
+          values={counters}
+          onReorder={setCounters}
           className={`counter-grid ${
             counters.length === 1
               ? 'counter-grid--solo'
@@ -143,7 +146,7 @@ export default function App() {
               />
             ))}
           </AnimatePresence>
-        </motion.div>
+        </Reorder.Group>
       )}
 
       {syncOpen && (

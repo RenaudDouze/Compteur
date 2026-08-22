@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from 'react'
-import { motion, useAnimationControls } from 'framer-motion'
+import { motion, Reorder, useAnimationControls, useDragControls } from 'framer-motion'
 import { Odometer } from './Odometer'
 import { cumulativeOdds, formatOdds } from '../odds'
 import { formatStartDate, toIsoDate, todayIsoDate } from '../date'
@@ -44,6 +44,7 @@ export function CounterCard({
   const [fillFontSize, setFillFontSize] = useState<number | null>(null)
   const pulseControls = useAnimationControls()
   const isFirstCount = useRef(true)
+  const dragControls = useDragControls()
 
   const bump = (delta: number) => {
     setDirection(delta > 0 ? 1 : -1)
@@ -158,12 +159,18 @@ export function CounterCard({
   const compactMeta = !fill || isNarrowScreen
 
   return (
-    <motion.article
+    <Reorder.Item
+      as="article"
+      value={counter}
+      id={counter.id}
+      dragListener={false}
+      dragControls={dragControls}
       layout
       initial={{ opacity: 0, scale: 0.9, y: 12 }}
       animate={{ opacity: 1, scale: 1, y: 0 }}
       exit={{ opacity: 0, scale: 0.85, y: -8 }}
       whileTap={{ scale: 0.98 }}
+      whileDrag={{ scale: 1.03, boxShadow: '0 12px 32px rgba(15, 23, 42, 0.25)', zIndex: 10 }}
       transition={{ type: 'spring', stiffness: 300, damping: 26 }}
       className="counter-card"
       style={{ '--accent': counter.color } as React.CSSProperties}
@@ -225,6 +232,20 @@ export function CounterCard({
       )}
 
       <div className="counter-meta">
+        <button
+          type="button"
+          className="counter-drag-handle"
+          onPointerDown={(e) => {
+            e.stopPropagation()
+            dragControls.start(e)
+          }}
+          onClick={(e) => e.stopPropagation()}
+          aria-label="Réordonner le compteur"
+          title="Glisser pour réordonner"
+        >
+          ⠿
+        </button>
+
         {editingOdds ? (
           <div className="counter-odds-edit" onClick={(e) => e.stopPropagation()}>
             <span>1 chance sur</span>
@@ -358,6 +379,6 @@ export function CounterCard({
           +
         </button>
       </div>
-    </motion.article>
+    </Reorder.Item>
   )
 }
