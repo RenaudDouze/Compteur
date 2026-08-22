@@ -122,6 +122,19 @@ describe('CounterCard', () => {
     })
   })
 
+  describe('taux de réussite cumulé', () => {
+    it("n'affiche aucun rappel sans probabilité définie", () => {
+      renderCard()
+      expect(document.querySelector('.counter-odds-hint')).not.toBeInTheDocument()
+    })
+
+    it('affiche le taux cumulé sous le nombre quand une probabilité est définie', () => {
+      renderCard({ oddsDenominator: 4, count: 1 })
+      // 1 - (1 - 1/4)^1 = 0.25 => arrondi affiché à 1 décimale : 25,0 %
+      expect(document.querySelector('.counter-odds-hint')).toHaveTextContent('25,0 %')
+    })
+  })
+
   describe('suppression', () => {
     it('demande une confirmation avant de supprimer', () => {
       const { onDelete } = renderCard()

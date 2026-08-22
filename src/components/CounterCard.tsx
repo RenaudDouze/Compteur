@@ -2,6 +2,7 @@ import { useEffect, useRef, useState } from 'react'
 import { motion, Reorder, useAnimationControls, useDragControls } from 'framer-motion'
 import { Odometer } from './Odometer'
 import { CounterSettingsPanel } from './CounterSettingsPanel'
+import { cumulativeOdds, formatOdds } from '../odds'
 import type { Counter } from '../types'
 
 interface CounterCardProps {
@@ -124,6 +125,8 @@ export function CounterCard({
       transition: { duration: 0.35, ease: 'easeOut', times: [0, 0.3, 0.7, 1] },
     })
   }, [counter.count, pulseControls])
+
+  const odds = counter.oddsDenominator ? cumulativeOdds(counter.oddsDenominator, counter.count) : null
 
   return (
     <Reorder.Item
@@ -271,6 +274,10 @@ export function CounterCard({
       <span className="sr-only" aria-live="polite">
         {counter.name} : {counter.count}
       </span>
+
+      {odds !== null && (
+        <p className="counter-odds-hint">{formatOdds(odds)} de chances de l'avoir obtenu avant ce stade</p>
+      )}
 
       <div className="counter-actions">
         <button
