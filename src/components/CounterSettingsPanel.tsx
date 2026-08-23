@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from 'react'
 import { createPortal } from 'react-dom'
-import { cumulativeOdds, formatOdds } from '../odds'
+import { cumulativeOdds, formatOdds, formatRemainingAttempts, formatConstantChanceReminder } from '../odds'
 import { formatStartDate, toIsoDate, todayIsoDate } from '../date'
 import { buildShareText } from '../share'
 import { isValidImageUrl } from '../url'
@@ -87,7 +87,6 @@ export function CounterSettingsPanel({
 
   const denominator = counter.oddsDenominator
   const odds = denominator ? cumulativeOdds(denominator, counter.count) : null
-  const remaining = denominator ? denominator - counter.count : null
   const startDate = counter.startDate ?? toIsoDate(counter.createdAt)
 
   return createPortal(
@@ -190,15 +189,8 @@ export function CounterSettingsPanel({
                   style={{ width: `${Math.min(counter.count / denominator, 1) * 100}%` }}
                 />
               </div>
-              <p className="modal-hint">
-                {remaining! > 0
-                  ? `Encore ~${remaining!.toLocaleString('fr-FR')} ${remaining === 1 ? 'tentative' : 'tentatives'} en moyenne (moyenne : ${denominator.toLocaleString('fr-FR')})`
-                  : `Moyenne dépassée (${counter.count.toLocaleString('fr-FR')} / ${denominator.toLocaleString('fr-FR')}) — la chance cumulée compense`}
-              </p>
-              <p className="modal-hint">
-                Chaque tentative garde exactement 1 chance sur {denominator.toLocaleString('fr-FR')}, quel que soit
-                le nombre de tentatives précédentes.
-              </p>
+              <p className="modal-hint">{formatRemainingAttempts(denominator, counter.count)}</p>
+              <p className="modal-hint">{formatConstantChanceReminder(denominator)}</p>
             </>
           )}
         </section>

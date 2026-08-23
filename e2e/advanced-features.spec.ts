@@ -7,7 +7,9 @@ test.describe('Fonctionnalités avancées', () => {
     await addCounter(page)
   })
 
-  test('définit une probabilité et affiche le taux de réussite cumulé sous le nombre', async ({ page }) => {
+  test('définit une probabilité et affiche le taux de réussite cumulé (avec stats) sous le nombre', async ({
+    page,
+  }) => {
     await page.getByRole('button', { name: 'Personnaliser le compteur' }).click()
     const input = page.getByPlaceholder('4096')
     await input.fill('4')
@@ -17,18 +19,23 @@ test.describe('Fonctionnalités avancées', () => {
     const plus = page.getByRole('button', { name: 'Incrémenter', exact: true })
     await plus.click()
     // 1 - (1 - 1/4)^1 = 0.25 => arrondi affiché à 1 décimale : 25,0 %
-    await expect(page.locator('.counter-odds-hint')).toHaveText(/25,0\s?%/)
+    // Directement sur la carte : le pourcentage, les tentatives restantes en
+    // moyenne, et le rappel de chance constante (pas caché dans le panneau).
+    const card = page.locator('.counter-card')
+    await expect(card.locator('.counter-odds-hint').nth(0)).toHaveText(/25,0\s?%/)
+    await expect(card.getByText('Encore ~3 tentatives en moyenne (moyenne : 4)')).toBeVisible()
+    await expect(card.getByText(/Chaque tentative garde exactement 1 chance sur 4,/)).toBeVisible()
 
-    // Le panneau affiche aussi le même rappel, indépendamment de la carte
-    // (`.modal-hint` a un second usage pour la date de début : on filtre sur le %).
+    // Le panneau affiche les mêmes informations, avec en plus une barre de
+    // progression visuelle (`.modal-hint` a un second usage pour la date de
+    // début : on filtre sur le %, et on scope au panneau car la carte
+    // affiche aussi ce texte en dessous).
     await page.getByRole('button', { name: 'Personnaliser le compteur' }).click()
-    await expect(page.locator('.modal-hint', { hasText: '%' })).toHaveText(/25,0\s?%/)
-
-    // Stats complémentaires pour ne pas décourager : barre de progression vers
-    // la moyenne (1/4 tentatives), tentatives restantes, chance constante.
-    await expect(page.locator('.odds-progress')).toHaveAttribute('aria-valuenow', '25')
-    await expect(page.getByText('Encore ~3 tentatives en moyenne (moyenne : 4)')).toBeVisible()
-    await expect(page.getByText(/Chaque tentative garde exactement 1 chance sur 4,/)).toBeVisible()
+    const panel = page.locator('.modal-panel')
+    await expect(panel.locator('.modal-hint', { hasText: '%' })).toHaveText(/25,0\s?%/)
+    await expect(panel.locator('.odds-progress')).toHaveAttribute('aria-valuenow', '25')
+    await expect(panel.getByText('Encore ~3 tentatives en moyenne (moyenne : 4)')).toBeVisible()
+    await expect(panel.getByText(/Chaque tentative garde exactement 1 chance sur 4,/)).toBeVisible()
   })
 
   test("affiche un sparkline dans l'historique après plusieurs changements espacés", async ({ page }) => {

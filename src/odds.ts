@@ -23,3 +23,20 @@ export function formatOdds(ratio: number): string {
     maximumFractionDigits: decimals,
   })} %`
 }
+
+/** Message sur le nombre de tentatives restantes en moyenne avant d'avoir
+ * obtenu l'événement, ou un message positif une fois la moyenne dépassée
+ * (la chance cumulée compense, plutôt que d'afficher un nombre négatif). */
+export function formatRemainingAttempts(denominator: number, count: number): string {
+  const remaining = denominator - count
+  if (remaining > 0) {
+    return `Encore ~${remaining.toLocaleString('fr-FR')} ${remaining === 1 ? 'tentative' : 'tentatives'} en moyenne (moyenne : ${denominator.toLocaleString('fr-FR')})`
+  }
+  return `Moyenne dépassée (${count.toLocaleString('fr-FR')} / ${denominator.toLocaleString('fr-FR')}) — la chance cumulée compense`
+}
+
+/** Rappel que chaque tentative garde une chance constante, indépendamment
+ * des précédentes (pas de notion de "malchance qui s'accumule"). */
+export function formatConstantChanceReminder(denominator: number): string {
+  return `Chaque tentative garde exactement 1 chance sur ${denominator.toLocaleString('fr-FR')}, quel que soit le nombre de tentatives précédentes.`
+}
