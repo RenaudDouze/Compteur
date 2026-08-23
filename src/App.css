@@ -481,19 +481,6 @@
   padding: 2px 10px;
 }
 
-/* Se démarque volontairement des stats au-dessus : c'est un rappel
-   rassurant, pas un chiffre à retenir. */
-.counter-chance-reminder {
-  margin: 0;
-  font-size: 0.75rem;
-  font-style: italic;
-  color: var(--accent);
-  text-align: center;
-  background: color-mix(in srgb, var(--accent) 14%, var(--surface) 78%);
-  border-radius: 8px;
-  padding: 2px 10px;
-}
-
 .counter-actions {
   display: flex;
   gap: 10px;

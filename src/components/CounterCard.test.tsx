@@ -306,20 +306,13 @@ describe('CounterCard', () => {
       expect(document.querySelector('.counter-odds-hint')).toHaveTextContent('25,0 %')
     })
 
-    it('affiche aussi les tentatives restantes et le rappel de chance constante, directement sur la carte', () => {
+    it("n'affiche que le pourcentage sur la carte (pas les tentatives restantes ni le rappel de chance constante)", () => {
       renderCard({ oddsDenominator: 4, count: 1 })
-      expect(screen.getByText('Encore ~3 tentatives en moyenne (moyenne : 4)')).toBeInTheDocument()
+      expect(screen.queryByText('Encore ~3 tentatives en moyenne (moyenne : 4)')).not.toBeInTheDocument()
       expect(
-        screen.getByText(/Chaque tentative garde exactement 1 chance sur 4, quel que soit/)
-      ).toBeInTheDocument()
-    })
-
-    it('démarque visuellement le rappel de chance constante des autres stats', () => {
-      renderCard({ oddsDenominator: 4, count: 1 })
-      const reminder = document.querySelector('.counter-chance-reminder')
-      expect(reminder).toBeInTheDocument()
-      expect(reminder).toHaveTextContent('💡')
-      expect(document.querySelectorAll('.counter-odds-hint')).toHaveLength(2)
+        screen.queryByText(/Chaque tentative garde exactement 1 chance sur 4, quel que soit/)
+      ).not.toBeInTheDocument()
+      expect(document.querySelectorAll('.counter-odds-hint')).toHaveLength(1)
     })
   })
 

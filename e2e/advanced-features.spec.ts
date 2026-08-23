@@ -19,17 +19,16 @@ test.describe('Fonctionnalités avancées', () => {
     const plus = page.getByRole('button', { name: 'Incrémenter', exact: true })
     await plus.click()
     // 1 - (1 - 1/4)^1 = 0.25 => arrondi affiché à 1 décimale : 25,0 %
-    // Directement sur la carte : le pourcentage, les tentatives restantes en
-    // moyenne, et le rappel de chance constante (pas caché dans le panneau).
+    // Directement sur la carte : uniquement le pourcentage, pour ne pas
+    // surcharger la carte (le détail complet reste dans le panneau).
     const card = page.locator('.counter-card')
-    await expect(card.locator('.counter-odds-hint').nth(0)).toHaveText(/25,0\s?%/)
-    await expect(card.getByText('Encore ~3 tentatives en moyenne (moyenne : 4)')).toBeVisible()
-    await expect(card.getByText(/Chaque tentative garde exactement 1 chance sur 4,/)).toBeVisible()
+    await expect(card.locator('.counter-odds-hint')).toHaveText(/25,0\s?%/)
+    await expect(card.getByText('Encore ~3 tentatives en moyenne (moyenne : 4)')).not.toBeVisible()
+    await expect(card.getByText(/Chaque tentative garde exactement 1 chance sur 4,/)).not.toBeVisible()
 
-    // Le panneau affiche les mêmes informations, avec en plus une barre de
+    // Le panneau affiche le détail complet, avec en plus une barre de
     // progression visuelle (`.modal-hint` a un second usage pour la date de
-    // début : on filtre sur le %, et on scope au panneau car la carte
-    // affiche aussi ce texte en dessous).
+    // début : on filtre sur le %).
     await page.getByRole('button', { name: 'Personnaliser le compteur' }).click()
     const panel = page.locator('.modal-panel')
     await expect(panel.locator('.modal-hint', { hasText: '%' })).toHaveText(/25,0\s?%/)
