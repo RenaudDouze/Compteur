@@ -56,6 +56,45 @@ test.describe('Fonctionnalités avancées', () => {
     await expect(card.locator('.value-segment7')).toBeVisible()
   })
 
+  test('définit un objectif libre et affiche sa progression', async ({ page }) => {
+    await page.getByRole('button', { name: 'Personnaliser le compteur' }).click()
+    const input = page.getByPlaceholder('ex : 50')
+    await input.fill('20')
+    await input.press('Enter')
+    await expect(page.locator('.odds-progress')).toHaveAttribute('aria-valuenow', '0')
+    await expect(page.getByText('0 / 20 (0 %)')).toBeVisible()
+    await page.getByRole('button', { name: 'Fermer' }).click()
+
+    for (let i = 0; i < 5; i++) {
+      await page.getByRole('button', { name: 'Incrémenter', exact: true }).click()
+    }
+
+    // La progression suit le compteur, y compris depuis la carte via
+    // l'anneau (choisi ici pour vérifier que l'objectif pilote bien
+    // l'anneau plutôt qu'une probabilité, qui n'est pas définie ici).
+    await page.getByRole('button', { name: 'Personnaliser le compteur' }).click()
+    await expect(page.locator('.odds-progress')).toHaveAttribute('aria-valuenow', '25')
+    await expect(page.getByText('5 / 20 (25 %)')).toBeVisible()
+    await page.getByRole('button', { name: 'Choisir le style Anneau' }).click()
+    await page.getByRole('button', { name: 'Fermer' }).click()
+    await expect(page.locator('.value-ring-pct')).toHaveText('25 %')
+  })
+
+  test('duplique un compteur avec sa configuration mais repart de zéro', async ({ page }) => {
+    await page.getByRole('button', { name: 'Personnaliser le compteur' }).click()
+    await page.getByRole('button', { name: `Choisir la couleur` }).first().click()
+    await page.getByRole('button', { name: 'Choisir le style LCD rétro' }).click()
+    await page.getByRole('button', { name: '⧉ Dupliquer ce compteur' }).click()
+
+    await expect(page.getByText('Compteur 1', { exact: true })).toBeVisible()
+    await expect(page.getByText('Compteur 1 (copie)').first()).toBeVisible()
+    const cards = page.locator('.counter-card')
+    await expect(cards).toHaveCount(2)
+    // Le style est repris, mais pas le compte.
+    await expect(cards.nth(1).locator('.value-lcd')).toBeVisible()
+    await expect(cards.nth(1).locator('.value-lcd-digits')).toHaveText('0')
+  })
+
   test("affiche un sparkline dans l'historique après plusieurs changements espacés", async ({ page }) => {
     await page.getByRole('button', { name: 'Personnaliser le compteur' }).click()
     await expect(page.getByText(/Pas encore assez d'historique/)).toBeVisible()

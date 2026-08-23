@@ -31,6 +31,8 @@ function renderPanel(
     onSetColor: vi.fn(),
     onSetStep: vi.fn(),
     onSetDisplayStyle: vi.fn(),
+    onSetTarget: vi.fn(),
+    onDuplicate: vi.fn(),
     ...props,
   }
   const utils = render(<CounterSettingsPanel counter={counter} {...handlers} {...props} />)
@@ -304,6 +306,86 @@ describe('CounterSettingsPanel', () => {
     })
   })
 
+  describe('objectif', () => {
+    it("préremplit le champ avec l'objectif actuel", () => {
+      renderPanel({ target: 50 })
+      expect(screen.getByDisplayValue('50')).toBeInTheDocument()
+    })
+
+    it('définit un objectif (Entrée)', () => {
+      const { onSetTarget } = renderPanel()
+      const input = screen.getByPlaceholderText('ex : 50')
+      fireEvent.change(input, { target: { value: '50' } })
+      fireEvent.keyDown(input, { key: 'Enter' })
+      expect(onSetTarget).toHaveBeenCalledWith(50)
+    })
+
+    it('valide aussi au blur', () => {
+      const { onSetTarget } = renderPanel()
+      const input = screen.getByPlaceholderText('ex : 50')
+      fireEvent.change(input, { target: { value: '20' } })
+      fireEvent.blur(input)
+      expect(onSetTarget).toHaveBeenCalledWith(20)
+    })
+
+    it('ignore les caractères non numériques dans la saisie', () => {
+      const { onSetTarget } = renderPanel()
+      const input = screen.getByPlaceholderText('ex : 50')
+      fireEvent.change(input, { target: { value: '5a0b' } })
+      fireEvent.keyDown(input, { key: 'Enter' })
+      expect(onSetTarget).toHaveBeenCalledWith(50)
+    })
+
+    it("efface l'objectif si la saisie est vide", () => {
+      const { onSetTarget } = renderPanel({ target: 10 })
+      const input = screen.getByDisplayValue('10')
+      fireEvent.change(input, { target: { value: '' } })
+      fireEvent.keyDown(input, { key: 'Enter' })
+      expect(onSetTarget).toHaveBeenCalledWith(undefined)
+    })
+
+    it("efface l'objectif si la saisie est 0", () => {
+      const { onSetTarget } = renderPanel({ target: 10 })
+      const input = screen.getByDisplayValue('10')
+      fireEvent.change(input, { target: { value: '0' } })
+      fireEvent.keyDown(input, { key: 'Enter' })
+      expect(onSetTarget).toHaveBeenCalledWith(undefined)
+    })
+
+    it("ne commite pas sur une touche autre qu'Entrée", () => {
+      const { onSetTarget } = renderPanel()
+      const input = screen.getByPlaceholderText('ex : 50')
+      fireEvent.change(input, { target: { value: '20' } })
+      fireEvent.keyDown(input, { key: 'a' })
+      expect(onSetTarget).not.toHaveBeenCalled()
+    })
+
+    it("n'affiche pas la progression sans objectif défini", () => {
+      renderPanel()
+      expect(document.querySelector('.odds-progress')).not.toBeInTheDocument()
+    })
+
+    it('affiche la progression et le compte quand un objectif est défini', () => {
+      renderPanel({ count: 5, target: 20 })
+      const bar = document.querySelector('.odds-progress')
+      expect(bar).toHaveAttribute('aria-valuenow', '25')
+      expect(document.querySelector('.odds-progress-fill')).toHaveStyle({ width: '25%' })
+      expect(screen.getByText('5 / 20 (25 %)')).toBeInTheDocument()
+    })
+
+    it('plafonne la progression à 100% quand la valeur dépasse l\'objectif', () => {
+      renderPanel({ count: 30, target: 20 })
+      const bar = document.querySelector('.odds-progress')
+      expect(bar).toHaveAttribute('aria-valuenow', '100')
+    })
+
+    it('ne descend pas sous 0% avec un compte négatif', () => {
+      renderPanel({ count: -5, target: 20 })
+      const bar = document.querySelector('.odds-progress')
+      expect(bar).toHaveAttribute('aria-valuenow', '0')
+    })
+  })
+
   describe('probabilité', () => {
     it('préremplit le champ avec la probabilité actuelle', () => {
       renderPanel({ oddsDenominator: 4096 })
@@ -542,6 +624,20 @@ describe('CounterSettingsPanel', () => {
         fireEvent.click(screen.getByText('⇪ Partager ce compteur'))
       })
       expect(screen.getByText('⇪ Partager ce compteur')).toBeInTheDocument()
+    })
+  })
+
+  describe('duplication', () => {
+    it('déclenche la duplication au clic', () => {
+      const { onDuplicate } = renderPanel()
+      fireEvent.click(screen.getByText('⧉ Dupliquer ce compteur'))
+      expect(onDuplicate).toHaveBeenCalledTimes(1)
+    })
+
+    it('ferme le panneau après duplication', () => {
+      const { onClose } = renderPanel()
+      fireEvent.click(screen.getByText('⧉ Dupliquer ce compteur'))
+      expect(onClose).toHaveBeenCalledTimes(1)
     })
   })
 })

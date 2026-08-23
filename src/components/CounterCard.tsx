@@ -25,11 +25,13 @@ interface CounterCardProps {
   onSetCount: (count: number) => void
   onRename: (name: string) => void
   onSetOdds: (denominator: number | undefined) => void
+  onSetTarget: (target: number | undefined) => void
   onSetStartDate: (isoDate: string | undefined) => void
   onSetBackgroundImage: (url: string | undefined) => void
   onSetColor: (color: string) => void
   onSetStep: (step: number | undefined) => void
   onSetDisplayStyle: (style: DisplayStyle | undefined) => void
+  onDuplicate: () => void
   onDelete: () => void
 }
 
@@ -42,11 +44,13 @@ export function CounterCard({
   onSetCount,
   onRename,
   onSetOdds,
+  onSetTarget,
   onSetStartDate,
   onSetBackgroundImage,
   onSetColor,
   onSetStep,
   onSetDisplayStyle,
+  onDuplicate,
   onDelete,
 }: CounterCardProps) {
   const [editing, setEditing] = useState(false)
@@ -221,9 +225,12 @@ export function CounterCard({
   }, [counter.count, pulseControls])
 
   const odds = counter.oddsDenominator ? cumulativeOdds(counter.oddsDenominator, counter.count) : null
-  // Progression vers le nombre moyen de tentatives (pour le style "anneau") :
-  // même formule que la barre de progression du panneau de réglages.
-  const progress = counter.oddsDenominator ? Math.min(counter.count / counter.oddsDenominator, 1) : null
+  // Progression pour le style "anneau" : vers l'objectif libre s'il est
+  // défini (le plus explicite), sinon vers le nombre moyen de tentatives —
+  // mêmes formules que les barres de progression du panneau de réglages.
+  const targetProgress = counter.target ? Math.max(0, Math.min(counter.count / counter.target, 1)) : null
+  const oddsProgress = counter.oddsDenominator ? Math.min(counter.count / counter.oddsDenominator, 1) : null
+  const progress = targetProgress ?? oddsProgress
 
   return (
     <Reorder.Item
@@ -457,11 +464,13 @@ export function CounterCard({
           colors={colors}
           onClose={() => setSettingsOpen(false)}
           onSetOdds={onSetOdds}
+          onSetTarget={onSetTarget}
           onSetStartDate={onSetStartDate}
           onSetBackgroundImage={onSetBackgroundImage}
           onSetColor={onSetColor}
           onSetStep={onSetStep}
           onSetDisplayStyle={onSetDisplayStyle}
+          onDuplicate={onDuplicate}
         />
       )}
     </Reorder.Item>

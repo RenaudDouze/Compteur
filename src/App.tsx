@@ -143,6 +143,10 @@ export default function App() {
     setCounters((prev) => prev.map((c) => (c.id === id ? { ...c, oddsDenominator } : c)))
   }
 
+  const setTarget = (id: string, target: number | undefined) => {
+    setCounters((prev) => prev.map((c) => (c.id === id ? { ...c, target } : c)))
+  }
+
   const setStartDate = (id: string, startDate: string | undefined) => {
     setCounters((prev) => prev.map((c) => (c.id === id ? { ...c, startDate } : c)))
   }
@@ -167,6 +171,23 @@ export default function App() {
     const target = counters.find((c) => c.id === id)!
     pushUndo(`Compteur « ${target.name} » supprimé`)
     setCounters((prev) => prev.filter((c) => c.id !== id))
+  }
+
+  // Reprend l'apparence et la configuration du compteur source (couleur,
+  // style, pas, probabilité, objectif, image de fond), mais repart de zéro :
+  // nouvel id, compte et historique vierges, pas de date de début figée.
+  const duplicateCounter = (id: string) => {
+    const source = counters.find((c) => c.id === id)!
+    const copy: Counter = {
+      ...source,
+      id: makeId(),
+      name: `${source.name} (copie)`,
+      count: 0,
+      createdAt: Date.now(),
+      startDate: undefined,
+      history: appendHistoryPoint(undefined, 0),
+    }
+    setCounters((prev) => [...prev, copy])
   }
 
   const handleImport = (imported: Counter[], mode: 'replace' | 'merge') => {
@@ -261,11 +282,13 @@ export default function App() {
                 onSetCount={(count) => setCount(counter.id, count)}
                 onRename={(name) => renameCounter(counter.id, name)}
                 onSetOdds={(denominator) => setOdds(counter.id, denominator)}
+                onSetTarget={(target) => setTarget(counter.id, target)}
                 onSetStartDate={(date) => setStartDate(counter.id, date)}
                 onSetBackgroundImage={(url) => setBackgroundImage(counter.id, url)}
                 onSetColor={(color) => setColor(counter.id, color)}
                 onSetStep={(step) => setStep(counter.id, step)}
                 onSetDisplayStyle={(style) => setDisplayStyle(counter.id, style)}
+                onDuplicate={() => duplicateCounter(counter.id)}
                 onDelete={() => deleteCounter(counter.id)}
               />
             ))}

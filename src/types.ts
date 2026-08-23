@@ -24,4 +24,6 @@ export interface Counter {
   history?: HistoryPoint[]
   /** Style d'affichage du chiffre. Absent = style par défaut (odomètre). */
   displayStyle?: DisplayStyle
+  /** Objectif libre (valeur à atteindre). Absent = pas d'objectif défini. */
+  target?: number
 }
