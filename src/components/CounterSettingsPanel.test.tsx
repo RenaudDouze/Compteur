@@ -309,6 +309,54 @@ describe('CounterSettingsPanel', () => {
       renderPanel()
       expect(screen.queryByText(/de l'avoir obtenu avant ce stade/)).not.toBeInTheDocument()
     })
+
+    it("n'affiche pas les stats complémentaires sans probabilité définie", () => {
+      renderPanel()
+      expect(document.querySelector('.odds-progress')).not.toBeInTheDocument()
+      expect(screen.queryByText(/en moyenne/)).not.toBeInTheDocument()
+      expect(screen.queryByText(/chance sur .* quel que soit/)).not.toBeInTheDocument()
+    })
+
+    it('affiche la barre de progression vers la moyenne', () => {
+      renderPanel({ count: 1024, oddsDenominator: 4096 })
+      const bar = document.querySelector('.odds-progress')
+      expect(bar).toHaveAttribute('aria-valuenow', '25')
+      expect(document.querySelector('.odds-progress-fill')).toHaveStyle({ width: '25%' })
+    })
+
+    it('plafonne la barre à 100% quand la moyenne est dépassée', () => {
+      renderPanel({ count: 6000, oddsDenominator: 4096 })
+      const bar = document.querySelector('.odds-progress')
+      expect(bar).toHaveAttribute('aria-valuenow', '100')
+      expect(document.querySelector('.odds-progress-fill')).toHaveStyle({ width: '100%' })
+    })
+
+    it("indique le nombre de tentatives restantes en moyenne (pluriel)", () => {
+      renderPanel({ count: 4000, oddsDenominator: 4096 })
+      expect(screen.getByText(/Encore ~96 tentatives en moyenne \(moyenne : 4 096\)/)).toBeInTheDocument()
+    })
+
+    it("indique le nombre de tentatives restantes en moyenne (singulier)", () => {
+      renderPanel({ count: 4095, oddsDenominator: 4096 })
+      expect(screen.getByText(/Encore ~1 tentative en moyenne/)).toBeInTheDocument()
+    })
+
+    it('indique que la moyenne est exactement atteinte', () => {
+      renderPanel({ count: 4096, oddsDenominator: 4096 })
+      expect(screen.getByText(/Moyenne dépassée \(4 096 \/ 4 096\)/)).toBeInTheDocument()
+    })
+
+    it('indique que la moyenne est dépassée', () => {
+      renderPanel({ count: 5000, oddsDenominator: 4096 })
+      expect(screen.getByText(/Moyenne dépassée \(5 000 \/ 4 096\) — la chance cumulée compense/)).toBeInTheDocument()
+    })
+
+    it('rappelle que la chance par tentative reste constante', () => {
+      renderPanel({ count: 10, oddsDenominator: 4096 })
+      expect(
+        screen.getByText(/Chaque tentative garde exactement 1 chance sur 4 096, quel que soit/)
+      ).toBeInTheDocument()
+    })
   })
 
   describe('date de début', () => {

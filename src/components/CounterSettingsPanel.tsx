@@ -85,7 +85,9 @@ export function CounterSettingsPanel({
     }
   }
 
-  const odds = counter.oddsDenominator ? cumulativeOdds(counter.oddsDenominator, counter.count) : null
+  const denominator = counter.oddsDenominator
+  const odds = denominator ? cumulativeOdds(denominator, counter.count) : null
+  const remaining = denominator ? denominator - counter.count : null
   const startDate = counter.startDate ?? toIsoDate(counter.createdAt)
 
   return createPortal(
@@ -172,8 +174,32 @@ export function CounterSettingsPanel({
               }}
             />
           </div>
-          {odds !== null && (
-            <p className="modal-hint">{formatOdds(odds)} de chances de l'avoir obtenu avant ce stade</p>
+          {denominator !== undefined && (
+            <>
+              <p className="modal-hint">{formatOdds(odds!)} de chances de l'avoir obtenu avant ce stade</p>
+              <div
+                className="odds-progress"
+                role="progressbar"
+                aria-valuenow={Math.round(Math.min(counter.count / denominator, 1) * 100)}
+                aria-valuemin={0}
+                aria-valuemax={100}
+                aria-label="Progression vers le nombre moyen de tentatives"
+              >
+                <div
+                  className="odds-progress-fill"
+                  style={{ width: `${Math.min(counter.count / denominator, 1) * 100}%` }}
+                />
+              </div>
+              <p className="modal-hint">
+                {remaining! > 0
+                  ? `Encore ~${remaining!.toLocaleString('fr-FR')} ${remaining === 1 ? 'tentative' : 'tentatives'} en moyenne (moyenne : ${denominator.toLocaleString('fr-FR')})`
+                  : `Moyenne dépassée (${counter.count.toLocaleString('fr-FR')} / ${denominator.toLocaleString('fr-FR')}) — la chance cumulée compense`}
+              </p>
+              <p className="modal-hint">
+                Chaque tentative garde exactement 1 chance sur {denominator.toLocaleString('fr-FR')}, quel que soit
+                le nombre de tentatives précédentes.
+              </p>
+            </>
           )}
         </section>
 

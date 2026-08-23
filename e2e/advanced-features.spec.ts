@@ -23,6 +23,12 @@ test.describe('Fonctionnalités avancées', () => {
     // (`.modal-hint` a un second usage pour la date de début : on filtre sur le %).
     await page.getByRole('button', { name: 'Personnaliser le compteur' }).click()
     await expect(page.locator('.modal-hint', { hasText: '%' })).toHaveText(/25,0\s?%/)
+
+    // Stats complémentaires pour ne pas décourager : barre de progression vers
+    // la moyenne (1/4 tentatives), tentatives restantes, chance constante.
+    await expect(page.locator('.odds-progress')).toHaveAttribute('aria-valuenow', '25')
+    await expect(page.getByText('Encore ~3 tentatives en moyenne (moyenne : 4)')).toBeVisible()
+    await expect(page.getByText(/Chaque tentative garde exactement 1 chance sur 4,/)).toBeVisible()
   })
 
   test("affiche un sparkline dans l'historique après plusieurs changements espacés", async ({ page }) => {
