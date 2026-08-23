@@ -472,9 +472,11 @@
    Toutes les tailles ci-dessous sont en `em`, relatives à la taille de police
    déjà posée sur `.counter-value` (par mode de grille, ou par la mesure JS du
    style par défaut) : chaque style suit donc l'espace disponible sans calcul
-   supplémentaire. Les styles "objet physique" (volets, LCD, 7 segments) ont
-   des couleurs fixes, indépendantes du thème clair/sombre — au même titre
-   qu'une photo d'appareil, ils représentent un seul objet cohérent. */
+   supplémentaire. Les boîtiers/écrans des styles "objet physique" (volets,
+   LCD, 7 segments) restent dans des teintes neutres fixes, indépendantes du
+   thème clair/sombre — au même titre qu'un vrai boîtier d'appareil — mais le
+   chiffre lui-même (le volet imprimé, le contenu de l'écran, le segment
+   allumé) reprend toujours la couleur du compteur (`--accent`). */
 
 .value-flap {
   display: flex;
@@ -500,7 +502,7 @@
   font-family: var(--font-mono);
   font-weight: 800;
   font-size: 0.62em;
-  color: #ede9df;
+  color: var(--accent);
 }
 
 .value-flap-hinge {
@@ -538,20 +540,21 @@
   font-weight: 700;
   font-variant-numeric: tabular-nums;
   letter-spacing: 0.04em;
-  background: #0d1f14;
+  background: color-mix(in srgb, var(--accent) 18%, #050807);
   border-radius: 0.06em;
   padding: 0.1em 0.14em;
 }
 
 .value-lcd-ghost {
-  color: #1c3a26;
+  color: color-mix(in srgb, var(--accent) 40%, black);
 }
 
 .value-lcd-digits {
   position: absolute;
   inset: 0.16em 0.2em;
-  color: #6bffa0;
-  text-shadow: 0 0 0.15em rgba(107, 255, 160, 0.65), 0 0 0.05em rgba(107, 255, 160, 0.9);
+  color: var(--accent);
+  text-shadow: 0 0 0.15em color-mix(in srgb, var(--accent) 65%, transparent),
+    0 0 0.05em color-mix(in srgb, var(--accent) 90%, transparent);
 }
 
 .value-segment7 {
@@ -570,13 +573,13 @@
 
 .value-segment {
   position: absolute;
-  background: #3a0a0a;
+  background: color-mix(in srgb, var(--accent) 20%, black);
   border-radius: 1px;
 }
 
 .value-segment.is-on {
-  background: #ff3b30;
-  box-shadow: 0 0 0.1em rgba(255, 59, 48, 0.85), 0 0 0.03em rgba(255, 59, 48, 1);
+  background: var(--accent);
+  box-shadow: 0 0 0.1em color-mix(in srgb, var(--accent) 85%, transparent), 0 0 0.03em var(--accent);
 }
 
 .value-segment--a {
