@@ -492,6 +492,8 @@
   justify-content: center;
   overflow: hidden;
   box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.05);
+  /* Donne du relief au pivot du caractère (bascule façon volet mécanique). */
+  perspective: 3em;
 }
 
 .value-flap-char {

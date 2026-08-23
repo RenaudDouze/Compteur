@@ -202,15 +202,22 @@ export function CounterCard({
   // (drop-shadow/brightness), qui force un repaint à chaque frame et
   // causait des lags visibles sur les appareils moins puissants, en plus
   // du texte à dégradé déjà coûteux à peindre.
+  // Réservé au style par défaut : chaque autre style a sa propre animation
+  // de changement (voir CounterValueDisplay), un rebond supplémentaire ici
+  // se superposerait à la sienne au lieu de la remplacer. `isDefaultStyle`
+  // est volontairement absent des dépendances : un changement de style seul
+  // (sans changement de compteur) ne doit pas déclencher de rebond.
   useEffect(() => {
     if (isFirstCount.current) {
       isFirstCount.current = false
       return
     }
+    if (!isDefaultStyle) return
     pulseControls.start({
       scale: [1, 1.16, 0.97, 1],
       transition: { duration: 0.35, ease: 'easeOut', times: [0, 0.3, 0.7, 1] },
     })
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [counter.count, pulseControls])
 
   const odds = counter.oddsDenominator ? cumulativeOdds(counter.oddsDenominator, counter.count) : null
