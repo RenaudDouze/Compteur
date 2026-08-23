@@ -190,7 +190,7 @@ export function CounterSettingsPanel({
                 />
               </div>
               <p className="modal-hint">{formatRemainingAttempts(denominator, counter.count)}</p>
-              <p className="modal-hint">{formatConstantChanceReminder(denominator)}</p>
+              <p className="modal-hint modal-hint--reminder">💡 {formatConstantChanceReminder(denominator)}</p>
             </>
           )}
         </section>

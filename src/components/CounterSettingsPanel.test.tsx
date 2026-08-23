@@ -357,6 +357,13 @@ describe('CounterSettingsPanel', () => {
         screen.getByText(/Chaque tentative garde exactement 1 chance sur 4 096, quel que soit/)
       ).toBeInTheDocument()
     })
+
+    it('démarque visuellement le rappel de chance constante des autres stats', () => {
+      renderPanel({ count: 10, oddsDenominator: 4096 })
+      const reminder = document.querySelector('.modal-hint--reminder')
+      expect(reminder).toBeInTheDocument()
+      expect(reminder).toHaveTextContent('💡')
+    })
   })
 
   describe('date de début', () => {

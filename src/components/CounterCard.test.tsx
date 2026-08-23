@@ -258,8 +258,16 @@ describe('CounterCard', () => {
       renderCard({ oddsDenominator: 4, count: 1 })
       expect(screen.getByText('Encore ~3 tentatives en moyenne (moyenne : 4)')).toBeInTheDocument()
       expect(
-        screen.getByText('Chaque tentative garde exactement 1 chance sur 4, quel que soit le nombre de tentatives précédentes.')
+        screen.getByText(/Chaque tentative garde exactement 1 chance sur 4, quel que soit/)
       ).toBeInTheDocument()
+    })
+
+    it('démarque visuellement le rappel de chance constante des autres stats', () => {
+      renderCard({ oddsDenominator: 4, count: 1 })
+      const reminder = document.querySelector('.counter-chance-reminder')
+      expect(reminder).toBeInTheDocument()
+      expect(reminder).toHaveTextContent('💡')
+      expect(document.querySelectorAll('.counter-odds-hint')).toHaveLength(2)
     })
   })
 

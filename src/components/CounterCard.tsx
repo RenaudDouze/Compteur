@@ -314,11 +314,13 @@ export function CounterCard({
       </span>
 
       {odds !== null && (
-        <>
+        <div className="counter-odds-stats">
           <p className="counter-odds-hint">{formatOdds(odds)} de chances de l'avoir obtenu avant ce stade</p>
           <p className="counter-odds-hint">{formatRemainingAttempts(counter.oddsDenominator!, counter.count)}</p>
-          <p className="counter-odds-hint">{formatConstantChanceReminder(counter.oddsDenominator!)}</p>
-        </>
+          <p className="counter-chance-reminder">
+            💡 {formatConstantChanceReminder(counter.oddsDenominator!)}
+          </p>
+        </div>
       )}
 
       <div className="counter-actions">
