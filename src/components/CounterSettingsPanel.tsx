@@ -96,8 +96,15 @@ export function CounterSettingsPanel({
         e.stopPropagation()
         onClose()
       }}
+      onPointerDown={(e) => e.stopPropagation()}
     >
-      <div className="modal-panel" onClick={(e) => e.stopPropagation()}>
+      {/* Le panneau est monté dans un portail (document.body), donc en
+          dehors de la carte dans le DOM réel : mais React fait toujours
+          remonter les évènements le long de l'arbre React (pas du DOM), donc
+          sans ce blocage, un pointerdown/up sur un bouton du panneau (ex:
+          "Fermer") atteindrait quand même le suivi de tap de la carte et
+          l'incrémenterait à tort. */}
+      <div className="modal-panel" onClick={(e) => e.stopPropagation()} onPointerDown={(e) => e.stopPropagation()}>
         <div className="modal-panel-header">
           <h2>Personnaliser « {counter.name} »</h2>
           <button className="modal-close" onClick={onClose} aria-label="Fermer">
