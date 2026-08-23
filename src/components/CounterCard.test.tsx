@@ -537,13 +537,38 @@ describe('CounterCard', () => {
       expect(onSetCount).toHaveBeenCalledWith(-15)
     })
 
-    it('retombe sur la valeur actuelle si la saisie est invalide', () => {
+    it('affiche une erreur et ne commite pas si la saisie est invalide', () => {
       const { onSetCount } = renderCard({ count: 12 })
       fireEvent.click(screen.getByRole('button', { name: 'Définir la valeur du compteur' }))
       const input = screen.getByDisplayValue('12')
       fireEvent.change(input, { target: { value: '' } })
       fireEvent.keyDown(input, { key: 'Enter' })
-      expect(onSetCount).toHaveBeenCalledWith(12)
+      expect(onSetCount).not.toHaveBeenCalled()
+      expect(screen.getByText('Nombre entier requis.')).toBeInTheDocument()
+      // Le champ reste ouvert pour corriger la saisie.
+      expect(screen.getByDisplayValue('')).toBeInTheDocument()
+    })
+
+    it('efface l\'erreur dès que la saisie est modifiée', () => {
+      renderCard({ count: 12 })
+      fireEvent.click(screen.getByRole('button', { name: 'Définir la valeur du compteur' }))
+      const input = screen.getByDisplayValue('12')
+      fireEvent.change(input, { target: { value: '' } })
+      fireEvent.keyDown(input, { key: 'Enter' })
+      expect(screen.getByText('Nombre entier requis.')).toBeInTheDocument()
+      fireEvent.change(input, { target: { value: '5' } })
+      expect(screen.queryByText('Nombre entier requis.')).not.toBeInTheDocument()
+    })
+
+    it('permet de corriger la saisie après une erreur puis de valider', () => {
+      const { onSetCount } = renderCard({ count: 12 })
+      fireEvent.click(screen.getByRole('button', { name: 'Définir la valeur du compteur' }))
+      const input = screen.getByDisplayValue('12')
+      fireEvent.change(input, { target: { value: '' } })
+      fireEvent.keyDown(input, { key: 'Enter' })
+      fireEvent.change(input, { target: { value: '20' } })
+      fireEvent.keyDown(input, { key: 'Enter' })
+      expect(onSetCount).toHaveBeenCalledWith(20)
     })
 
     it('annule avec Échap sans appeler onSetCount', () => {
@@ -588,6 +613,26 @@ describe('CounterCard', () => {
       const { onChange } = renderCard({ count: 42 })
       fireEvent.click(screen.getByRole('button', { name: 'Définir la valeur du compteur' }))
       fireEvent.pointerDown(screen.getByDisplayValue('42'))
+      expect(onChange).not.toHaveBeenCalled()
+    })
+
+    it("cliquer sur le message d'erreur n'incrémente pas le compteur", () => {
+      const { onChange } = renderCard({ count: 42 })
+      fireEvent.click(screen.getByRole('button', { name: 'Définir la valeur du compteur' }))
+      const input = screen.getByDisplayValue('42')
+      fireEvent.change(input, { target: { value: '' } })
+      fireEvent.keyDown(input, { key: 'Enter' })
+      fireEvent.click(screen.getByText('Nombre entier requis.'))
+      expect(onChange).not.toHaveBeenCalled()
+    })
+
+    it("pointerdown sur le message d'erreur n'incrémente pas le compteur", () => {
+      const { onChange } = renderCard({ count: 42 })
+      fireEvent.click(screen.getByRole('button', { name: 'Définir la valeur du compteur' }))
+      const input = screen.getByDisplayValue('42')
+      fireEvent.change(input, { target: { value: '' } })
+      fireEvent.keyDown(input, { key: 'Enter' })
+      fireEvent.pointerDown(screen.getByText('Nombre entier requis.'))
       expect(onChange).not.toHaveBeenCalled()
     })
   })

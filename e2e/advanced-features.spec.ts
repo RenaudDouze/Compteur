@@ -125,6 +125,26 @@ test.describe('Fonctionnalités avancées', () => {
     await expect(page.locator('.counter-value')).toHaveText('0')
   })
 
+  test("affiche une erreur pour un pas d'incrément invalide, sans faire disparaître l'erreur au changement de focus", async ({
+    page,
+  }) => {
+    await page.getByRole('button', { name: 'Personnaliser le compteur' }).click()
+    const input = page.getByPlaceholder('1')
+    await input.fill('0')
+    await input.press('Enter')
+    await expect(page.getByText('Nombre entier positif requis.')).toBeVisible()
+
+    // Cliquer ailleurs dans le panneau (perte de focus) ne doit pas faire
+    // disparaître silencieusement l'erreur.
+    await page.getByRole('heading', { name: 'Couleur' }).click()
+    await expect(page.getByText('Nombre entier positif requis.')).toBeVisible()
+
+    await input.fill('3')
+    await input.press('Enter')
+    await expect(page.getByText('Nombre entier positif requis.')).not.toBeVisible()
+    await expect(page.getByText('+3 / −3 à chaque appui')).toBeVisible()
+  })
+
   test('modifie la date de début et affiche un rappel textuel', async ({ page }) => {
     await page.getByRole('button', { name: 'Personnaliser le compteur' }).click()
     const hint = page.locator('.modal-section:has(input[type="date"]) .modal-hint')
@@ -163,13 +183,15 @@ test.describe('Fonctionnalités avancées', () => {
     await expect(page.locator('.counter-bg')).not.toBeAttached()
   })
 
-  test('ignore une URL invalide comme image de fond', async ({ page }) => {
+  test('ignore une URL invalide comme image de fond et affiche une erreur', async ({ page }) => {
     await page.getByRole('button', { name: 'Personnaliser le compteur' }).click()
     const input = page.getByPlaceholder('https://exemple.com/image.jpg')
     await input.fill('pas-une-url')
     await input.press('Enter')
     await expect(page.locator('.counter-bg')).not.toBeAttached()
-    await expect(input).toHaveValue('')
+    await expect(page.getByText('URL http(s) invalide.')).toBeVisible()
+    // La saisie reste affichée pour que l'utilisateur puisse la corriger.
+    await expect(input).toHaveValue('pas-une-url')
   })
 
   test('change la couleur du compteur via la palette', async ({ page }) => {
@@ -198,6 +220,19 @@ test.describe('Fonctionnalités avancées', () => {
     await input.fill('-42')
     await input.press('Enter')
     await expect(page.locator('.counter-value')).toHaveText('-42')
+  })
+
+  test('affiche une erreur et ne ferme pas le champ si la saisie directe est invalide', async ({ page }) => {
+    await page.getByRole('button', { name: 'Définir la valeur du compteur' }).click()
+    const input = page.locator('.counter-value-input')
+    await input.fill('abc')
+    await input.press('Enter')
+    await expect(page.getByText('Nombre entier requis.')).toBeVisible()
+    await expect(input).toBeVisible()
+    // Corrige la saisie : le champ se ferme et le compteur adopte la valeur.
+    await input.fill('7')
+    await input.press('Enter')
+    await expect(page.locator('.counter-value')).toHaveText('7')
   })
 
   test('réordonne les compteurs par glisser-déposer', async ({ page }) => {

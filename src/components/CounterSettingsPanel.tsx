@@ -9,6 +9,8 @@ import { CounterValueDisplay } from './CounterValueDisplay'
 import { DISPLAY_STYLES } from '../displayStyles'
 import type { Counter, DisplayStyle } from '../types'
 
+const POSITIVE_INT_ERROR = 'Nombre entier positif requis.'
+
 interface CounterSettingsPanelProps {
   counter: Counter
   colors: string[]
@@ -36,10 +38,18 @@ export function CounterSettingsPanel({
   onSetDisplayStyle,
   onDuplicate,
 }: CounterSettingsPanelProps) {
+  const startDate = counter.startDate ?? toIsoDate(counter.createdAt)
+
   const [draftOdds, setDraftOdds] = useState(counter.oddsDenominator?.toString() ?? '')
+  const [oddsError, setOddsError] = useState<string | null>(null)
   const [draftTarget, setDraftTarget] = useState(counter.target?.toString() ?? '')
+  const [targetError, setTargetError] = useState<string | null>(null)
   const [draftBackground, setDraftBackground] = useState(counter.backgroundImageUrl ?? '')
+  const [backgroundError, setBackgroundError] = useState<string | null>(null)
   const [draftStep, setDraftStep] = useState(counter.step?.toString() ?? '')
+  const [stepError, setStepError] = useState<string | null>(null)
+  const [draftStartDate, setDraftStartDate] = useState(startDate)
+  const [startDateError, setStartDateError] = useState<string | null>(null)
   const [shared, setShared] = useState(false)
   const shareTimer = useRef<ReturnType<typeof setTimeout> | undefined>(undefined)
 
@@ -52,36 +62,86 @@ export function CounterSettingsPanel({
   }, [onClose])
 
   const commitOdds = () => {
+    if (draftOdds.trim() === '') {
+      setOddsError(null)
+      onSetOdds(undefined)
+      return
+    }
     const parsed = parseInt(draftOdds.replace(/[^\d]/g, ''), 10)
-    onSetOdds(Number.isFinite(parsed) && parsed > 0 ? parsed : undefined)
+    if (Number.isFinite(parsed) && parsed > 0) {
+      setOddsError(null)
+      onSetOdds(parsed)
+    } else {
+      // Laisse la saisie invalide affichée (plutôt que de revenir à la
+      // valeur précédente) : sinon un blur qui reperd le focus sur ce champ
+      // (ex: en cliquant ailleurs) recommetterait un brouillon déjà vidé, et
+      // ferait silencieusement disparaître le message d'erreur.
+      setOddsError(POSITIVE_INT_ERROR)
+    }
   }
 
   const commitTarget = () => {
+    if (draftTarget.trim() === '') {
+      setTargetError(null)
+      onSetTarget(undefined)
+      return
+    }
     const parsed = parseInt(draftTarget.replace(/[^\d]/g, ''), 10)
-    onSetTarget(Number.isFinite(parsed) && parsed > 0 ? parsed : undefined)
+    if (Number.isFinite(parsed) && parsed > 0) {
+      setTargetError(null)
+      onSetTarget(parsed)
+    } else {
+      setTargetError(POSITIVE_INT_ERROR)
+    }
   }
 
   const commitStep = () => {
+    if (draftStep.trim() === '') {
+      setStepError(null)
+      onSetStep(undefined)
+      return
+    }
     const parsed = parseInt(draftStep.replace(/[^\d]/g, ''), 10)
-    onSetStep(Number.isFinite(parsed) && parsed > 0 ? parsed : undefined)
+    if (Number.isFinite(parsed) && parsed > 0) {
+      setStepError(null)
+      onSetStep(parsed)
+    } else {
+      setStepError(POSITIVE_INT_ERROR)
+    }
   }
 
   const commitBackground = () => {
     const trimmed = draftBackground.trim()
     if (!trimmed) {
+      setBackgroundError(null)
       onSetBackgroundImage(undefined)
     } else if (isValidImageUrl(trimmed)) {
+      setBackgroundError(null)
       onSetBackgroundImage(trimmed)
     } else {
-      // URL invalide : on ignore la saisie et on revient à la valeur actuelle
-      // plutôt que d'effacer une image déjà définie sur une simple faute de frappe.
-      setDraftBackground(counter.backgroundImageUrl ?? '')
+      setBackgroundError('URL http(s) invalide.')
     }
   }
 
   const clearBackground = () => {
     setDraftBackground('')
+    setBackgroundError(null)
     onSetBackgroundImage(undefined)
+  }
+
+  const handleStartDateChange = (value: string) => {
+    setDraftStartDate(value)
+    if (value === '') {
+      setStartDateError(null)
+      onSetStartDate(undefined)
+    } else if (value > todayIsoDate()) {
+      // Bloqué en pratique par `max` sur le sélecteur natif, mais gardé en
+      // filet de sécurité (saisie clavier manuelle selon le navigateur).
+      setStartDateError('La date ne peut pas être dans le futur.')
+    } else {
+      setStartDateError(null)
+      onSetStartDate(value)
+    }
   }
 
   const handleShare = async () => {
@@ -106,7 +166,6 @@ export function CounterSettingsPanel({
 
   const denominator = counter.oddsDenominator
   const odds = denominator ? cumulativeOdds(denominator, counter.count) : null
-  const startDate = counter.startDate ?? toIsoDate(counter.createdAt)
   const activeStyle: DisplayStyle = counter.displayStyle ?? 'default'
   const target = counter.target
   const targetProgress = target ? Math.max(0, Math.min(counter.count / target, 1)) : null
@@ -190,14 +249,19 @@ export function CounterSettingsPanel({
             className="modal-input modal-input--odds"
             inputMode="numeric"
             pattern="[0-9]*"
+            aria-invalid={stepError !== null}
             value={draftStep}
             placeholder="1"
-            onChange={(e) => setDraftStep(e.target.value)}
+            onChange={(e) => {
+              setDraftStep(e.target.value)
+              setStepError(null)
+            }}
             onBlur={commitStep}
             onKeyDown={(e) => {
               if (e.key === 'Enter') commitStep()
             }}
           />
+          {stepError && <p className="modal-error">{stepError}</p>}
           <p className="modal-hint">
             +{counter.step ?? 1} / −{counter.step ?? 1} à chaque appui
           </p>
@@ -210,9 +274,13 @@ export function CounterSettingsPanel({
               type="url"
               inputMode="url"
               className="modal-input"
+              aria-invalid={backgroundError !== null}
               value={draftBackground}
               placeholder="https://exemple.com/image.jpg"
-              onChange={(e) => setDraftBackground(e.target.value)}
+              onChange={(e) => {
+                setDraftBackground(e.target.value)
+                setBackgroundError(null)
+              }}
               onBlur={commitBackground}
               onKeyDown={(e) => {
                 if (e.key === 'Enter') commitBackground()
@@ -224,6 +292,7 @@ export function CounterSettingsPanel({
               </button>
             )}
           </div>
+          {backgroundError && <p className="modal-error">{backgroundError}</p>}
         </section>
 
         <section className="modal-section">
@@ -232,14 +301,19 @@ export function CounterSettingsPanel({
             className="modal-input modal-input--odds"
             inputMode="numeric"
             pattern="[0-9]*"
+            aria-invalid={targetError !== null}
             value={draftTarget}
             placeholder="ex : 50"
-            onChange={(e) => setDraftTarget(e.target.value)}
+            onChange={(e) => {
+              setDraftTarget(e.target.value)
+              setTargetError(null)
+            }}
             onBlur={commitTarget}
             onKeyDown={(e) => {
               if (e.key === 'Enter') commitTarget()
             }}
           />
+          {targetError && <p className="modal-error">{targetError}</p>}
           {target !== undefined && (
             <>
               <div
@@ -268,15 +342,20 @@ export function CounterSettingsPanel({
               className="modal-input modal-input--odds"
               inputMode="numeric"
               pattern="[0-9]*"
+              aria-invalid={oddsError !== null}
               value={draftOdds}
               placeholder="4096"
-              onChange={(e) => setDraftOdds(e.target.value)}
+              onChange={(e) => {
+                setDraftOdds(e.target.value)
+                setOddsError(null)
+              }}
               onBlur={commitOdds}
               onKeyDown={(e) => {
                 if (e.key === 'Enter') commitOdds()
               }}
             />
           </div>
+          {oddsError && <p className="modal-error">{oddsError}</p>}
           {denominator !== undefined && (
             <>
               <p className="modal-hint">{formatOdds(odds!)} de chances de l'avoir obtenu avant ce stade</p>
@@ -304,10 +383,12 @@ export function CounterSettingsPanel({
           <input
             type="date"
             className="modal-input"
-            defaultValue={startDate}
+            aria-invalid={startDateError !== null}
+            value={draftStartDate}
             max={todayIsoDate()}
-            onChange={(e) => onSetStartDate(e.target.value || undefined)}
+            onChange={(e) => handleStartDateChange(e.target.value)}
           />
+          {startDateError && <p className="modal-error">{startDateError}</p>}
           <p className="modal-hint">{formatStartDate(startDate)}</p>
         </section>
 

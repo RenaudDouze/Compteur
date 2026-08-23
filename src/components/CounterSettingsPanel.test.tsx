@@ -216,12 +216,36 @@ describe('CounterSettingsPanel', () => {
       expect(onSetStep).toHaveBeenCalledWith(undefined)
     })
 
-    it('revient au pas par défaut si la saisie est 0', () => {
+    it('affiche une erreur et garde la saisie invalide affichée si la saisie est 0', () => {
       const { onSetStep } = renderPanel({ step: 5 })
       const input = screen.getByDisplayValue('5')
       fireEvent.change(input, { target: { value: '0' } })
       fireEvent.keyDown(input, { key: 'Enter' })
-      expect(onSetStep).toHaveBeenCalledWith(undefined)
+      expect(onSetStep).not.toHaveBeenCalled()
+      expect(screen.getByText('Nombre entier positif requis.')).toBeInTheDocument()
+      expect(screen.getByDisplayValue('0')).toBeInTheDocument()
+    })
+
+    it("efface l'erreur dès que la saisie est modifiée", () => {
+      renderPanel({ step: 5 })
+      const input = screen.getByDisplayValue('5')
+      fireEvent.change(input, { target: { value: '0' } })
+      fireEvent.keyDown(input, { key: 'Enter' })
+      expect(screen.getByText('Nombre entier positif requis.')).toBeInTheDocument()
+      fireEvent.change(input, { target: { value: '3' } })
+      expect(screen.queryByText('Nombre entier positif requis.')).not.toBeInTheDocument()
+    })
+
+    it("garde l'erreur affichée si le champ reperd le focus sans être corrigé", () => {
+      renderPanel({ step: 5 })
+      const input = screen.getByDisplayValue('5')
+      fireEvent.change(input, { target: { value: '0' } })
+      fireEvent.keyDown(input, { key: 'Enter' })
+      expect(screen.getByText('Nombre entier positif requis.')).toBeInTheDocument()
+      // Un blur sans modification (ex: en cliquant ailleurs dans le panneau)
+      // ne doit pas faire disparaître silencieusement l'erreur.
+      fireEvent.blur(input)
+      expect(screen.getByText('Nombre entier positif requis.')).toBeInTheDocument()
     })
 
     it("ne commite pas sur une touche autre qu'Entrée", () => {
@@ -271,13 +295,24 @@ describe('CounterSettingsPanel', () => {
       expect(onSetBackgroundImage).toHaveBeenCalledWith('https://exemple.com/blur.jpg')
     })
 
-    it('ignore une URL invalide et conserve la valeur précédente', () => {
+    it('ignore une URL invalide, affiche une erreur et garde la saisie affichée', () => {
       const { onSetBackgroundImage } = renderPanel({ backgroundImageUrl: 'https://exemple.com/ancien.jpg' })
       const input = screen.getByDisplayValue('https://exemple.com/ancien.jpg')
       fireEvent.change(input, { target: { value: 'pas-une-url' } })
       fireEvent.keyDown(input, { key: 'Enter' })
       expect(onSetBackgroundImage).not.toHaveBeenCalled()
-      expect(screen.getByDisplayValue('https://exemple.com/ancien.jpg')).toBeInTheDocument()
+      expect(screen.getByText('URL http(s) invalide.')).toBeInTheDocument()
+      expect(screen.getByDisplayValue('pas-une-url')).toBeInTheDocument()
+    })
+
+    it("garde l'erreur d'URL affichée si le champ reperd le focus sans être corrigé", () => {
+      renderPanel({ backgroundImageUrl: 'https://exemple.com/ancien.jpg' })
+      const input = screen.getByDisplayValue('https://exemple.com/ancien.jpg')
+      fireEvent.change(input, { target: { value: 'pas-une-url' } })
+      fireEvent.keyDown(input, { key: 'Enter' })
+      expect(screen.getByText('URL http(s) invalide.')).toBeInTheDocument()
+      fireEvent.blur(input)
+      expect(screen.getByText('URL http(s) invalide.')).toBeInTheDocument()
     })
 
     it('efface l\'image de fond si la saisie est vidée', () => {
@@ -294,7 +329,7 @@ describe('CounterSettingsPanel', () => {
       fireEvent.change(input, { target: { value: 'pas-une-url' } })
       fireEvent.keyDown(input, { key: 'Enter' })
       expect(onSetBackgroundImage).not.toHaveBeenCalled()
-      expect((input as HTMLInputElement).value).toBe('')
+      expect((input as HTMLInputElement).value).toBe('pas-une-url')
     })
 
     it("ne commite pas sur une touche autre qu'Entrée", () => {
@@ -367,12 +402,24 @@ describe('CounterSettingsPanel', () => {
       expect(onSetTarget).toHaveBeenCalledWith(undefined)
     })
 
-    it("efface l'objectif si la saisie est 0", () => {
+    it('affiche une erreur et garde la saisie invalide affichée si la saisie est 0', () => {
       const { onSetTarget } = renderPanel({ target: 10 })
       const input = screen.getByDisplayValue('10')
       fireEvent.change(input, { target: { value: '0' } })
       fireEvent.keyDown(input, { key: 'Enter' })
-      expect(onSetTarget).toHaveBeenCalledWith(undefined)
+      expect(onSetTarget).not.toHaveBeenCalled()
+      expect(screen.getByText('Nombre entier positif requis.')).toBeInTheDocument()
+      expect(screen.getByDisplayValue('0')).toBeInTheDocument()
+    })
+
+    it("garde l'erreur affichée si le champ reperd le focus sans être corrigé", () => {
+      renderPanel()
+      const input = screen.getByPlaceholderText('ex : 50')
+      fireEvent.change(input, { target: { value: '0' } })
+      fireEvent.keyDown(input, { key: 'Enter' })
+      expect(screen.getByText('Nombre entier positif requis.')).toBeInTheDocument()
+      fireEvent.blur(input)
+      expect(screen.getByText('Nombre entier positif requis.')).toBeInTheDocument()
     })
 
     it("ne commite pas sur une touche autre qu'Entrée", () => {
@@ -447,12 +494,24 @@ describe('CounterSettingsPanel', () => {
       expect(onSetOdds).toHaveBeenCalledWith(undefined)
     })
 
-    it('efface la probabilité si la saisie est 0', () => {
+    it('affiche une erreur et garde la saisie invalide affichée si la saisie est 0', () => {
       const { onSetOdds } = renderPanel({ oddsDenominator: 10 })
       const input = screen.getByDisplayValue('10')
       fireEvent.change(input, { target: { value: '0' } })
       fireEvent.keyDown(input, { key: 'Enter' })
-      expect(onSetOdds).toHaveBeenCalledWith(undefined)
+      expect(onSetOdds).not.toHaveBeenCalled()
+      expect(screen.getByText('Nombre entier positif requis.')).toBeInTheDocument()
+      expect(screen.getByDisplayValue('0')).toBeInTheDocument()
+    })
+
+    it("garde l'erreur affichée si le champ reperd le focus sans être corrigé", () => {
+      renderPanel()
+      const input = screen.getByPlaceholderText('4096')
+      fireEvent.change(input, { target: { value: '0' } })
+      fireEvent.keyDown(input, { key: 'Enter' })
+      expect(screen.getByText('Nombre entier positif requis.')).toBeInTheDocument()
+      fireEvent.blur(input)
+      expect(screen.getByText('Nombre entier positif requis.')).toBeInTheDocument()
     })
 
     it("ne commite pas sur une touche autre qu'Entrée", () => {
@@ -552,6 +611,25 @@ describe('CounterSettingsPanel', () => {
     it('affiche un rappel textuel de la date de début', () => {
       renderPanel({ createdAt: new Date(2026, 7, 1).getTime(), startDate: undefined })
       expect(screen.getByText(/août/)).toBeInTheDocument()
+    })
+
+    it("affiche une erreur et ne commite pas pour une date dans le futur (filet de sécurité au-delà du sélecteur natif)", () => {
+      const { onSetStartDate } = renderPanel({ startDate: '2026-01-01' })
+      const input = document.querySelector('input[type="date"]') as HTMLInputElement
+      fireEvent.change(input, { target: { value: '9999-12-31' } })
+      expect(onSetStartDate).not.toHaveBeenCalled()
+      expect(screen.getByText('La date ne peut pas être dans le futur.')).toBeInTheDocument()
+      expect(input).toHaveValue('9999-12-31')
+    })
+
+    it("efface l'erreur de date une fois une date valide saisie", () => {
+      const { onSetStartDate } = renderPanel({ startDate: '2026-01-01' })
+      const input = document.querySelector('input[type="date"]') as HTMLInputElement
+      fireEvent.change(input, { target: { value: '9999-12-31' } })
+      expect(screen.getByText('La date ne peut pas être dans le futur.')).toBeInTheDocument()
+      fireEvent.change(input, { target: { value: '2026-02-01' } })
+      expect(screen.queryByText('La date ne peut pas être dans le futur.')).not.toBeInTheDocument()
+      expect(onSetStartDate).toHaveBeenCalledWith('2026-02-01')
     })
   })
 
