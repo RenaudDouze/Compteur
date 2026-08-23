@@ -14,11 +14,13 @@ interface CounterSettingsPanelProps {
   colors: string[]
   onClose: () => void
   onSetOdds: (denominator: number | undefined) => void
+  onSetTarget: (target: number | undefined) => void
   onSetStartDate: (isoDate: string | undefined) => void
   onSetBackgroundImage: (url: string | undefined) => void
   onSetColor: (color: string) => void
   onSetStep: (step: number | undefined) => void
   onSetDisplayStyle: (style: DisplayStyle | undefined) => void
+  onDuplicate: () => void
 }
 
 export function CounterSettingsPanel({
@@ -26,13 +28,16 @@ export function CounterSettingsPanel({
   colors,
   onClose,
   onSetOdds,
+  onSetTarget,
   onSetStartDate,
   onSetBackgroundImage,
   onSetColor,
   onSetStep,
   onSetDisplayStyle,
+  onDuplicate,
 }: CounterSettingsPanelProps) {
   const [draftOdds, setDraftOdds] = useState(counter.oddsDenominator?.toString() ?? '')
+  const [draftTarget, setDraftTarget] = useState(counter.target?.toString() ?? '')
   const [draftBackground, setDraftBackground] = useState(counter.backgroundImageUrl ?? '')
   const [draftStep, setDraftStep] = useState(counter.step?.toString() ?? '')
   const [shared, setShared] = useState(false)
@@ -49,6 +54,11 @@ export function CounterSettingsPanel({
   const commitOdds = () => {
     const parsed = parseInt(draftOdds.replace(/[^\d]/g, ''), 10)
     onSetOdds(Number.isFinite(parsed) && parsed > 0 ? parsed : undefined)
+  }
+
+  const commitTarget = () => {
+    const parsed = parseInt(draftTarget.replace(/[^\d]/g, ''), 10)
+    onSetTarget(Number.isFinite(parsed) && parsed > 0 ? parsed : undefined)
   }
 
   const commitStep = () => {
@@ -93,6 +103,13 @@ export function CounterSettingsPanel({
   const odds = denominator ? cumulativeOdds(denominator, counter.count) : null
   const startDate = counter.startDate ?? toIsoDate(counter.createdAt)
   const activeStyle: DisplayStyle = counter.displayStyle ?? 'default'
+  const target = counter.target
+  const targetProgress = target ? Math.max(0, Math.min(counter.count / target, 1)) : null
+
+  const handleDuplicate = () => {
+    onDuplicate()
+    onClose()
+  }
 
   return createPortal(
     <div
@@ -198,6 +215,40 @@ export function CounterSettingsPanel({
         </section>
 
         <section className="modal-section">
+          <h3>Objectif</h3>
+          <input
+            className="modal-input modal-input--odds"
+            inputMode="numeric"
+            pattern="[0-9]*"
+            value={draftTarget}
+            placeholder="ex : 50"
+            onChange={(e) => setDraftTarget(e.target.value)}
+            onBlur={commitTarget}
+            onKeyDown={(e) => {
+              if (e.key === 'Enter') commitTarget()
+            }}
+          />
+          {target !== undefined && (
+            <>
+              <div
+                className="odds-progress"
+                role="progressbar"
+                aria-valuenow={Math.round(targetProgress! * 100)}
+                aria-valuemin={0}
+                aria-valuemax={100}
+                aria-label="Progression vers l'objectif"
+              >
+                <div className="odds-progress-fill" style={{ width: `${targetProgress! * 100}%` }} />
+              </div>
+              <p className="modal-hint">
+                {counter.count.toLocaleString('fr-FR')} / {target.toLocaleString('fr-FR')} (
+                {Math.round(targetProgress! * 100)} %)
+              </p>
+            </>
+          )}
+        </section>
+
+        <section className="modal-section">
           <h3>Probabilité</h3>
           <div className="modal-row">
             <span>1 chance sur</span>
@@ -268,6 +319,9 @@ export function CounterSettingsPanel({
         <section className="modal-section">
           <button className="modal-btn" onClick={handleShare}>
             {shared ? 'Copié ✓' : '⇪ Partager ce compteur'}
+          </button>
+          <button className="modal-btn" onClick={handleDuplicate}>
+            ⧉ Dupliquer ce compteur
           </button>
         </section>
       </div>

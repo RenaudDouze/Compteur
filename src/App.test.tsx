@@ -182,6 +182,32 @@ describe('App', () => {
     expect(screen.getByRole('button', { name: 'Choisir le style Volets' }).className).toContain('selected')
   })
 
+  it('définit un objectif pour le compteur', () => {
+    render(<App />)
+    fireEvent.click(screen.getByRole('button', { name: '+ Nouveau compteur' }))
+    fireEvent.click(screen.getByRole('button', { name: 'Personnaliser le compteur' }))
+    const input = screen.getByPlaceholderText('ex : 50')
+    fireEvent.change(input, { target: { value: '20' } })
+    fireEvent.keyDown(input, { key: 'Enter' })
+    fireEvent.click(screen.getByRole('button', { name: 'Fermer' }))
+    fireEvent.click(screen.getByRole('button', { name: 'Personnaliser le compteur' }))
+    expect(screen.getByDisplayValue('20')).toBeInTheDocument()
+  })
+
+  it('duplique un compteur avec sa configuration, mais repart de zéro', () => {
+    render(<App />)
+    fireEvent.click(screen.getByRole('button', { name: '+ Nouveau compteur' }))
+    fireEvent.click(screen.getByRole('button', { name: 'Personnaliser le compteur' }))
+    fireEvent.click(screen.getByRole('button', { name: `Choisir la couleur ${COLORS[1]}` }))
+    fireEvent.click(screen.getByRole('button', { name: 'Choisir le style Volets' }))
+    fireEvent.click(screen.getByRole('button', { name: '⧉ Dupliquer ce compteur' }))
+
+    expect(screen.getByText('Compteur 1')).toBeInTheDocument()
+    expect(screen.getByText('Compteur 1 (copie)')).toBeInTheDocument()
+    expect(document.querySelectorAll('.counter-value--flap')).toHaveLength(2)
+    expect(document.querySelectorAll('.counter-value')[1]).toHaveTextContent('0')
+  })
+
   it('supprime un compteur après confirmation', () => {
     render(<App />)
     fireEvent.click(screen.getByRole('button', { name: '+ Nouveau compteur' }))
@@ -413,6 +439,16 @@ describe('App', () => {
     fireEvent.click(screen.getByRole('button', { name: 'Fermer' }))
     expect(firstCard.querySelector('.counter-value--flap')).toBeInTheDocument()
     expect(secondCard.querySelector('.counter-value--flap')).not.toBeInTheDocument()
+
+    // Définit un objectif uniquement sur le premier.
+    fireEvent.click(within(firstCard).getByRole('button', { name: 'Personnaliser le compteur' }))
+    fireEvent.change(screen.getByPlaceholderText('ex : 50'), { target: { value: '20' } })
+    fireEvent.keyDown(screen.getByPlaceholderText('ex : 50'), { key: 'Enter' })
+    fireEvent.click(screen.getByRole('button', { name: 'Fermer' }))
+
+    fireEvent.click(within(secondCard).getByRole('button', { name: 'Personnaliser le compteur' }))
+    expect(screen.queryByDisplayValue('20')).not.toBeInTheDocument()
+    fireEvent.click(screen.getByRole('button', { name: 'Fermer' }))
 
     // Définit directement la valeur uniquement sur le premier.
     fireEvent.click(within(firstCard).getByRole('button', { name: 'Définir la valeur du compteur' }))

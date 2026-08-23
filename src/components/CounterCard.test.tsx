@@ -30,6 +30,8 @@ function renderCard(counterOverrides: Partial<Counter> = {}, props: Partial<Para
     onSetColor: vi.fn(),
     onSetStep: vi.fn(),
     onSetDisplayStyle: vi.fn(),
+    onSetTarget: vi.fn(),
+    onDuplicate: vi.fn(),
     onDelete: vi.fn(),
     ...props,
   }
@@ -314,6 +316,23 @@ describe('CounterCard', () => {
         screen.queryByText(/Chaque tentative garde exactement 1 chance sur 4, quel que soit/)
       ).not.toBeInTheDocument()
       expect(document.querySelectorAll('.counter-odds-hint')).toHaveLength(1)
+    })
+  })
+
+  describe('progression du style anneau', () => {
+    it("n'affiche pas de progression sans objectif ni probabilité", () => {
+      renderCard({ displayStyle: 'ring' })
+      expect(document.querySelector('.value-ring-pct')).not.toBeInTheDocument()
+    })
+
+    it("utilise la probabilité pour la progression quand aucun objectif n'est défini", () => {
+      renderCard({ displayStyle: 'ring', oddsDenominator: 4, count: 1 })
+      expect(document.querySelector('.value-ring-pct')).toHaveTextContent('25 %')
+    })
+
+    it("privilégie l'objectif à la probabilité pour la progression quand les deux sont définis", () => {
+      renderCard({ displayStyle: 'ring', target: 20, count: 5, oddsDenominator: 4 })
+      expect(document.querySelector('.value-ring-pct')).toHaveTextContent('25 %')
     })
   })
 
@@ -645,6 +664,8 @@ describe('CounterCard', () => {
             onSetColor={vi.fn()}
             onSetStep={vi.fn()}
             onSetDisplayStyle={vi.fn()}
+            onSetTarget={vi.fn()}
+            onDuplicate={vi.fn()}
             onDelete={vi.fn()}
           />
         </Reorder.Group>
@@ -666,6 +687,8 @@ describe('CounterCard', () => {
             onSetColor={vi.fn()}
             onSetStep={vi.fn()}
             onSetDisplayStyle={vi.fn()}
+            onSetTarget={vi.fn()}
+            onDuplicate={vi.fn()}
             onDelete={vi.fn()}
           />
         </Reorder.Group>
@@ -697,6 +720,8 @@ describe('CounterCard', () => {
             onSetColor={vi.fn()}
             onSetStep={vi.fn()}
             onSetDisplayStyle={vi.fn()}
+            onSetTarget={vi.fn()}
+            onDuplicate={vi.fn()}
             onDelete={vi.fn()}
           />
         </Reorder.Group>
@@ -716,6 +741,8 @@ describe('CounterCard', () => {
             onSetColor={vi.fn()}
             onSetStep={vi.fn()}
             onSetDisplayStyle={vi.fn()}
+            onSetTarget={vi.fn()}
+            onDuplicate={vi.fn()}
             onDelete={vi.fn()}
           />
         </Reorder.Group>
