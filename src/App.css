@@ -429,6 +429,12 @@
   pointer-events: none;
 }
 
+/* Le style éditorial se veut sans ombre ni relief : la lueur de fond
+   (pensée pour le dégradé du style par défaut) ne convient qu'à lui. */
+.counter-value--editorial {
+  filter: none;
+}
+
 .counter-grid--solo .counter-value,
 .counter-grid--duo .counter-value {
   flex: 1;
@@ -460,6 +466,255 @@
   -webkit-background-clip: text;
   background-clip: text;
   color: transparent;
+}
+
+/* ---------- Styles alternatifs du chiffre (voir CounterValueDisplay) ----------
+   Toutes les tailles ci-dessous sont en `em`, relatives à la taille de police
+   déjà posée sur `.counter-value` (par mode de grille, ou par la mesure JS du
+   style par défaut) : chaque style suit donc l'espace disponible sans calcul
+   supplémentaire. Les styles "objet physique" (volets, LCD, 7 segments) ont
+   des couleurs fixes, indépendantes du thème clair/sombre — au même titre
+   qu'une photo d'appareil, ils représentent un seul objet cohérent. */
+
+.value-flap {
+  display: flex;
+  gap: 0.1em;
+}
+
+.value-flap-tile {
+  position: relative;
+  width: 0.6em;
+  height: 1em;
+  background: #24262b;
+  border-radius: 0.1em;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  overflow: hidden;
+  box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.05);
+}
+
+.value-flap-char {
+  font-family: var(--font-mono);
+  font-weight: 800;
+  font-size: 0.62em;
+  color: #ede9df;
+}
+
+.value-flap-hinge {
+  position: absolute;
+  top: 50%;
+  left: 0;
+  right: 0;
+  height: 2px;
+  background: rgba(0, 0, 0, 0.55);
+  transform: translateY(-1px);
+}
+
+.value-lcd {
+  position: relative;
+  background: #cec9b8;
+  border-radius: 0.14em;
+  padding: 0.16em 0.2em;
+}
+
+.value-lcd-led {
+  position: absolute;
+  top: 0.14em;
+  right: 0.16em;
+  width: 0.08em;
+  height: 0.08em;
+  border-radius: 50%;
+  background: #ff5b4d;
+  box-shadow: 0 0 0.1em rgba(255, 91, 77, 0.9);
+}
+
+.value-lcd-ghost,
+.value-lcd-digits {
+  display: block;
+  font-family: var(--font-mono);
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+  letter-spacing: 0.04em;
+  background: #0d1f14;
+  border-radius: 0.06em;
+  padding: 0.1em 0.14em;
+}
+
+.value-lcd-ghost {
+  color: #1c3a26;
+}
+
+.value-lcd-digits {
+  position: absolute;
+  inset: 0.16em 0.2em;
+  color: #6bffa0;
+  text-shadow: 0 0 0.15em rgba(107, 255, 160, 0.65), 0 0 0.05em rgba(107, 255, 160, 0.9);
+}
+
+.value-segment7 {
+  display: flex;
+  gap: 0.12em;
+}
+
+.value-segment-digit {
+  position: relative;
+  display: inline-block;
+  width: 0.58em;
+  height: 1em;
+  background: #150606;
+  border-radius: 0.08em;
+}
+
+.value-segment {
+  position: absolute;
+  background: #3a0a0a;
+  border-radius: 1px;
+}
+
+.value-segment.is-on {
+  background: #ff3b30;
+  box-shadow: 0 0 0.1em rgba(255, 59, 48, 0.85), 0 0 0.03em rgba(255, 59, 48, 1);
+}
+
+.value-segment--a {
+  top: 6%;
+  left: 18%;
+  width: 64%;
+  height: 9%;
+}
+.value-segment--d {
+  bottom: 6%;
+  left: 18%;
+  width: 64%;
+  height: 9%;
+}
+.value-segment--g {
+  top: 45.5%;
+  left: 18%;
+  width: 64%;
+  height: 9%;
+}
+.value-segment--f {
+  top: 10%;
+  left: 8%;
+  width: 10%;
+  height: 38%;
+}
+.value-segment--b {
+  top: 10%;
+  right: 8%;
+  width: 10%;
+  height: 38%;
+}
+.value-segment--e {
+  bottom: 10%;
+  left: 8%;
+  width: 10%;
+  height: 38%;
+}
+.value-segment--c {
+  bottom: 10%;
+  right: 8%;
+  width: 10%;
+  height: 38%;
+}
+
+.value-ring {
+  position: relative;
+  width: 2.6em;
+  height: 2.6em;
+}
+
+.value-ring-svg {
+  width: 100%;
+  height: 100%;
+  transform: rotate(-90deg);
+}
+
+.value-ring-track {
+  fill: none;
+  stroke: var(--surface-border);
+  stroke-width: 8;
+}
+
+.value-ring-fill {
+  fill: none;
+  stroke: var(--accent);
+  stroke-width: 8;
+  stroke-linecap: round;
+}
+
+.value-ring-center {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 0.02em;
+}
+
+.value-ring-number {
+  font-family: var(--font-mono);
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+  font-size: 0.34em;
+  color: var(--text);
+}
+
+.value-ring-pct {
+  font-family: var(--font-mono);
+  font-size: 0.13em;
+  font-weight: 600;
+  color: var(--accent);
+}
+
+.value-editorial {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.08em;
+}
+
+.value-editorial-number {
+  font-family: var(--font-ui);
+  font-weight: 300;
+  letter-spacing: 0.02em;
+  font-variant-numeric: tabular-nums;
+  color: var(--text);
+}
+
+.value-editorial-rule {
+  width: 0.5em;
+  height: 1px;
+  background: var(--text-dim);
+  opacity: 0.5;
+}
+
+.value-badge {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.value-badge-pill {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0.14em 0.5em;
+  border-radius: 999px;
+  background: linear-gradient(
+    135deg,
+    color-mix(in srgb, var(--accent) 85%, white 15%),
+    var(--accent) 60%,
+    color-mix(in srgb, var(--accent) 70%, black 20%)
+  );
+  color: #fff;
+  font-family: var(--font-ui);
+  font-weight: 800;
+  font-variant-numeric: tabular-nums;
+  box-shadow: 0 0.1em 0.3em color-mix(in srgb, var(--accent) 45%, transparent), inset 0 1px 0 rgba(255, 255, 255, 0.35);
 }
 
 .counter-odds-stats {
@@ -673,6 +928,43 @@
   flex-wrap: wrap;
   justify-content: center;
   gap: 8px;
+}
+
+.display-style-grid {
+  width: 100%;
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(84px, 1fr));
+  gap: 10px;
+}
+
+.display-style-option {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 6px;
+  padding: 10px 6px;
+  border-radius: 12px;
+  border: 2px solid transparent;
+  background: var(--bg-1);
+}
+
+.display-style-option.selected {
+  border-color: var(--accent, #2563eb);
+}
+
+.display-style-preview {
+  font-size: 1.3rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  height: 2.6em;
+}
+
+.display-style-name {
+  font-size: 0.72rem;
+  font-weight: 600;
+  color: var(--text-dim);
+  text-align: center;
 }
 
 .modal-btn {

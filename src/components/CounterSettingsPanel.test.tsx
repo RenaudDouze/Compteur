@@ -30,6 +30,7 @@ function renderPanel(
     onSetBackgroundImage: vi.fn(),
     onSetColor: vi.fn(),
     onSetStep: vi.fn(),
+    onSetDisplayStyle: vi.fn(),
     ...props,
   }
   const utils = render(<CounterSettingsPanel counter={counter} {...handlers} {...props} />)
@@ -126,6 +127,45 @@ describe('CounterSettingsPanel', () => {
     it('reste ouvert après avoir choisi une couleur', () => {
       const { onClose } = renderPanel()
       fireEvent.click(screen.getByRole('button', { name: `Choisir la couleur ${TEST_COLORS[1]}` }))
+      expect(onClose).not.toHaveBeenCalled()
+    })
+  })
+
+  describe("style d'affichage", () => {
+    it('affiche une option par style disponible', () => {
+      renderPanel()
+      ;['Actuel', 'Volets', 'LCD rétro', '7 segments', 'Anneau', 'Éditorial', 'Pastille'].forEach((label) => {
+        expect(screen.getByRole('button', { name: `Choisir le style ${label}` })).toBeInTheDocument()
+      })
+    })
+
+    it("marque 'Actuel' comme sélectionné quand aucun style n'est défini", () => {
+      renderPanel()
+      expect(screen.getByRole('button', { name: 'Choisir le style Actuel' }).className).toContain('selected')
+      expect(screen.getByRole('button', { name: 'Choisir le style Volets' }).className).not.toContain('selected')
+    })
+
+    it('marque le style actuellement sélectionné', () => {
+      renderPanel({ displayStyle: 'lcd' })
+      expect(screen.getByRole('button', { name: 'Choisir le style LCD rétro' }).className).toContain('selected')
+      expect(screen.getByRole('button', { name: 'Choisir le style Actuel' }).className).not.toContain('selected')
+    })
+
+    it('choisit un style personnalisé', () => {
+      const { onSetDisplayStyle } = renderPanel()
+      fireEvent.click(screen.getByRole('button', { name: 'Choisir le style 7 segments' }))
+      expect(onSetDisplayStyle).toHaveBeenCalledWith('segment7')
+    })
+
+    it("repasse à 'undefined' (style par défaut) en choisissant Actuel", () => {
+      const { onSetDisplayStyle } = renderPanel({ displayStyle: 'badge' })
+      fireEvent.click(screen.getByRole('button', { name: 'Choisir le style Actuel' }))
+      expect(onSetDisplayStyle).toHaveBeenCalledWith(undefined)
+    })
+
+    it('reste ouvert après avoir choisi un style', () => {
+      const { onClose } = renderPanel()
+      fireEvent.click(screen.getByRole('button', { name: 'Choisir le style Anneau' }))
       expect(onClose).not.toHaveBeenCalled()
     })
   })

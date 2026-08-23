@@ -3,6 +3,9 @@ export interface HistoryPoint {
   v: number
 }
 
+/** Style d'affichage du chiffre sur la carte. Absent = 'default' (odomètre actuel). */
+export type DisplayStyle = 'default' | 'flap' | 'lcd' | 'segment7' | 'ring' | 'editorial' | 'badge'
+
 export interface Counter {
   id: string
   name: string
@@ -19,4 +22,6 @@ export interface Counter {
   step?: number
   /** Historique des valeurs dans le temps, pour l'aperçu (sparkline). Absent = pas encore suivi. */
   history?: HistoryPoint[]
+  /** Style d'affichage du chiffre. Absent = style par défaut (odomètre). */
+  displayStyle?: DisplayStyle
 }

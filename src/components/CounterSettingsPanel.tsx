@@ -5,7 +5,9 @@ import { formatStartDate, toIsoDate, todayIsoDate } from '../date'
 import { buildShareText } from '../share'
 import { isValidImageUrl } from '../url'
 import { Sparkline } from './Sparkline'
-import type { Counter } from '../types'
+import { CounterValueDisplay } from './CounterValueDisplay'
+import { DISPLAY_STYLES } from '../displayStyles'
+import type { Counter, DisplayStyle } from '../types'
 
 interface CounterSettingsPanelProps {
   counter: Counter
@@ -16,6 +18,7 @@ interface CounterSettingsPanelProps {
   onSetBackgroundImage: (url: string | undefined) => void
   onSetColor: (color: string) => void
   onSetStep: (step: number | undefined) => void
+  onSetDisplayStyle: (style: DisplayStyle | undefined) => void
 }
 
 export function CounterSettingsPanel({
@@ -27,6 +30,7 @@ export function CounterSettingsPanel({
   onSetBackgroundImage,
   onSetColor,
   onSetStep,
+  onSetDisplayStyle,
 }: CounterSettingsPanelProps) {
   const [draftOdds, setDraftOdds] = useState(counter.oddsDenominator?.toString() ?? '')
   const [draftBackground, setDraftBackground] = useState(counter.backgroundImageUrl ?? '')
@@ -88,6 +92,7 @@ export function CounterSettingsPanel({
   const denominator = counter.oddsDenominator
   const odds = denominator ? cumulativeOdds(denominator, counter.count) : null
   const startDate = counter.startDate ?? toIsoDate(counter.createdAt)
+  const activeStyle: DisplayStyle = counter.displayStyle ?? 'default'
 
   return createPortal(
     <div
@@ -104,7 +109,16 @@ export function CounterSettingsPanel({
           sans ce blocage, un pointerdown/up sur un bouton du panneau (ex:
           "Fermer") atteindrait quand même le suivi de tap de la carte et
           l'incrémenterait à tort. */}
-      <div className="modal-panel" onClick={(e) => e.stopPropagation()} onPointerDown={(e) => e.stopPropagation()}>
+      <div
+        className="modal-panel"
+        // Le panneau est un portail hors de la carte : il n'hérite pas de la
+        // variable --accent posée sur `.counter-card`. Les aperçus de style
+        // (anneau, pastille) et le pourcentage en dépendent pour refléter la
+        // couleur réelle de ce compteur.
+        style={{ '--accent': counter.color } as React.CSSProperties}
+        onClick={(e) => e.stopPropagation()}
+        onPointerDown={(e) => e.stopPropagation()}
+      >
         <div className="modal-panel-header">
           <h2>Personnaliser « {counter.name} »</h2>
           <button className="modal-close" onClick={onClose} aria-label="Fermer">
@@ -124,6 +138,26 @@ export function CounterSettingsPanel({
                 aria-label={`Choisir la couleur ${c}`}
                 onClick={() => onSetColor(c)}
               />
+            ))}
+          </div>
+        </section>
+
+        <section className="modal-section">
+          <h3>Style d'affichage</h3>
+          <div className="display-style-grid">
+            {DISPLAY_STYLES.map((opt) => (
+              <button
+                key={opt.id}
+                type="button"
+                className={`display-style-option${opt.id === activeStyle ? ' selected' : ''}`}
+                aria-label={`Choisir le style ${opt.label}`}
+                onClick={() => onSetDisplayStyle(opt.id === 'default' ? undefined : opt.id)}
+              >
+                <span className="display-style-preview">
+                  <CounterValueDisplay value={8} direction={1} style={opt.id} progress={opt.id === 'ring' ? 0.6 : null} />
+                </span>
+                <span className="display-style-name">{opt.label}</span>
+              </button>
             ))}
           </div>
         </section>

@@ -8,7 +8,7 @@ import { decodeCountersFromParam } from './sync'
 import { appendHistoryPoint } from './history'
 import { makeId } from './id'
 import { COLORS, pickColor } from './colors'
-import type { Counter } from './types'
+import type { Counter, DisplayStyle } from './types'
 import './App.css'
 
 const UNDO_TIMEOUT_MS = 5000
@@ -159,6 +159,10 @@ export default function App() {
     setCounters((prev) => prev.map((c) => (c.id === id ? { ...c, step } : c)))
   }
 
+  const setDisplayStyle = (id: string, displayStyle: DisplayStyle | undefined) => {
+    setCounters((prev) => prev.map((c) => (c.id === id ? { ...c, displayStyle } : c)))
+  }
+
   const deleteCounter = (id: string) => {
     const target = counters.find((c) => c.id === id)!
     pushUndo(`Compteur « ${target.name} » supprimé`)
@@ -261,6 +265,7 @@ export default function App() {
                 onSetBackgroundImage={(url) => setBackgroundImage(counter.id, url)}
                 onSetColor={(color) => setColor(counter.id, color)}
                 onSetStep={(step) => setStep(counter.id, step)}
+                onSetDisplayStyle={(style) => setDisplayStyle(counter.id, style)}
                 onDelete={() => deleteCounter(counter.id)}
               />
             ))}
