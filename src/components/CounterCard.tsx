@@ -2,7 +2,7 @@ import { useEffect, useRef, useState } from 'react'
 import { motion, Reorder, useAnimationControls, useDragControls } from 'framer-motion'
 import { Odometer } from './Odometer'
 import { CounterSettingsPanel } from './CounterSettingsPanel'
-import { cumulativeOdds, formatOdds, formatRemainingAttempts, formatConstantChanceReminder } from '../odds'
+import { cumulativeOdds, formatOdds } from '../odds'
 import type { Counter } from '../types'
 
 // Délai avant qu'un appui maintenu sur +/- déclenche la répétition, puis
@@ -369,10 +369,6 @@ export function CounterCard({
       {odds !== null && (
         <div className="counter-odds-stats">
           <p className="counter-odds-hint">{formatOdds(odds)} de chances de l'avoir obtenu avant ce stade</p>
-          <p className="counter-odds-hint">{formatRemainingAttempts(counter.oddsDenominator!, counter.count)}</p>
-          <p className="counter-chance-reminder">
-            💡 {formatConstantChanceReminder(counter.oddsDenominator!)}
-          </p>
         </div>
       )}
 
