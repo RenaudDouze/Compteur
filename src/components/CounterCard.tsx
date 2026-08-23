@@ -3,6 +3,7 @@ import { motion, Reorder, useAnimationControls, useDragControls } from 'framer-m
 import { CounterValueDisplay } from './CounterValueDisplay'
 import { CounterSettingsPanel } from './CounterSettingsPanel'
 import { cumulativeOdds, formatOdds, progressRatio } from '../odds'
+import { playIncrementSound } from '../sound'
 import type { Counter, DisplayStyle } from '../types'
 
 // Délai avant qu'un appui maintenu sur +/- déclenche la répétition, puis
@@ -220,11 +221,16 @@ export function CounterCard({
   // se superposerait à la sienne au lieu de la remplacer. `isDefaultStyle`
   // est volontairement absent des dépendances : un changement de style seul
   // (sans changement de compteur) ne doit pas déclencher de rebond.
+  //
+  // Le son d'incrémentation, lui, se joue quel que soit le style : cet
+  // effet ne se déclenche qu'après que React a posé la nouvelle valeur à
+  // l'écran (jamais au clic lui-même), et uniquement en incrémentant.
   useEffect(() => {
     if (isFirstCount.current) {
       isFirstCount.current = false
       return
     }
+    if (direction === 1) playIncrementSound()
     if (!isDefaultStyle) return
     pulseControls.start({
       scale: [1, 1.16, 0.97, 1],
