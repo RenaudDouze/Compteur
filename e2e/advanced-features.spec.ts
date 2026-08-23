@@ -37,6 +37,25 @@ test.describe('Fonctionnalités avancées', () => {
     await expect(panel.getByText(/Chaque tentative garde exactement 1 chance sur 4,/)).toBeVisible()
   })
 
+  test("change le style d'affichage du chiffre et continue d'incrémenter normalement", async ({ page }) => {
+    await page.getByRole('button', { name: 'Personnaliser le compteur' }).click()
+    await page.getByRole('button', { name: 'Choisir le style 7 segments' }).click()
+    await expect(page.getByRole('button', { name: 'Choisir le style 7 segments' })).toHaveClass(/selected/)
+    await page.getByRole('button', { name: 'Fermer' }).click()
+
+    const card = page.locator('.counter-card')
+    await expect(card.locator('.value-segment7')).toBeVisible()
+    await expect(card.locator('.odometer')).toHaveCount(0)
+
+    // Le style choisi n'empêche pas d'incrémenter normalement.
+    await page.getByRole('button', { name: 'Incrémenter', exact: true }).click()
+    await expect(card.locator('.value-segment-digit')).toHaveCount(1)
+
+    // Persiste après rechargement.
+    await page.reload()
+    await expect(card.locator('.value-segment7')).toBeVisible()
+  })
+
   test("affiche un sparkline dans l'historique après plusieurs changements espacés", async ({ page }) => {
     await page.getByRole('button', { name: 'Personnaliser le compteur' }).click()
     await expect(page.getByText(/Pas encore assez d'historique/)).toBeVisible()

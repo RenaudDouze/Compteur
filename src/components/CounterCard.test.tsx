@@ -29,6 +29,7 @@ function renderCard(counterOverrides: Partial<Counter> = {}, props: Partial<Para
     onSetBackgroundImage: vi.fn(),
     onSetColor: vi.fn(),
     onSetStep: vi.fn(),
+    onSetDisplayStyle: vi.fn(),
     onDelete: vi.fn(),
     ...props,
   }
@@ -572,6 +573,39 @@ describe('CounterCard', () => {
     })
   })
 
+  describe("style d'affichage", () => {
+    it("rend l'odomètre par défaut sans classe modificatrice, sans style d'affichage défini", () => {
+      renderCard({ count: 3 })
+      const valueEl = document.querySelector('.counter-value')
+      expect(valueEl?.className).toBe('counter-value')
+      expect(document.querySelector('.odometer')).toBeInTheDocument()
+    })
+
+    it("rend l'odomètre avec la classe modificatrice quand le style est explicitement 'default'", () => {
+      renderCard({ count: 3, displayStyle: 'default' })
+      const valueEl = document.querySelector('.counter-value')
+      expect(valueEl?.className).toBe('counter-value counter-value--default')
+      expect(document.querySelector('.odometer')).toBeInTheDocument()
+    })
+
+    it('rend le style choisi avec sa classe modificatrice sur .counter-value', () => {
+      renderCard({ count: 247, displayStyle: 'flap' })
+      const valueEl = document.querySelector('.counter-value')
+      expect(valueEl?.className).toBe('counter-value counter-value--flap')
+      expect(document.querySelectorAll('.value-flap-tile')).toHaveLength(3)
+    })
+
+    it("ne calcule pas de taille de police en mode fill pour un style autre que 'default'", () => {
+      const widthSpy = vi.spyOn(HTMLElement.prototype, 'offsetWidth', 'get').mockReturnValue(320)
+      const heightSpy = vi.spyOn(HTMLElement.prototype, 'offsetHeight', 'get').mockReturnValue(480)
+      renderCard({ count: 12, displayStyle: 'lcd' }, { fill: true })
+      const valueEl = document.querySelector('.counter-value') as HTMLElement
+      expect(valueEl.style.fontSize).toBe('')
+      widthSpy.mockRestore()
+      heightSpy.mockRestore()
+    })
+  })
+
   describe('mesure dynamique de la taille (fill)', () => {
     it("ne crée pas d'observateur de redimensionnement quand fill=false", () => {
       renderCard({}, { fill: false })
@@ -610,6 +644,7 @@ describe('CounterCard', () => {
             onSetBackgroundImage={vi.fn()}
             onSetColor={vi.fn()}
             onSetStep={vi.fn()}
+            onSetDisplayStyle={vi.fn()}
             onDelete={vi.fn()}
           />
         </Reorder.Group>
@@ -630,6 +665,7 @@ describe('CounterCard', () => {
             onSetBackgroundImage={vi.fn()}
             onSetColor={vi.fn()}
             onSetStep={vi.fn()}
+            onSetDisplayStyle={vi.fn()}
             onDelete={vi.fn()}
           />
         </Reorder.Group>
@@ -660,6 +696,7 @@ describe('CounterCard', () => {
             onSetBackgroundImage={vi.fn()}
             onSetColor={vi.fn()}
             onSetStep={vi.fn()}
+            onSetDisplayStyle={vi.fn()}
             onDelete={vi.fn()}
           />
         </Reorder.Group>
@@ -678,6 +715,7 @@ describe('CounterCard', () => {
             onSetBackgroundImage={vi.fn()}
             onSetColor={vi.fn()}
             onSetStep={vi.fn()}
+            onSetDisplayStyle={vi.fn()}
             onDelete={vi.fn()}
           />
         </Reorder.Group>

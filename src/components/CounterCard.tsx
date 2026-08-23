@@ -1,9 +1,9 @@
 import { useEffect, useRef, useState } from 'react'
 import { motion, Reorder, useAnimationControls, useDragControls } from 'framer-motion'
-import { Odometer } from './Odometer'
+import { CounterValueDisplay } from './CounterValueDisplay'
 import { CounterSettingsPanel } from './CounterSettingsPanel'
 import { cumulativeOdds, formatOdds } from '../odds'
-import type { Counter } from '../types'
+import type { Counter, DisplayStyle } from '../types'
 
 // Délai avant qu'un appui maintenu sur +/- déclenche la répétition, puis
 // intervalle entre chaque répétition (comptage en rafale).
@@ -29,6 +29,7 @@ interface CounterCardProps {
   onSetBackgroundImage: (url: string | undefined) => void
   onSetColor: (color: string) => void
   onSetStep: (step: number | undefined) => void
+  onSetDisplayStyle: (style: DisplayStyle | undefined) => void
   onDelete: () => void
 }
 
@@ -45,6 +46,7 @@ export function CounterCard({
   onSetBackgroundImage,
   onSetColor,
   onSetStep,
+  onSetDisplayStyle,
   onDelete,
 }: CounterCardProps) {
   const [editing, setEditing] = useState(false)
@@ -163,9 +165,13 @@ export function CounterCard({
   // Quand il n'y a qu'1 ou 2 compteurs, on mesure l'espace réellement
   // disponible pour afficher le chiffre le plus grand possible, sans le
   // faire déborder ni en hauteur ni en largeur (nombre de chiffres compris).
+  // Réglé spécifiquement pour les proportions de l'odomètre : les autres
+  // styles s'appuient plutôt sur les tailles CSS par mode de grille (elles
+  // s'expriment en `em`, donc elles suivent quand même l'espace disponible).
+  const isDefaultStyle = !counter.displayStyle || counter.displayStyle === 'default'
   useEffect(() => {
     const el = valueRef.current
-    if (!fill || !el) {
+    if (!fill || !el || !isDefaultStyle) {
       setFillFontSize(null)
       return
     }
@@ -188,7 +194,7 @@ export function CounterCard({
     const ro = new ResizeObserver(compute)
     ro.observe(el)
     return () => ro.disconnect()
-  }, [fill, counter.count])
+  }, [fill, counter.count, isDefaultStyle])
 
   // Petit rebond élastique à chaque incrément/décrément, en plus du
   // défilement des chiffres. N'anime que `scale` (accéléré par le
@@ -208,6 +214,9 @@ export function CounterCard({
   }, [counter.count, pulseControls])
 
   const odds = counter.oddsDenominator ? cumulativeOdds(counter.oddsDenominator, counter.count) : null
+  // Progression vers le nombre moyen de tentatives (pour le style "anneau") :
+  // même formule que la barre de progression du panneau de réglages.
+  const progress = counter.oddsDenominator ? Math.min(counter.count / counter.oddsDenominator, 1) : null
 
   return (
     <Reorder.Item
@@ -348,13 +357,18 @@ export function CounterCard({
         />
       ) : (
         <motion.div
-          className="counter-value"
+          className={`counter-value${counter.displayStyle ? ` counter-value--${counter.displayStyle}` : ''}`}
           ref={valueRef}
           style={fillFontSize ? { fontSize: `${fillFontSize}px` } : undefined}
           animate={pulseControls}
           aria-hidden="true"
         >
-          <Odometer value={counter.count} direction={direction} />
+          <CounterValueDisplay
+            value={counter.count}
+            direction={direction}
+            style={counter.displayStyle}
+            progress={progress}
+          />
         </motion.div>
       )}
 
@@ -440,6 +454,7 @@ export function CounterCard({
           onSetBackgroundImage={onSetBackgroundImage}
           onSetColor={onSetColor}
           onSetStep={onSetStep}
+          onSetDisplayStyle={onSetDisplayStyle}
         />
       )}
     </Reorder.Item>

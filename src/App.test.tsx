@@ -171,6 +171,17 @@ describe('App', () => {
     expect(selected.className).toContain('selected')
   })
 
+  it("définit un style d'affichage pour le compteur", () => {
+    render(<App />)
+    fireEvent.click(screen.getByRole('button', { name: '+ Nouveau compteur' }))
+    fireEvent.click(screen.getByRole('button', { name: 'Personnaliser le compteur' }))
+    fireEvent.click(screen.getByRole('button', { name: 'Choisir le style Volets' }))
+    fireEvent.click(screen.getByRole('button', { name: 'Fermer' }))
+    expect(document.querySelector('.counter-value--flap')).toBeInTheDocument()
+    fireEvent.click(screen.getByRole('button', { name: 'Personnaliser le compteur' }))
+    expect(screen.getByRole('button', { name: 'Choisir le style Volets' }).className).toContain('selected')
+  })
+
   it('supprime un compteur après confirmation', () => {
     render(<App />)
     fireEvent.click(screen.getByRole('button', { name: '+ Nouveau compteur' }))
@@ -395,6 +406,13 @@ describe('App', () => {
     fireEvent.click(within(secondCard).getByRole('button', { name: 'Personnaliser le compteur' }))
     expect(screen.queryByDisplayValue('5')).not.toBeInTheDocument()
     fireEvent.click(screen.getByRole('button', { name: 'Fermer' }))
+
+    // Définit un style d'affichage uniquement sur le premier.
+    fireEvent.click(within(firstCard).getByRole('button', { name: 'Personnaliser le compteur' }))
+    fireEvent.click(screen.getByRole('button', { name: 'Choisir le style Volets' }))
+    fireEvent.click(screen.getByRole('button', { name: 'Fermer' }))
+    expect(firstCard.querySelector('.counter-value--flap')).toBeInTheDocument()
+    expect(secondCard.querySelector('.counter-value--flap')).not.toBeInTheDocument()
 
     // Définit directement la valeur uniquement sur le premier.
     fireEvent.click(within(firstCard).getByRole('button', { name: 'Définir la valeur du compteur' }))
