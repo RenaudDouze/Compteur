@@ -2,6 +2,7 @@ import { useEffect, useRef, useState } from 'react'
 import { motion, Reorder, useAnimationControls, useDragControls } from 'framer-motion'
 import { CounterValueDisplay } from './CounterValueDisplay'
 import { CounterSettingsPanel } from './CounterSettingsPanel'
+import { CounterOtherSettingsPanel } from './CounterOtherSettingsPanel'
 import { cumulativeOdds, formatOdds, progressRatio } from '../odds'
 import { playIncrementSound } from '../sound'
 import type { Counter, DisplayStyle } from '../types'
@@ -56,7 +57,10 @@ export function CounterCard({
 }: CounterCardProps) {
   const [editing, setEditing] = useState(false)
   const [draftName, setDraftName] = useState(counter.name)
-  const [settingsOpen, setSettingsOpen] = useState(false)
+  // Deux modales distinctes : la personnalisation de l'apparence (couleur,
+  // style, image de fond) et les autres réglages (pas d'incrément,
+  // objectif, probabilité, date de début, historique, partage/duplication).
+  const [openPanel, setOpenPanel] = useState<'personnalisation' | 'autres' | null>(null)
   const [editingCount, setEditingCount] = useState(false)
   const [draftCount, setDraftCount] = useState(counter.count.toString())
   const [countError, setCountError] = useState<string | null>(null)
@@ -322,11 +326,11 @@ export function CounterCard({
         className="counter-settings-btn"
         onClick={(e) => {
           e.stopPropagation()
-          setSettingsOpen(true)
+          setOpenPanel('personnalisation')
         }}
         onPointerDown={(e) => e.stopPropagation()}
         aria-label="Personnaliser le compteur"
-        title="Couleur, image de fond, probabilité, date de début, partage"
+        title="Couleur, style d'affichage, image de fond"
       >
         ⚙
       </button>
@@ -486,18 +490,26 @@ export function CounterCard({
         </button>
       </div>
 
-      {settingsOpen && (
+      {openPanel === 'personnalisation' && (
         <CounterSettingsPanel
           counter={counter}
           colors={colors}
-          onClose={() => setSettingsOpen(false)}
+          onClose={() => setOpenPanel(null)}
+          onSetBackgroundImage={onSetBackgroundImage}
+          onSetColor={onSetColor}
+          onSetDisplayStyle={onSetDisplayStyle}
+          onOpenOther={() => setOpenPanel('autres')}
+        />
+      )}
+
+      {openPanel === 'autres' && (
+        <CounterOtherSettingsPanel
+          counter={counter}
+          onClose={() => setOpenPanel(null)}
           onSetOdds={onSetOdds}
           onSetTarget={onSetTarget}
           onSetStartDate={onSetStartDate}
-          onSetBackgroundImage={onSetBackgroundImage}
-          onSetColor={onSetColor}
           onSetStep={onSetStep}
-          onSetDisplayStyle={onSetDisplayStyle}
           onDuplicate={onDuplicate}
         />
       )}

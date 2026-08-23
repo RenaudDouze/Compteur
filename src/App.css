@@ -810,30 +810,6 @@
   font-size: 0.9rem;
 }
 
-/* Regroupe les réglages du panneau en deux blocs : ce qui personnalise
-   l'apparence de la carte (couleur, style, image de fond) et le reste
-   (comportement du compteur, historique, actions). */
-.modal-group {
-  display: flex;
-  flex-direction: column;
-}
-
-.modal-group + .modal-group {
-  border-top: 1px solid var(--surface-border);
-  padding-top: 16px;
-  margin-top: 16px;
-}
-
-.modal-group-title {
-  margin: 0 0 4px;
-  font-size: 0.72rem;
-  font-weight: 700;
-  text-transform: uppercase;
-  letter-spacing: 0.06em;
-  color: var(--text-dim);
-  align-self: flex-start;
-}
-
 .modal-section {
   padding: 16px 0;
   border-top: 1px solid var(--surface-border);
