@@ -253,6 +253,14 @@ describe('CounterCard', () => {
       // 1 - (1 - 1/4)^1 = 0.25 => arrondi affiché à 1 décimale : 25,0 %
       expect(document.querySelector('.counter-odds-hint')).toHaveTextContent('25,0 %')
     })
+
+    it('affiche aussi les tentatives restantes et le rappel de chance constante, directement sur la carte', () => {
+      renderCard({ oddsDenominator: 4, count: 1 })
+      expect(screen.getByText('Encore ~3 tentatives en moyenne (moyenne : 4)')).toBeInTheDocument()
+      expect(
+        screen.getByText('Chaque tentative garde exactement 1 chance sur 4, quel que soit le nombre de tentatives précédentes.')
+      ).toBeInTheDocument()
+    })
   })
 
   describe('suppression', () => {

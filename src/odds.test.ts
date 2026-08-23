@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { cumulativeOdds, formatOdds } from './odds'
+import { cumulativeOdds, formatConstantChanceReminder, formatOdds, formatRemainingAttempts } from './odds'
 
 function expectedPct(pct: number, decimals: number): string {
   return `${pct.toLocaleString('fr-FR', {
@@ -104,5 +104,37 @@ describe('formatOdds', () => {
 
   it('utilise 1 décimale juste sous le seuil de 99,995 %', () => {
     expect(formatOdds(0.999)).toBe(expectedPct(99.9, 1))
+  })
+})
+
+const n = (value: number) => value.toLocaleString('fr-FR')
+
+describe('formatRemainingAttempts', () => {
+  it('indique le nombre de tentatives restantes (pluriel)', () => {
+    expect(formatRemainingAttempts(4096, 4000)).toBe(`Encore ~96 tentatives en moyenne (moyenne : ${n(4096)})`)
+  })
+
+  it('indique le nombre de tentatives restantes (singulier)', () => {
+    expect(formatRemainingAttempts(4096, 4095)).toBe(`Encore ~1 tentative en moyenne (moyenne : ${n(4096)})`)
+  })
+
+  it('indique que la moyenne est exactement atteinte', () => {
+    expect(formatRemainingAttempts(4096, 4096)).toBe(
+      `Moyenne dépassée (${n(4096)} / ${n(4096)}) — la chance cumulée compense`
+    )
+  })
+
+  it('indique que la moyenne est dépassée', () => {
+    expect(formatRemainingAttempts(4096, 5000)).toBe(
+      `Moyenne dépassée (${n(5000)} / ${n(4096)}) — la chance cumulée compense`
+    )
+  })
+})
+
+describe('formatConstantChanceReminder', () => {
+  it('rappelle la chance constante avec le dénominateur formaté', () => {
+    expect(formatConstantChanceReminder(4096)).toBe(
+      `Chaque tentative garde exactement 1 chance sur ${n(4096)}, quel que soit le nombre de tentatives précédentes.`
+    )
   })
 })
