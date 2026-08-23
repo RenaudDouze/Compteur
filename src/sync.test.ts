@@ -227,6 +227,18 @@ describe('parseBackupJson', () => {
     expect(result?.[0].step).toBeUndefined()
   })
 
+  it('conserve displayStyle et target optionnels', () => {
+    const result = parseBackupJson(JSON.stringify([{ name: 'A', count: 1, displayStyle: 'segment7', target: 50 }]))
+    expect(result?.[0].displayStyle).toBe('segment7')
+    expect(result?.[0].target).toBe(50)
+  })
+
+  it('laisse displayStyle et target indéfinis si absents', () => {
+    const result = parseBackupJson(JSON.stringify([{ name: 'A', count: 1 }]))
+    expect(result?.[0].displayStyle).toBeUndefined()
+    expect(result?.[0].target).toBeUndefined()
+  })
+
   it('conserve history optionnel', () => {
     const result = parseBackupJson(
       JSON.stringify([{ name: 'A', count: 1, history: [{ t: 1000, v: 0 }, { t: 2000, v: 1 }] }])
@@ -265,6 +277,8 @@ describe('encodeCountersToParam / decodeCountersFromParam', () => {
         startDate: '2026-08-01',
         backgroundImageUrl: 'https://exemple.com/fond.jpg',
         step: 5,
+        displayStyle: 'segment7',
+        target: 100,
       }),
     ]
     const encoded = encodeCountersToParam(counters)
@@ -279,12 +293,21 @@ describe('encodeCountersToParam / decodeCountersFromParam', () => {
       startDate: '2026-08-01',
       backgroundImageUrl: 'https://exemple.com/fond.jpg',
       step: 5,
+      displayStyle: 'segment7',
+      target: 100,
     })
   })
 
   it('omet les champs optionnels absents lors de l\'aller-retour', () => {
     const counters = [
-      makeCounter({ oddsDenominator: undefined, startDate: undefined, backgroundImageUrl: undefined, step: undefined }),
+      makeCounter({
+        oddsDenominator: undefined,
+        startDate: undefined,
+        backgroundImageUrl: undefined,
+        step: undefined,
+        displayStyle: undefined,
+        target: undefined,
+      }),
     ]
     const encoded = encodeCountersToParam(counters)
     const decoded = decodeCountersFromParam(encoded)
@@ -292,6 +315,8 @@ describe('encodeCountersToParam / decodeCountersFromParam', () => {
     expect(decoded?.[0].startDate).toBeUndefined()
     expect(decoded?.[0].backgroundImageUrl).toBeUndefined()
     expect(decoded?.[0].step).toBeUndefined()
+    expect(decoded?.[0].displayStyle).toBeUndefined()
+    expect(decoded?.[0].target).toBeUndefined()
   })
 
   it('applique count=0 si le champ "c" décodé n\'est pas un nombre (payload corrompu)', () => {

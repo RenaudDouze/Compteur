@@ -57,6 +57,16 @@ describe('CounterValueDisplay', () => {
       expect(minus.querySelector('.value-segment--g')?.className).toContain('is-on')
       expect(minus.querySelector('.value-segment--a')?.className).not.toContain('is-on')
     })
+
+    it("n'échoue pas sur un caractère hors table (notation exponentielle d'une très grande valeur)", () => {
+      // (1e21).toString() === '1e+21' : les caractères 'e' et '+' n'ont pas
+      // d'entrée dans la table des segments.
+      render(<CounterValueDisplay value={1e21} direction={1} style="segment7" progress={null} />)
+      const digits = document.querySelectorAll('.value-segment-digit')
+      expect(digits).toHaveLength(5)
+      const eDigit = digits[1]
+      expect(eDigit.querySelectorAll('.is-on')).toHaveLength(0)
+    })
   })
 
   describe('style anneau', () => {

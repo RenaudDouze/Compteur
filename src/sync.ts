@@ -1,5 +1,5 @@
 import { makeId } from './id'
-import type { Counter } from './types'
+import type { Counter, DisplayStyle } from './types'
 
 /** Déclenche le téléchargement d'un fichier JSON contenant tous les compteurs. */
 export function downloadBackup(counters: Counter[]) {
@@ -34,6 +34,8 @@ function normalizeCounter(raw: Partial<Counter>): Counter {
     backgroundImageUrl: raw.backgroundImageUrl,
     step: raw.step,
     history: raw.history,
+    displayStyle: raw.displayStyle,
+    target: raw.target,
   }
 }
 
@@ -62,6 +64,8 @@ interface CompactCounter {
   s?: string
   i?: string
   p?: number
+  y?: DisplayStyle
+  g?: number
 }
 
 function toCompact(counter: Counter): CompactCounter {
@@ -74,6 +78,8 @@ function toCompact(counter: Counter): CompactCounter {
     ...(counter.startDate ? { s: counter.startDate } : {}),
     ...(counter.backgroundImageUrl ? { i: counter.backgroundImageUrl } : {}),
     ...(counter.step ? { p: counter.step } : {}),
+    ...(counter.displayStyle ? { y: counter.displayStyle } : {}),
+    ...(counter.target ? { g: counter.target } : {}),
   }
 }
 
@@ -87,6 +93,8 @@ function fromCompact(raw: CompactCounter): Counter {
     startDate: raw.s,
     backgroundImageUrl: raw.i,
     step: raw.p,
+    displayStyle: raw.y,
+    target: raw.g,
   })
 }
 

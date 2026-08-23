@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from 'react'
 import { createPortal } from 'react-dom'
-import { cumulativeOdds, formatOdds, formatRemainingAttempts, formatConstantChanceReminder } from '../odds'
+import { cumulativeOdds, formatOdds, formatRemainingAttempts, formatConstantChanceReminder, progressRatio } from '../odds'
 import { formatStartDate, toIsoDate, todayIsoDate } from '../date'
 import { buildShareText } from '../share'
 import { isValidImageUrl } from '../url'
@@ -180,7 +180,8 @@ export function CounterSettingsPanel({
   const odds = denominator ? cumulativeOdds(denominator, counter.count) : null
   const activeStyle: DisplayStyle = counter.displayStyle ?? 'default'
   const target = counter.target
-  const targetProgress = target ? Math.max(0, Math.min(counter.count / target, 1)) : null
+  const targetProgress = progressRatio(counter.count, target)
+  const oddsProgress = progressRatio(counter.count, denominator)
 
   const handleDuplicate = () => {
     onDuplicate()
@@ -374,15 +375,12 @@ export function CounterSettingsPanel({
               <div
                 className="odds-progress"
                 role="progressbar"
-                aria-valuenow={Math.round(Math.min(counter.count / denominator, 1) * 100)}
+                aria-valuenow={Math.round(oddsProgress! * 100)}
                 aria-valuemin={0}
                 aria-valuemax={100}
                 aria-label="Progression vers le nombre moyen de tentatives"
               >
-                <div
-                  className="odds-progress-fill"
-                  style={{ width: `${Math.min(counter.count / denominator, 1) * 100}%` }}
-                />
+                <div className="odds-progress-fill" style={{ width: `${oddsProgress! * 100}%` }} />
               </div>
               <p className="modal-hint">{formatRemainingAttempts(denominator, counter.count)}</p>
               <p className="modal-hint modal-hint--reminder">💡 {formatConstantChanceReminder(denominator)}</p>

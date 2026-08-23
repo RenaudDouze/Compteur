@@ -1,4 +1,14 @@
 /**
+ * Progression [0, 1] du compte vers un objectif ou une moyenne statistique
+ * (compte/dénominateur), toujours bornée dans les deux sens (un compte
+ * négatif ne doit jamais produire une barre de progression négative).
+ * Retourne `null` si aucun dénominateur n'est défini (fonctionnalité désactivée).
+ */
+export function progressRatio(count: number, denominator: number | undefined): number | null {
+  return denominator ? Math.max(0, Math.min(count / denominator, 1)) : null
+}
+
+/**
  * Probabilité cumulée d'avoir obtenu au moins une fois un événement de
  * probabilité 1/denominator après `attempts` essais indépendants.
  * (ex: chasse aux shasses/loot rares : 1 - (1 - 1/N)^n)
