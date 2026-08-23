@@ -75,6 +75,58 @@ describe('CounterCard', () => {
     expect(onChange).toHaveBeenCalledWith(1)
   })
 
+  describe('tap tactile (pointer events)', () => {
+    it("incrémente au relâchement d'un tap sur la carte (pointerdown puis pointerup au même endroit)", () => {
+      const { onChange } = renderCard()
+      const card = screen.getByRole('button', { name: /Incrémenter Compteur 1/ })
+      fireEvent.pointerDown(card, { clientX: 20, clientY: 20, button: 0 })
+      fireEvent.pointerUp(card, { clientX: 20, clientY: 20, button: 0 })
+      expect(onChange).toHaveBeenCalledTimes(1)
+      expect(onChange).toHaveBeenCalledWith(1)
+    })
+
+    it("n'incrémente pas deux fois quand le clic natif du navigateur suit le tap déjà compté", () => {
+      const { onChange } = renderCard()
+      const card = screen.getByRole('button', { name: /Incrémenter Compteur 1/ })
+      fireEvent.pointerDown(card, { clientX: 20, clientY: 20, button: 0 })
+      fireEvent.pointerUp(card, { clientX: 20, clientY: 20, button: 0 })
+      fireEvent.click(card)
+      expect(onChange).toHaveBeenCalledTimes(1)
+    })
+
+    it("n'incrémente pas si le pointeur a beaucoup bougé entre l'appui et le relâchement (scroll)", () => {
+      const { onChange } = renderCard()
+      const card = screen.getByRole('button', { name: /Incrémenter Compteur 1/ })
+      fireEvent.pointerDown(card, { clientX: 20, clientY: 20, button: 0 })
+      fireEvent.pointerUp(card, { clientX: 200, clientY: 200, button: 0 })
+      expect(onChange).not.toHaveBeenCalled()
+    })
+
+    it("ignore un pointerup sans pointerdown préalable sur la carte", () => {
+      const { onChange } = renderCard()
+      const card = screen.getByRole('button', { name: /Incrémenter Compteur 1/ })
+      fireEvent.pointerUp(card, { clientX: 20, clientY: 20, button: 0 })
+      expect(onChange).not.toHaveBeenCalled()
+    })
+
+    it('ignore le clic droit (bouton secondaire) sur la carte', () => {
+      const { onChange } = renderCard()
+      const card = screen.getByRole('button', { name: /Incrémenter Compteur 1/ })
+      fireEvent.pointerDown(card, { clientX: 20, clientY: 20, button: 2 })
+      fireEvent.pointerUp(card, { clientX: 20, clientY: 20, button: 2 })
+      expect(onChange).not.toHaveBeenCalled()
+    })
+
+    it('un pointercancel annule le tap en cours (pas d\'incrément au pointerup qui suit)', () => {
+      const { onChange } = renderCard()
+      const card = screen.getByRole('button', { name: /Incrémenter Compteur 1/ })
+      fireEvent.pointerDown(card, { clientX: 20, clientY: 20, button: 0 })
+      fireEvent.pointerCancel(card)
+      fireEvent.pointerUp(card, { clientX: 20, clientY: 20, button: 0 })
+      expect(onChange).not.toHaveBeenCalled()
+    })
+  })
+
   describe("pas d'incrément personnalisé", () => {
     it('applique le pas au clic sur la carte', () => {
       const { onChange } = renderCard({ step: 5 })
@@ -304,6 +356,12 @@ describe('CounterCard', () => {
       fireEvent.click(screen.getByRole('button', { name: 'Supprimer le compteur' }))
       expect(onChange).not.toHaveBeenCalled()
     })
+
+    it("pointerdown sur le bouton supprimer n'incrémente pas le compteur", () => {
+      const { onChange } = renderCard()
+      fireEvent.pointerDown(screen.getByRole('button', { name: 'Supprimer le compteur' }))
+      expect(onChange).not.toHaveBeenCalled()
+    })
   })
 
   describe('poignée de glisser', () => {
@@ -390,6 +448,19 @@ describe('CounterCard', () => {
       fireEvent.click(screen.getByDisplayValue('Avant'))
       expect(onChange).not.toHaveBeenCalled()
     })
+
+    it("pointerdown sur le nom n'incrémente pas le compteur", () => {
+      const { onChange } = renderCard({ name: 'Avant' })
+      fireEvent.pointerDown(screen.getByText('Avant'))
+      expect(onChange).not.toHaveBeenCalled()
+    })
+
+    it("pointerdown dans le champ de saisie du nom n'incrémente pas le compteur", () => {
+      const { onChange } = renderCard({ name: 'Avant' })
+      fireEvent.click(screen.getByText('Avant'))
+      fireEvent.pointerDown(screen.getByDisplayValue('Avant'))
+      expect(onChange).not.toHaveBeenCalled()
+    })
   })
 
   describe('personnalisation (panneau)', () => {
@@ -402,6 +473,12 @@ describe('CounterCard', () => {
     it("le clic sur ⚙ n'incrémente pas le compteur", () => {
       const { onChange } = renderCard()
       fireEvent.click(screen.getByRole('button', { name: 'Personnaliser le compteur' }))
+      expect(onChange).not.toHaveBeenCalled()
+    })
+
+    it("pointerdown sur ⚙ n'incrémente pas le compteur", () => {
+      const { onChange } = renderCard()
+      fireEvent.pointerDown(screen.getByRole('button', { name: 'Personnaliser le compteur' }))
       expect(onChange).not.toHaveBeenCalled()
     })
 
@@ -485,6 +562,19 @@ describe('CounterCard', () => {
       const { onChange } = renderCard({ count: 42 })
       fireEvent.click(screen.getByRole('button', { name: 'Définir la valeur du compteur' }))
       fireEvent.click(screen.getByDisplayValue('42'))
+      expect(onChange).not.toHaveBeenCalled()
+    })
+
+    it("pointerdown sur le crayon n'incrémente pas le compteur", () => {
+      const { onChange } = renderCard()
+      fireEvent.pointerDown(screen.getByRole('button', { name: 'Définir la valeur du compteur' }))
+      expect(onChange).not.toHaveBeenCalled()
+    })
+
+    it("pointerdown dans le champ de valeur n'incrémente pas le compteur", () => {
+      const { onChange } = renderCard({ count: 42 })
+      fireEvent.click(screen.getByRole('button', { name: 'Définir la valeur du compteur' }))
+      fireEvent.pointerDown(screen.getByDisplayValue('42'))
       expect(onChange).not.toHaveBeenCalled()
     })
   })

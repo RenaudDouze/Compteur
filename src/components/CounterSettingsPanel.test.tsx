@@ -70,6 +70,24 @@ describe('CounterSettingsPanel', () => {
     expect(onClose).not.toHaveBeenCalled()
   })
 
+  it("un pointerdown à l'intérieur du panneau ne remonte pas plus haut dans le document (le panneau est un portail : sans ce blocage, il atteindrait quand même le suivi de tap de la carte via l'arbre React)", () => {
+    const outerHandler = vi.fn()
+    document.addEventListener('pointerdown', outerHandler)
+    renderPanel()
+    fireEvent.pointerDown(document.querySelector('.modal-panel')!)
+    document.removeEventListener('pointerdown', outerHandler)
+    expect(outerHandler).not.toHaveBeenCalled()
+  })
+
+  it("un pointerdown sur l'arrière-plan du panneau ne remonte pas plus haut dans le document", () => {
+    const outerHandler = vi.fn()
+    document.addEventListener('pointerdown', outerHandler)
+    renderPanel()
+    fireEvent.pointerDown(document.querySelector('.modal-overlay')!)
+    document.removeEventListener('pointerdown', outerHandler)
+    expect(outerHandler).not.toHaveBeenCalled()
+  })
+
   it('ferme avec la touche Échap', () => {
     const { onClose } = renderPanel()
     fireEvent.keyDown(document, { key: 'Escape' })

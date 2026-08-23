@@ -10,6 +10,10 @@ import type { Counter } from '../types'
 const HOLD_DELAY_MS = 350
 const HOLD_REPEAT_MS = 100
 
+// Distance de tolérance (px) entre l'appui et le relâchement pour qu'un
+// geste sur la carte compte comme un tap plutôt qu'un glissement/scroll.
+const TAP_MOVE_THRESHOLD_PX = 10
+
 interface CounterCardProps {
   counter: Counter
   fill?: boolean
@@ -59,6 +63,8 @@ export function CounterCard({
   const holdTimer = useRef<ReturnType<typeof setTimeout> | undefined>(undefined)
   const holdInterval = useRef<ReturnType<typeof setInterval> | undefined>(undefined)
   const longPressFired = useRef(false)
+  const tapStart = useRef<{ x: number; y: number } | null>(null)
+  const tapHandledByPointer = useRef(false)
 
   // `sign` indique juste le sens (+1/-1) : l'amplitude réelle appliquée est
   // le pas personnalisable du compteur (par défaut 1).
@@ -89,6 +95,45 @@ export function CounterCard({
       bump(sign)
       holdInterval.current = setInterval(() => bump(sign), HOLD_REPEAT_MS)
     }, HOLD_DELAY_MS)
+  }
+
+  // Sur mobile, le clic natif émis par le navigateur après un touchend peut
+  // occasionnellement ne pas se déclencher (ambiguïté tap/scroll, ou bug de
+  // synthèse du clic pendant qu'un transform Framer Motion est encore
+  // appliqué à la carte) : le compteur reste alors bloqué sans aucune
+  // réaction. On suit donc nous-mêmes le tap via les évènements pointer
+  // (fiables même quand le clic de compatibilité échoue), en secours du
+  // onClick natif qui reste la voie principale pour la souris et le clavier.
+  const handleCardPointerDown = (e: React.PointerEvent) => {
+    // Ignore le clic droit/bouton secondaire (button !== 0) : seul un tap ou
+    // un clic principal doit compter comme une intention d'incrémenter.
+    if (e.button !== 0) return
+    tapStart.current = { x: e.clientX, y: e.clientY }
+  }
+
+  const handleCardPointerUp = (e: React.PointerEvent) => {
+    const start = tapStart.current
+    tapStart.current = null
+    if (!start) return
+    const moved = Math.hypot(e.clientX - start.x, e.clientY - start.y)
+    if (moved <= TAP_MOVE_THRESHOLD_PX) {
+      tapHandledByPointer.current = true
+      bump(1)
+    }
+  }
+
+  const handleCardPointerCancel = () => {
+    tapStart.current = null
+  }
+
+  const handleCardClick = () => {
+    // Le tap a déjà été compté via pointerup : ignore le clic natif qui
+    // suit pour ne pas incrémenter deux fois.
+    if (tapHandledByPointer.current) {
+      tapHandledByPointer.current = false
+      return
+    }
+    bump(1)
   }
 
   const commitName = () => {
@@ -180,7 +225,10 @@ export function CounterCard({
       transition={{ type: 'spring', stiffness: 300, damping: 26 }}
       className="counter-card"
       style={{ '--accent': counter.color } as React.CSSProperties}
-      onClick={() => bump(1)}
+      onClick={handleCardClick}
+      onPointerDown={handleCardPointerDown}
+      onPointerUp={handleCardPointerUp}
+      onPointerCancel={handleCardPointerCancel}
       role="button"
       tabIndex={0}
       aria-label={`Incrémenter ${counter.name}`}
@@ -210,6 +258,7 @@ export function CounterCard({
       <button
         className="counter-delete"
         onClick={handleDeleteClick}
+        onPointerDown={(e) => e.stopPropagation()}
         aria-label="Supprimer le compteur"
         title={confirmDelete ? 'Cliquer à nouveau pour confirmer' : 'Supprimer'}
       >
@@ -237,6 +286,7 @@ export function CounterCard({
           e.stopPropagation()
           setSettingsOpen(true)
         }}
+        onPointerDown={(e) => e.stopPropagation()}
         aria-label="Personnaliser le compteur"
         title="Couleur, image de fond, probabilité, date de début, partage"
       >
@@ -249,6 +299,7 @@ export function CounterCard({
           autoFocus
           value={draftName}
           onClick={(e) => e.stopPropagation()}
+          onPointerDown={(e) => e.stopPropagation()}
           onChange={(e) => setDraftName(e.target.value)}
           onBlur={commitName}
           onKeyDown={(e) => {
@@ -268,6 +319,7 @@ export function CounterCard({
             setDraftName(counter.name)
             setEditing(true)
           }}
+          onPointerDown={(e) => e.stopPropagation()}
           title="Toucher pour renommer"
         >
           {counter.name}
@@ -282,6 +334,7 @@ export function CounterCard({
           pattern="-?[0-9]*"
           value={draftCount}
           onClick={(e) => e.stopPropagation()}
+          onPointerDown={(e) => e.stopPropagation()}
           onFocus={(e) => e.currentTarget.select()}
           onChange={(e) => setDraftCount(e.target.value)}
           onBlur={commitCount}
@@ -331,6 +384,7 @@ export function CounterCard({
             setDraftCount(counter.count.toString())
             setEditingCount(true)
           }}
+          onPointerDown={(e) => e.stopPropagation()}
           aria-label="Définir la valeur du compteur"
           title="Définir la valeur du compteur"
         >
