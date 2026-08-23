@@ -730,6 +730,11 @@
   border-radius: 999px;
   box-shadow: 0 8px 24px rgba(15, 23, 42, 0.25);
   font-size: 0.9rem;
+  /* Le toast flotte par-dessus la grille sans réserver d'espace : sans ça,
+     il peut recouvrir (et absorber les taps destinés à) le bouton +/- d'un
+     compteur juste en dessous, surtout en bas d'écran sur mobile. Seul le
+     bouton "Annuler" doit rester cliquable. */
+  pointer-events: none;
 }
 
 .undo-toast span {
@@ -746,4 +751,5 @@
   font-weight: 700;
   text-decoration: underline;
   padding: 0;
+  pointer-events: auto;
 }

@@ -16,6 +16,25 @@ test.describe('Parcours de base', () => {
     await expect(page.locator('.counter-value')).toHaveText('0')
   })
 
+  test("le toast d'annulation ne bloque pas les taps sur ce qu'il recouvre", async ({ page }) => {
+    await addCounter(page)
+    // Modifier la valeur déclenche le toast "Annuler", qui reste affiché 5s
+    // en position fixe : il peut visuellement recouvrir le bouton + d'un
+    // compteur en bas d'écran. Le tap doit quand même atteindre le bouton.
+    await page.getByRole('button', { name: 'Définir la valeur du compteur' }).click()
+    const input = page.locator('.counter-value-input')
+    await input.fill('10')
+    await input.press('Enter')
+    await expect(page.getByRole('button', { name: 'Annuler' })).toBeVisible()
+
+    const plus = page.getByRole('button', { name: 'Incrémenter', exact: true })
+    const box = (await plus.boundingBox())!
+    // Clic par coordonnées (comme un vrai tap à l'aveugle), pas via le
+    // locator qui refuserait de cliquer un élément visuellement recouvert.
+    await page.mouse.click(box.x + box.width / 2, box.y + box.height / 2)
+    await expect(page.locator('.counter-value')).toHaveText('11')
+  })
+
   test('incrémente au clic sur la carte', async ({ page }) => {
     await addCounter(page)
     await page.locator('.counter-card').click()
