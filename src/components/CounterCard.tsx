@@ -150,11 +150,14 @@ export function CounterCard({
   }
 
   const commitCount = () => {
-    const parsed = parseInt(draftCount.replace(/[^-\d]/g, ''), 10)
-    if (!Number.isFinite(parsed)) {
+    const trimmed = draftCount.trim()
+    // N'accepte que des chiffres (et un signe moins optionnel) : une saisie
+    // comme "abd7" doit être rejetée, pas silencieusement réduite à "7".
+    if (!/^-?\d+$/.test(trimmed)) {
       setCountError('Nombre entier requis.')
       return
     }
+    const parsed = parseInt(trimmed, 10)
     setCountError(null)
     setDirection(parsed >= counter.count ? 1 : -1)
     onSetCount(parsed)

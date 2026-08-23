@@ -549,6 +549,16 @@ describe('CounterCard', () => {
       expect(screen.getByDisplayValue('')).toBeInTheDocument()
     })
 
+    it('rejette une saisie contenant des lettres plutôt que de garder seulement les chiffres', () => {
+      const { onSetCount } = renderCard({ count: 12 })
+      fireEvent.click(screen.getByRole('button', { name: 'Définir la valeur du compteur' }))
+      const input = screen.getByDisplayValue('12')
+      fireEvent.change(input, { target: { value: 'abd7' } })
+      fireEvent.keyDown(input, { key: 'Enter' })
+      expect(onSetCount).not.toHaveBeenCalled()
+      expect(screen.getByText('Nombre entier requis.')).toBeInTheDocument()
+    })
+
     it('efface l\'erreur dès que la saisie est modifiée', () => {
       renderCard({ count: 12 })
       fireEvent.click(screen.getByRole('button', { name: 'Définir la valeur du compteur' }))
