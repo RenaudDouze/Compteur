@@ -16,9 +16,11 @@ function getAudioContext(): AudioContext {
   return audioContext
 }
 
-/** Joue un bref bip montant. Échoue silencieusement si l'API Web Audio est
- * indisponible ou bloquée (ex: contexte encore suspendu faute d'interaction
- * utilisateur) : le son est un agrément, jamais un pré-requis. */
+/** Joue un bref "tock" mécanique (comme un compteur à main), à hauteur fixe
+ * — pas de montée de fréquence, pour ne pas évoquer un bip de notification.
+ * Échoue silencieusement si l'API Web Audio est indisponible ou bloquée
+ * (ex: contexte encore suspendu faute d'interaction utilisateur) : le son
+ * est un agrément, jamais un pré-requis. */
 export function playIncrementSound() {
   try {
     const ctx = getAudioContext()
@@ -27,16 +29,15 @@ export function playIncrementSound() {
     const now = ctx.currentTime
     const oscillator = ctx.createOscillator()
     const gain = ctx.createGain()
-    oscillator.type = 'sine'
-    oscillator.frequency.setValueAtTime(880, now)
-    oscillator.frequency.exponentialRampToValueAtTime(1320, now + 0.08)
+    oscillator.type = 'triangle'
+    oscillator.frequency.setValueAtTime(220, now)
     gain.gain.setValueAtTime(0.0001, now)
-    gain.gain.exponentialRampToValueAtTime(0.2, now + 0.01)
-    gain.gain.exponentialRampToValueAtTime(0.0001, now + 0.12)
+    gain.gain.exponentialRampToValueAtTime(0.6, now + 0.002)
+    gain.gain.exponentialRampToValueAtTime(0.0001, now + 0.05)
     oscillator.connect(gain)
     gain.connect(ctx.destination)
     oscillator.start(now)
-    oscillator.stop(now + 0.13)
+    oscillator.stop(now + 0.06)
   } catch {
     // API Web Audio indisponible/bloquée : pas de son, pas d'erreur bloquante.
   }

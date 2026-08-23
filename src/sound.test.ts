@@ -120,7 +120,7 @@ describe('playIncrementSound', () => {
     expect(fake.oscillators[0].stopped).toBe(true)
   })
 
-  it("programme un bip sinusoïdal montant, avec une enveloppe de volume qui s'éteint avant l'arrêt", async () => {
+  it("programme un tock triangulaire à hauteur fixe, avec une enveloppe de volume qui s'éteint avant l'arrêt", async () => {
     vi.stubGlobal('AudioContext', FakeAudioContext)
     const playIncrementSound = await loadPlayIncrementSound()
     playIncrementSound()
@@ -128,21 +128,20 @@ describe('playIncrementSound', () => {
     const osc = fake.oscillators[0]
     const gain = fake.gains[0]
 
-    expect(osc.type).toBe('sine')
-    expect(osc.frequency.calls).toEqual([
-      { method: 'setValueAtTime', value: 880, time: 0 },
-      { method: 'exponentialRampToValueAtTime', value: 1320, time: 0.08 },
-    ])
+    expect(osc.type).toBe('triangle')
+    // Pas de rampe de fréquence : une hauteur fixe évite l'effet "bip de
+    // notification" d'un son qui monte en pitch.
+    expect(osc.frequency.calls).toEqual([{ method: 'setValueAtTime', value: 220, time: 0 }])
     expect(gain.gain.calls).toEqual([
       { method: 'setValueAtTime', value: 0.0001, time: 0 },
-      { method: 'exponentialRampToValueAtTime', value: 0.2, time: 0.01 },
-      { method: 'exponentialRampToValueAtTime', value: 0.0001, time: 0.12 },
+      { method: 'exponentialRampToValueAtTime', value: 0.6, time: 0.002 },
+      { method: 'exponentialRampToValueAtTime', value: 0.0001, time: 0.05 },
     ])
     expect(osc.startTime).toBe(0)
     // L'oscillateur s'arrête après que le volume soit déjà retombé à
     // (quasi) zéro, pour ne pas couper le son sec en pleine émission.
     expect(osc.stopTime).toBeGreaterThan(gain.gain.calls[2].time)
-    expect(osc.stopTime).toBe(0.13)
+    expect(osc.stopTime).toBe(0.06)
   })
 
   it("reprend le contexte s'il est suspendu", async () => {
