@@ -58,6 +58,7 @@ export function CounterCard({
   const [settingsOpen, setSettingsOpen] = useState(false)
   const [editingCount, setEditingCount] = useState(false)
   const [draftCount, setDraftCount] = useState(counter.count.toString())
+  const [countError, setCountError] = useState<string | null>(null)
   const [direction, setDirection] = useState<1 | -1>(1)
   const [confirmDelete, setConfirmDelete] = useState(false)
   const confirmTimer = useRef<ReturnType<typeof setTimeout> | undefined>(undefined)
@@ -150,8 +151,13 @@ export function CounterCard({
 
   const commitCount = () => {
     const parsed = parseInt(draftCount.replace(/[^-\d]/g, ''), 10)
-    setDirection(Number.isFinite(parsed) && parsed >= counter.count ? 1 : -1)
-    onSetCount(Number.isFinite(parsed) ? parsed : counter.count)
+    if (!Number.isFinite(parsed)) {
+      setCountError('Nombre entier requis.')
+      return
+    }
+    setCountError(null)
+    setDirection(parsed >= counter.count ? 1 : -1)
+    onSetCount(parsed)
     setEditingCount(false)
   }
 
@@ -350,25 +356,37 @@ export function CounterCard({
       )}
 
       {editingCount ? (
-        <input
-          className="counter-value-input"
-          autoFocus
-          inputMode="numeric"
-          pattern="-?[0-9]*"
-          value={draftCount}
-          onClick={(e) => e.stopPropagation()}
-          onPointerDown={(e) => e.stopPropagation()}
-          onFocus={(e) => e.currentTarget.select()}
-          onChange={(e) => setDraftCount(e.target.value)}
-          onBlur={commitCount}
-          onKeyDown={(e) => {
-            if (e.key === 'Enter') commitCount()
-            if (e.key === 'Escape') {
-              setDraftCount(counter.count.toString())
-              setEditingCount(false)
-            }
-          }}
-        />
+        <>
+          <input
+            className="counter-value-input"
+            autoFocus
+            inputMode="numeric"
+            pattern="-?[0-9]*"
+            aria-invalid={countError !== null}
+            value={draftCount}
+            onClick={(e) => e.stopPropagation()}
+            onPointerDown={(e) => e.stopPropagation()}
+            onFocus={(e) => e.currentTarget.select()}
+            onChange={(e) => {
+              setDraftCount(e.target.value)
+              setCountError(null)
+            }}
+            onBlur={commitCount}
+            onKeyDown={(e) => {
+              if (e.key === 'Enter') commitCount()
+              if (e.key === 'Escape') {
+                setDraftCount(counter.count.toString())
+                setCountError(null)
+                setEditingCount(false)
+              }
+            }}
+          />
+          {countError && (
+            <p className="modal-error" onClick={(e) => e.stopPropagation()} onPointerDown={(e) => e.stopPropagation()}>
+              {countError}
+            </p>
+          )}
+        </>
       ) : (
         <motion.div
           className={`counter-value${counter.displayStyle ? ` counter-value--${counter.displayStyle}` : ''}`}
@@ -406,6 +424,7 @@ export function CounterCard({
           onClick={(e) => {
             e.stopPropagation()
             setDraftCount(counter.count.toString())
+            setCountError(null)
             setEditingCount(true)
           }}
           onPointerDown={(e) => e.stopPropagation()}
