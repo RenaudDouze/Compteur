@@ -506,6 +506,22 @@ describe('CounterCard', () => {
       fireEvent.click(screen.getByRole('button', { name: 'Fermer' }))
       expect(screen.queryByRole('button', { name: 'Fermer' })).not.toBeInTheDocument()
     })
+
+    it('ouvre le panneau "Comportement" depuis la personnalisation', () => {
+      renderCard({ name: 'Mon compteur' })
+      fireEvent.click(screen.getByRole('button', { name: 'Personnaliser le compteur' }))
+      fireEvent.click(screen.getByRole('button', { name: '→ Comportement' }))
+      expect(screen.getByText('Comportement « Mon compteur »')).toBeInTheDocument()
+    })
+
+    it('ouvre puis ferme le panneau "Historique" depuis la personnalisation', () => {
+      renderCard({ name: 'Mon compteur' })
+      fireEvent.click(screen.getByRole('button', { name: 'Personnaliser le compteur' }))
+      fireEvent.click(screen.getByRole('button', { name: '→ Historique' }))
+      expect(screen.getByText('Historique « Mon compteur »')).toBeInTheDocument()
+      fireEvent.click(screen.getByRole('button', { name: 'Fermer' }))
+      expect(screen.queryByText('Historique « Mon compteur »')).not.toBeInTheDocument()
+    })
   })
 
   describe('édition directe de la valeur', () => {

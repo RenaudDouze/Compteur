@@ -2,7 +2,8 @@ import { useEffect, useRef, useState } from 'react'
 import { motion, Reorder, useAnimationControls, useDragControls } from 'framer-motion'
 import { CounterValueDisplay } from './CounterValueDisplay'
 import { CounterSettingsPanel } from './CounterSettingsPanel'
-import { CounterOtherSettingsPanel } from './CounterOtherSettingsPanel'
+import { CounterBehaviorSettingsPanel } from './CounterBehaviorSettingsPanel'
+import { CounterHistoryPanel } from './CounterHistoryPanel'
 import { cumulativeOdds, formatOdds, progressRatio } from '../odds'
 import { playIncrementSound } from '../sound'
 import type { Counter, DisplayStyle } from '../types'
@@ -57,10 +58,11 @@ export function CounterCard({
 }: CounterCardProps) {
   const [editing, setEditing] = useState(false)
   const [draftName, setDraftName] = useState(counter.name)
-  // Deux modales distinctes : la personnalisation de l'apparence (couleur,
-  // style, image de fond) et les autres réglages (pas d'incrément,
-  // objectif, probabilité, date de début, historique, partage/duplication).
-  const [openPanel, setOpenPanel] = useState<'personnalisation' | 'autres' | null>(null)
+  // Trois modales distinctes : la personnalisation de l'apparence (couleur,
+  // style, image de fond), le comportement du compteur (pas d'incrément,
+  // objectif, probabilité, date de début, partage/duplication) et son
+  // historique.
+  const [openPanel, setOpenPanel] = useState<'personnalisation' | 'comportement' | 'historique' | null>(null)
   const [editingCount, setEditingCount] = useState(false)
   const [draftCount, setDraftCount] = useState(counter.count.toString())
   const [countError, setCountError] = useState<string | null>(null)
@@ -498,12 +500,13 @@ export function CounterCard({
           onSetBackgroundImage={onSetBackgroundImage}
           onSetColor={onSetColor}
           onSetDisplayStyle={onSetDisplayStyle}
-          onOpenOther={() => setOpenPanel('autres')}
+          onOpenBehavior={() => setOpenPanel('comportement')}
+          onOpenHistory={() => setOpenPanel('historique')}
         />
       )}
 
-      {openPanel === 'autres' && (
-        <CounterOtherSettingsPanel
+      {openPanel === 'comportement' && (
+        <CounterBehaviorSettingsPanel
           counter={counter}
           onClose={() => setOpenPanel(null)}
           onSetOdds={onSetOdds}
@@ -513,6 +516,8 @@ export function CounterCard({
           onDuplicate={onDuplicate}
         />
       )}
+
+      {openPanel === 'historique' && <CounterHistoryPanel counter={counter} onClose={() => setOpenPanel(null)} />}
     </Reorder.Item>
   )
 }

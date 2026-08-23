@@ -1,6 +1,6 @@
 import { act, fireEvent, render, screen } from '@testing-library/react'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
-import { CounterOtherSettingsPanel } from './CounterOtherSettingsPanel'
+import { CounterBehaviorSettingsPanel } from './CounterBehaviorSettingsPanel'
 import type { Counter } from '../types'
 
 const realNavigator = window.navigator
@@ -18,7 +18,7 @@ function makeCounter(overrides: Partial<Counter> = {}): Counter {
 
 function renderPanel(
   counterOverrides: Partial<Counter> = {},
-  props: Partial<Parameters<typeof CounterOtherSettingsPanel>[0]> = {}
+  props: Partial<Parameters<typeof CounterBehaviorSettingsPanel>[0]> = {}
 ) {
   const counter = makeCounter(counterOverrides)
   const handlers = {
@@ -30,11 +30,11 @@ function renderPanel(
     onDuplicate: vi.fn(),
     ...props,
   }
-  const utils = render(<CounterOtherSettingsPanel counter={counter} {...handlers} {...props} />)
+  const utils = render(<CounterBehaviorSettingsPanel counter={counter} {...handlers} {...props} />)
   return { counter, ...handlers, ...utils }
 }
 
-describe('CounterOtherSettingsPanel', () => {
+describe('CounterBehaviorSettingsPanel', () => {
   beforeEach(() => {
     vi.useFakeTimers({ shouldAdvanceTime: true })
   })
@@ -45,7 +45,7 @@ describe('CounterOtherSettingsPanel', () => {
 
   it('affiche le nom du compteur dans le titre', () => {
     renderPanel({ name: 'Mon compteur' })
-    expect(screen.getByText('Autres réglages « Mon compteur »')).toBeInTheDocument()
+    expect(screen.getByText('Comportement « Mon compteur »')).toBeInTheDocument()
   })
 
   it('ferme au clic sur la croix', () => {
@@ -418,32 +418,6 @@ describe('CounterOtherSettingsPanel', () => {
       fireEvent.change(input, { target: { value: '2026-02-01' } })
       expect(screen.queryByText('La date ne peut pas être dans le futur.')).not.toBeInTheDocument()
       expect(onSetStartDate).toHaveBeenCalledWith('2026-02-01')
-    })
-  })
-
-  describe('historique', () => {
-    it("indique l'absence d'historique suffisant sans historique du tout", () => {
-      renderPanel({ history: undefined })
-      expect(screen.getByText(/Pas encore assez d'historique/)).toBeInTheDocument()
-      expect(document.querySelector('.sparkline')).not.toBeInTheDocument()
-    })
-
-    it("indique l'absence d'historique suffisant avec un seul point", () => {
-      renderPanel({ history: [{ t: 1000, v: 0 }] })
-      expect(screen.getByText(/Pas encore assez d'historique/)).toBeInTheDocument()
-      expect(document.querySelector('.sparkline')).not.toBeInTheDocument()
-    })
-
-    it('affiche le sparkline et les extrêmes avec au moins deux points', () => {
-      renderPanel({
-        history: [
-          { t: 1000, v: 0 },
-          { t: 2000, v: 5 },
-          { t: 3000, v: 2 },
-        ],
-      })
-      expect(document.querySelector('.sparkline')).toBeInTheDocument()
-      expect(screen.getByText('Min : 0 · Max : 5')).toBeInTheDocument()
     })
   })
 
