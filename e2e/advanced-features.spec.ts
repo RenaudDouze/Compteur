@@ -83,7 +83,7 @@ test.describe('Fonctionnalités avancées', () => {
   test('duplique un compteur avec sa configuration mais repart de zéro', async ({ page }) => {
     await page.getByRole('button', { name: 'Personnaliser le compteur' }).click()
     await page.getByRole('button', { name: `Choisir la couleur` }).first().click()
-    await page.getByRole('button', { name: 'Choisir le style LCD rétro' }).click()
+    await page.getByRole('button', { name: 'Choisir le style Volets' }).click()
     await page.getByRole('button', { name: '⧉ Dupliquer ce compteur' }).click()
 
     await expect(page.getByText('Compteur 1', { exact: true })).toBeVisible()
@@ -91,8 +91,8 @@ test.describe('Fonctionnalités avancées', () => {
     const cards = page.locator('.counter-card')
     await expect(cards).toHaveCount(2)
     // Le style est repris, mais pas le compte.
-    await expect(cards.nth(1).locator('.value-lcd')).toBeVisible()
-    await expect(cards.nth(1).locator('.value-lcd-digits')).toHaveText('0')
+    await expect(cards.nth(1).locator('.value-flap')).toBeVisible()
+    await expect(cards.nth(1).locator('.value-flap-tile')).toHaveText('0')
   })
 
   test("affiche un sparkline dans l'historique après plusieurs changements espacés", async ({ page }) => {

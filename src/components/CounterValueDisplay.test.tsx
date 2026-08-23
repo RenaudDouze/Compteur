@@ -31,14 +31,6 @@ describe('CounterValueDisplay', () => {
     })
   })
 
-  describe('style LCD', () => {
-    it('affiche les chiffres et un nombre de fantômes équivalent', () => {
-      render(<CounterValueDisplay value={12} direction={1} style="lcd" progress={null} />)
-      expect(document.querySelector('.value-lcd-digits')).toHaveTextContent('12')
-      expect(document.querySelector('.value-lcd-ghost')).toHaveTextContent('88')
-    })
-  })
-
   describe('style 7 segments', () => {
     it('allume les bons segments pour chaque chiffre (0-9)', () => {
       render(<CounterValueDisplay value={1234567890} direction={1} style="segment7" progress={null} />)

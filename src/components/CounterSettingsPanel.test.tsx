@@ -136,21 +136,21 @@ describe('CounterSettingsPanel', () => {
   describe("style d'affichage", () => {
     it('affiche une option par style disponible', () => {
       renderPanel()
-      ;['Actuel', 'Volets', 'LCD rétro', '7 segments', 'Anneau', 'Éditorial', 'Pastille'].forEach((label) => {
+      ;['Odomètre', 'Volets', '7 segments', 'Anneau', 'Éditorial', 'Pastille'].forEach((label) => {
         expect(screen.getByRole('button', { name: `Choisir le style ${label}` })).toBeInTheDocument()
       })
     })
 
-    it("marque 'Actuel' comme sélectionné quand aucun style n'est défini", () => {
+    it("marque 'Odomètre' comme sélectionné quand aucun style n'est défini", () => {
       renderPanel()
-      expect(screen.getByRole('button', { name: 'Choisir le style Actuel' }).className).toContain('selected')
+      expect(screen.getByRole('button', { name: 'Choisir le style Odomètre' }).className).toContain('selected')
       expect(screen.getByRole('button', { name: 'Choisir le style Volets' }).className).not.toContain('selected')
     })
 
     it('marque le style actuellement sélectionné', () => {
-      renderPanel({ displayStyle: 'lcd' })
-      expect(screen.getByRole('button', { name: 'Choisir le style LCD rétro' }).className).toContain('selected')
-      expect(screen.getByRole('button', { name: 'Choisir le style Actuel' }).className).not.toContain('selected')
+      renderPanel({ displayStyle: 'flap' })
+      expect(screen.getByRole('button', { name: 'Choisir le style Volets' }).className).toContain('selected')
+      expect(screen.getByRole('button', { name: 'Choisir le style Odomètre' }).className).not.toContain('selected')
     })
 
     it('choisit un style personnalisé', () => {
@@ -159,9 +159,9 @@ describe('CounterSettingsPanel', () => {
       expect(onSetDisplayStyle).toHaveBeenCalledWith('segment7')
     })
 
-    it("repasse à 'undefined' (style par défaut) en choisissant Actuel", () => {
+    it("repasse à 'undefined' (style par défaut) en choisissant Odomètre", () => {
       const { onSetDisplayStyle } = renderPanel({ displayStyle: 'badge' })
-      fireEvent.click(screen.getByRole('button', { name: 'Choisir le style Actuel' }))
+      fireEvent.click(screen.getByRole('button', { name: 'Choisir le style Odomètre' }))
       expect(onSetDisplayStyle).toHaveBeenCalledWith(undefined)
     })
 

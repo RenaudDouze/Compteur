@@ -4,7 +4,7 @@ export interface HistoryPoint {
 }
 
 /** Style d'affichage du chiffre sur la carte. Absent = 'default' (odomètre actuel). */
-export type DisplayStyle = 'default' | 'flap' | 'lcd' | 'segment7' | 'ring' | 'editorial' | 'badge'
+export type DisplayStyle = 'default' | 'flap' | 'segment7' | 'ring' | 'editorial' | 'badge'
 
 export interface Counter {
   id: string

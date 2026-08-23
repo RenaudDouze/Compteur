@@ -435,11 +435,10 @@
   filter: none;
 }
 
-/* Les styles "objet physique" (volets, LCD, 7 segments) ont déjà leur
-   propre relief (boîtier, bezel, ombres internes) : la lueur de fond du
-   style par défaut y créerait un halo/bordure parasite autour du boîtier. */
+/* Les styles "objet physique" (volets, 7 segments) ont déjà leur propre
+   relief (boîtier, bezel, ombres internes) : la lueur de fond du style par
+   défaut y créerait un halo/bordure parasite autour du boîtier. */
 .counter-value--flap,
-.counter-value--lcd,
 .counter-value--segment7 {
   filter: none;
 }
@@ -482,13 +481,10 @@
    déjà posée sur `.counter-value` (par mode de grille, ou par la mesure JS du
    style par défaut) : chaque style suit donc l'espace disponible sans calcul
    supplémentaire. Les boîtiers/écrans des styles "objet physique" (volets,
-   LCD, 7 segments) restent dans des teintes neutres fixes, indépendantes du
+   7 segments) restent dans des teintes neutres fixes, indépendantes du
    thème clair/sombre — au même titre qu'un vrai boîtier d'appareil — mais le
-   chiffre lui-même (le volet imprimé, le contenu de l'écran, le segment
-   allumé) reprend toujours la couleur du compteur (`--accent`). Le style LCD
-   n'a volontairement pas de bezel autour de l'écran (contrairement aux
-   volets et 7 segments) : l'écran occupe tout l'espace du compteur, sans
-   bordure interne. */
+   chiffre lui-même (le volet imprimé, le segment allumé) reprend toujours la
+   couleur du compteur (`--accent`). */
 
 .value-flap {
   display: flex;
@@ -525,45 +521,6 @@
   height: 2px;
   background: rgba(0, 0, 0, 0.55);
   transform: translateY(-1px);
-}
-
-.value-lcd {
-  position: relative;
-}
-
-.value-lcd-led {
-  position: absolute;
-  top: -0.1em;
-  right: -0.08em;
-  width: 0.08em;
-  height: 0.08em;
-  border-radius: 50%;
-  background: #ff5b4d;
-  box-shadow: 0 0 0.1em rgba(255, 91, 77, 0.9);
-}
-
-.value-lcd-ghost,
-.value-lcd-digits {
-  display: block;
-  font-family: var(--font-mono);
-  font-weight: 700;
-  font-variant-numeric: tabular-nums;
-  letter-spacing: 0.04em;
-  background: color-mix(in srgb, var(--accent) 18%, #050807);
-  border-radius: 0.06em;
-  padding: 0.1em 0.14em;
-}
-
-.value-lcd-ghost {
-  color: color-mix(in srgb, var(--accent) 40%, black);
-}
-
-.value-lcd-digits {
-  position: absolute;
-  inset: 0.16em 0.2em;
-  color: var(--accent);
-  text-shadow: 0 0 0.15em color-mix(in srgb, var(--accent) 65%, transparent),
-    0 0 0.05em color-mix(in srgb, var(--accent) 90%, transparent);
 }
 
 .value-segment7 {
@@ -851,6 +808,30 @@
   height: 30px;
   border-radius: 50%;
   font-size: 0.9rem;
+}
+
+/* Regroupe les réglages du panneau en deux blocs : ce qui personnalise
+   l'apparence de la carte (couleur, style, image de fond) et le reste
+   (comportement du compteur, historique, actions). */
+.modal-group {
+  display: flex;
+  flex-direction: column;
+}
+
+.modal-group + .modal-group {
+  border-top: 1px solid var(--surface-border);
+  padding-top: 16px;
+  margin-top: 16px;
+}
+
+.modal-group-title {
+  margin: 0 0 4px;
+  font-size: 0.72rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: var(--text-dim);
+  align-self: flex-start;
 }
 
 .modal-section {
