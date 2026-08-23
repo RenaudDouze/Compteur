@@ -11,6 +11,15 @@ import type { Counter, DisplayStyle } from '../types'
 
 const POSITIVE_INT_ERROR = 'Nombre entier positif requis.'
 
+// N'accepte que des chiffres (contrairement à un simple filtrage des
+// caractères non numériques) : une saisie comme "abd7" doit être rejetée,
+// pas silencieusement réduite à "7".
+function parsePositiveInt(trimmed: string): number | undefined {
+  if (!/^\d+$/.test(trimmed)) return undefined
+  const value = parseInt(trimmed, 10)
+  return value > 0 ? value : undefined
+}
+
 interface CounterSettingsPanelProps {
   counter: Counter
   colors: string[]
@@ -62,13 +71,14 @@ export function CounterSettingsPanel({
   }, [onClose])
 
   const commitOdds = () => {
-    if (draftOdds.trim() === '') {
+    const trimmed = draftOdds.trim()
+    if (trimmed === '') {
       setOddsError(null)
       onSetOdds(undefined)
       return
     }
-    const parsed = parseInt(draftOdds.replace(/[^\d]/g, ''), 10)
-    if (Number.isFinite(parsed) && parsed > 0) {
+    const parsed = parsePositiveInt(trimmed)
+    if (parsed !== undefined) {
       setOddsError(null)
       onSetOdds(parsed)
     } else {
@@ -81,13 +91,14 @@ export function CounterSettingsPanel({
   }
 
   const commitTarget = () => {
-    if (draftTarget.trim() === '') {
+    const trimmed = draftTarget.trim()
+    if (trimmed === '') {
       setTargetError(null)
       onSetTarget(undefined)
       return
     }
-    const parsed = parseInt(draftTarget.replace(/[^\d]/g, ''), 10)
-    if (Number.isFinite(parsed) && parsed > 0) {
+    const parsed = parsePositiveInt(trimmed)
+    if (parsed !== undefined) {
       setTargetError(null)
       onSetTarget(parsed)
     } else {
@@ -96,13 +107,14 @@ export function CounterSettingsPanel({
   }
 
   const commitStep = () => {
-    if (draftStep.trim() === '') {
+    const trimmed = draftStep.trim()
+    if (trimmed === '') {
       setStepError(null)
       onSetStep(undefined)
       return
     }
-    const parsed = parseInt(draftStep.replace(/[^\d]/g, ''), 10)
-    if (Number.isFinite(parsed) && parsed > 0) {
+    const parsed = parsePositiveInt(trimmed)
+    if (parsed !== undefined) {
       setStepError(null)
       onSetStep(parsed)
     } else {

@@ -200,12 +200,13 @@ describe('CounterSettingsPanel', () => {
       expect(onSetStep).toHaveBeenCalledWith(10)
     })
 
-    it('ignore les caractères non numériques dans la saisie', () => {
+    it('rejette une saisie contenant des lettres plutôt que de garder seulement les chiffres', () => {
       const { onSetStep } = renderPanel()
       const input = screen.getByPlaceholderText('1')
       fireEvent.change(input, { target: { value: '1a0b' } })
       fireEvent.keyDown(input, { key: 'Enter' })
-      expect(onSetStep).toHaveBeenCalledWith(10)
+      expect(onSetStep).not.toHaveBeenCalled()
+      expect(screen.getByText('Nombre entier positif requis.')).toBeInTheDocument()
     })
 
     it('revient au pas par défaut si la saisie est vide', () => {
@@ -386,12 +387,13 @@ describe('CounterSettingsPanel', () => {
       expect(onSetTarget).toHaveBeenCalledWith(20)
     })
 
-    it('ignore les caractères non numériques dans la saisie', () => {
+    it('rejette une saisie contenant des lettres plutôt que de garder seulement les chiffres', () => {
       const { onSetTarget } = renderPanel()
       const input = screen.getByPlaceholderText('ex : 50')
       fireEvent.change(input, { target: { value: '5a0b' } })
       fireEvent.keyDown(input, { key: 'Enter' })
-      expect(onSetTarget).toHaveBeenCalledWith(50)
+      expect(onSetTarget).not.toHaveBeenCalled()
+      expect(screen.getByText('Nombre entier positif requis.')).toBeInTheDocument()
     })
 
     it("efface l'objectif si la saisie est vide", () => {
@@ -478,12 +480,13 @@ describe('CounterSettingsPanel', () => {
       expect(onSetOdds).toHaveBeenCalledWith(20)
     })
 
-    it('ignore les caractères non numériques dans la saisie', () => {
+    it('rejette une saisie contenant des lettres plutôt que de garder seulement les chiffres', () => {
       const { onSetOdds } = renderPanel()
       const input = screen.getByPlaceholderText('4096')
       fireEvent.change(input, { target: { value: '4a0b9c6' } })
       fireEvent.keyDown(input, { key: 'Enter' })
-      expect(onSetOdds).toHaveBeenCalledWith(4096)
+      expect(onSetOdds).not.toHaveBeenCalled()
+      expect(screen.getByText('Nombre entier positif requis.')).toBeInTheDocument()
     })
 
     it('efface la probabilité si la saisie est vide', () => {
