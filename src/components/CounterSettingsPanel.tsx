@@ -220,213 +220,221 @@ export function CounterSettingsPanel({
           </button>
         </div>
 
-        <section className="modal-section">
-          <h3>Couleur</h3>
-          <div className="settings-color-grid">
-            {colors.map((c) => (
-              <button
-                key={c}
-                type="button"
-                className={`counter-color-option${c === counter.color ? ' selected' : ''}`}
-                style={{ background: c }}
-                aria-label={`Choisir la couleur ${c}`}
-                onClick={() => onSetColor(c)}
+        <div className="modal-group">
+          <h3 className="modal-group-title">Personnalisation</h3>
+
+          <section className="modal-section">
+            <h3>Couleur</h3>
+            <div className="settings-color-grid">
+              {colors.map((c) => (
+                <button
+                  key={c}
+                  type="button"
+                  className={`counter-color-option${c === counter.color ? ' selected' : ''}`}
+                  style={{ background: c }}
+                  aria-label={`Choisir la couleur ${c}`}
+                  onClick={() => onSetColor(c)}
+                />
+              ))}
+            </div>
+          </section>
+
+          <section className="modal-section">
+            <h3>Style d'affichage</h3>
+            <div className="display-style-grid">
+              {DISPLAY_STYLES.map((opt) => (
+                <button
+                  key={opt.id}
+                  type="button"
+                  className={`display-style-option${opt.id === activeStyle ? ' selected' : ''}`}
+                  aria-label={`Choisir le style ${opt.label}`}
+                  onClick={() => onSetDisplayStyle(opt.id === 'default' ? undefined : opt.id)}
+                >
+                  <span className="display-style-preview">
+                    <CounterValueDisplay value={8} direction={1} style={opt.id} progress={opt.id === 'ring' ? 0.6 : null} />
+                  </span>
+                  <span className="display-style-name">{opt.label}</span>
+                </button>
+              ))}
+            </div>
+          </section>
+
+          <section className="modal-section">
+            <h3>Image de fond</h3>
+            <div className="modal-row">
+              <input
+                type="url"
+                inputMode="url"
+                className="modal-input"
+                aria-invalid={backgroundError !== null}
+                value={draftBackground}
+                placeholder="https://exemple.com/image.jpg"
+                onChange={(e) => {
+                  setDraftBackground(e.target.value)
+                  setBackgroundError(null)
+                }}
+                onBlur={commitBackground}
+                onKeyDown={(e) => {
+                  if (e.key === 'Enter') commitBackground()
+                }}
               />
-            ))}
-          </div>
-        </section>
+              {draftBackground !== '' && (
+                <button className="modal-close" onClick={clearBackground} aria-label="Vider l'image de fond">
+                  ✕
+                </button>
+              )}
+            </div>
+            {backgroundError && <p className="modal-error">{backgroundError}</p>}
+          </section>
+        </div>
 
-        <section className="modal-section">
-          <h3>Style d'affichage</h3>
-          <div className="display-style-grid">
-            {DISPLAY_STYLES.map((opt) => (
-              <button
-                key={opt.id}
-                type="button"
-                className={`display-style-option${opt.id === activeStyle ? ' selected' : ''}`}
-                aria-label={`Choisir le style ${opt.label}`}
-                onClick={() => onSetDisplayStyle(opt.id === 'default' ? undefined : opt.id)}
-              >
-                <span className="display-style-preview">
-                  <CounterValueDisplay value={8} direction={1} style={opt.id} progress={opt.id === 'ring' ? 0.6 : null} />
-                </span>
-                <span className="display-style-name">{opt.label}</span>
-              </button>
-            ))}
-          </div>
-        </section>
+        <div className="modal-group">
+          <h3 className="modal-group-title">Autres</h3>
 
-        <section className="modal-section">
-          <h3>Pas d'incrément</h3>
-          <input
-            className="modal-input modal-input--odds"
-            inputMode="numeric"
-            pattern="[0-9]*"
-            aria-invalid={stepError !== null}
-            value={draftStep}
-            placeholder="1"
-            onChange={(e) => {
-              setDraftStep(e.target.value)
-              setStepError(null)
-            }}
-            onBlur={commitStep}
-            onKeyDown={(e) => {
-              if (e.key === 'Enter') commitStep()
-            }}
-          />
-          {stepError && <p className="modal-error">{stepError}</p>}
-          <p className="modal-hint">
-            +{counter.step ?? 1} / −{counter.step ?? 1} à chaque appui
-          </p>
-        </section>
-
-        <section className="modal-section">
-          <h3>Image de fond</h3>
-          <div className="modal-row">
-            <input
-              type="url"
-              inputMode="url"
-              className="modal-input"
-              aria-invalid={backgroundError !== null}
-              value={draftBackground}
-              placeholder="https://exemple.com/image.jpg"
-              onChange={(e) => {
-                setDraftBackground(e.target.value)
-                setBackgroundError(null)
-              }}
-              onBlur={commitBackground}
-              onKeyDown={(e) => {
-                if (e.key === 'Enter') commitBackground()
-              }}
-            />
-            {draftBackground !== '' && (
-              <button className="modal-close" onClick={clearBackground} aria-label="Vider l'image de fond">
-                ✕
-              </button>
-            )}
-          </div>
-          {backgroundError && <p className="modal-error">{backgroundError}</p>}
-        </section>
-
-        <section className="modal-section">
-          <h3>Objectif</h3>
-          <input
-            className="modal-input modal-input--odds"
-            inputMode="numeric"
-            pattern="[0-9]*"
-            aria-invalid={targetError !== null}
-            value={draftTarget}
-            placeholder="ex : 50"
-            onChange={(e) => {
-              setDraftTarget(e.target.value)
-              setTargetError(null)
-            }}
-            onBlur={commitTarget}
-            onKeyDown={(e) => {
-              if (e.key === 'Enter') commitTarget()
-            }}
-          />
-          {targetError && <p className="modal-error">{targetError}</p>}
-          {target !== undefined && (
-            <>
-              <div
-                className="odds-progress"
-                role="progressbar"
-                aria-valuenow={Math.round(targetProgress! * 100)}
-                aria-valuemin={0}
-                aria-valuemax={100}
-                aria-label="Progression vers l'objectif"
-              >
-                <div className="odds-progress-fill" style={{ width: `${targetProgress! * 100}%` }} />
-              </div>
-              <p className="modal-hint">
-                {counter.count.toLocaleString('fr-FR')} / {target.toLocaleString('fr-FR')} (
-                {Math.round(targetProgress! * 100)} %)
-              </p>
-            </>
-          )}
-        </section>
-
-        <section className="modal-section">
-          <h3>Probabilité</h3>
-          <div className="modal-row">
-            <span>1 chance sur</span>
+          <section className="modal-section">
+            <h3>Pas d'incrément</h3>
             <input
               className="modal-input modal-input--odds"
               inputMode="numeric"
               pattern="[0-9]*"
-              aria-invalid={oddsError !== null}
-              value={draftOdds}
-              placeholder="4096"
+              aria-invalid={stepError !== null}
+              value={draftStep}
+              placeholder="1"
               onChange={(e) => {
-                setDraftOdds(e.target.value)
-                setOddsError(null)
+                setDraftStep(e.target.value)
+                setStepError(null)
               }}
-              onBlur={commitOdds}
+              onBlur={commitStep}
               onKeyDown={(e) => {
-                if (e.key === 'Enter') commitOdds()
+                if (e.key === 'Enter') commitStep()
               }}
             />
-          </div>
-          {oddsError && <p className="modal-error">{oddsError}</p>}
-          {denominator !== undefined && (
-            <>
-              <p className="modal-hint">{formatOdds(odds!)} de chances de l'avoir obtenu avant ce stade</p>
-              <div
-                className="odds-progress"
-                role="progressbar"
-                aria-valuenow={Math.round(oddsProgress! * 100)}
-                aria-valuemin={0}
-                aria-valuemax={100}
-                aria-label="Progression vers le nombre moyen de tentatives"
-              >
-                <div className="odds-progress-fill" style={{ width: `${oddsProgress! * 100}%` }} />
-              </div>
-              <p className="modal-hint">{formatRemainingAttempts(denominator, counter.count)}</p>
-              <p className="modal-hint modal-hint--reminder">💡 {formatConstantChanceReminder(denominator)}</p>
-            </>
-          )}
-        </section>
-
-        <section className="modal-section">
-          <h3>Date de début</h3>
-          <input
-            type="date"
-            className="modal-input"
-            aria-invalid={startDateError !== null}
-            value={draftStartDate}
-            max={todayIsoDate()}
-            onChange={(e) => handleStartDateChange(e.target.value)}
-          />
-          {startDateError && <p className="modal-error">{startDateError}</p>}
-          <p className="modal-hint">{formatStartDate(startDate)}</p>
-        </section>
-
-        <section className="modal-section">
-          <h3>Historique</h3>
-          {counter.history && counter.history.length >= 2 ? (
-            <>
-              <Sparkline points={counter.history} color={counter.color} />
-              <p className="modal-hint">
-                Min : {Math.min(...counter.history.map((p) => p.v))} · Max :{' '}
-                {Math.max(...counter.history.map((p) => p.v))}
-              </p>
-            </>
-          ) : (
+            {stepError && <p className="modal-error">{stepError}</p>}
             <p className="modal-hint">
-              Pas encore assez d'historique : incrémente ou décrémente le compteur pour le voir apparaître.
+              +{counter.step ?? 1} / −{counter.step ?? 1} à chaque appui
             </p>
-          )}
-        </section>
+          </section>
 
-        <section className="modal-section">
-          <button className="modal-btn" onClick={handleShare}>
-            {shared ? 'Copié ✓' : '⇪ Partager ce compteur'}
-          </button>
-          <button className="modal-btn" onClick={handleDuplicate}>
-            ⧉ Dupliquer ce compteur
-          </button>
-        </section>
+          <section className="modal-section">
+            <h3>Objectif</h3>
+            <input
+              className="modal-input modal-input--odds"
+              inputMode="numeric"
+              pattern="[0-9]*"
+              aria-invalid={targetError !== null}
+              value={draftTarget}
+              placeholder="ex : 50"
+              onChange={(e) => {
+                setDraftTarget(e.target.value)
+                setTargetError(null)
+              }}
+              onBlur={commitTarget}
+              onKeyDown={(e) => {
+                if (e.key === 'Enter') commitTarget()
+              }}
+            />
+            {targetError && <p className="modal-error">{targetError}</p>}
+            {target !== undefined && (
+              <>
+                <div
+                  className="odds-progress"
+                  role="progressbar"
+                  aria-valuenow={Math.round(targetProgress! * 100)}
+                  aria-valuemin={0}
+                  aria-valuemax={100}
+                  aria-label="Progression vers l'objectif"
+                >
+                  <div className="odds-progress-fill" style={{ width: `${targetProgress! * 100}%` }} />
+                </div>
+                <p className="modal-hint">
+                  {counter.count.toLocaleString('fr-FR')} / {target.toLocaleString('fr-FR')} (
+                  {Math.round(targetProgress! * 100)} %)
+                </p>
+              </>
+            )}
+          </section>
+
+          <section className="modal-section">
+            <h3>Probabilité</h3>
+            <div className="modal-row">
+              <span>1 chance sur</span>
+              <input
+                className="modal-input modal-input--odds"
+                inputMode="numeric"
+                pattern="[0-9]*"
+                aria-invalid={oddsError !== null}
+                value={draftOdds}
+                placeholder="4096"
+                onChange={(e) => {
+                  setDraftOdds(e.target.value)
+                  setOddsError(null)
+                }}
+                onBlur={commitOdds}
+                onKeyDown={(e) => {
+                  if (e.key === 'Enter') commitOdds()
+                }}
+              />
+            </div>
+            {oddsError && <p className="modal-error">{oddsError}</p>}
+            {denominator !== undefined && (
+              <>
+                <p className="modal-hint">{formatOdds(odds!)} de chances de l'avoir obtenu avant ce stade</p>
+                <div
+                  className="odds-progress"
+                  role="progressbar"
+                  aria-valuenow={Math.round(oddsProgress! * 100)}
+                  aria-valuemin={0}
+                  aria-valuemax={100}
+                  aria-label="Progression vers le nombre moyen de tentatives"
+                >
+                  <div className="odds-progress-fill" style={{ width: `${oddsProgress! * 100}%` }} />
+                </div>
+                <p className="modal-hint">{formatRemainingAttempts(denominator, counter.count)}</p>
+                <p className="modal-hint modal-hint--reminder">💡 {formatConstantChanceReminder(denominator)}</p>
+              </>
+            )}
+          </section>
+
+          <section className="modal-section">
+            <h3>Date de début</h3>
+            <input
+              type="date"
+              className="modal-input"
+              aria-invalid={startDateError !== null}
+              value={draftStartDate}
+              max={todayIsoDate()}
+              onChange={(e) => handleStartDateChange(e.target.value)}
+            />
+            {startDateError && <p className="modal-error">{startDateError}</p>}
+            <p className="modal-hint">{formatStartDate(startDate)}</p>
+          </section>
+
+          <section className="modal-section">
+            <h3>Historique</h3>
+            {counter.history && counter.history.length >= 2 ? (
+              <>
+                <Sparkline points={counter.history} color={counter.color} />
+                <p className="modal-hint">
+                  Min : {Math.min(...counter.history.map((p) => p.v))} · Max :{' '}
+                  {Math.max(...counter.history.map((p) => p.v))}
+                </p>
+              </>
+            ) : (
+              <p className="modal-hint">
+                Pas encore assez d'historique : incrémente ou décrémente le compteur pour le voir apparaître.
+              </p>
+            )}
+          </section>
+
+          <section className="modal-section">
+            <button className="modal-btn" onClick={handleShare}>
+              {shared ? 'Copié ✓' : '⇪ Partager ce compteur'}
+            </button>
+            <button className="modal-btn" onClick={handleDuplicate}>
+              ⧉ Dupliquer ce compteur
+            </button>
+          </section>
+        </div>
       </div>
     </div>,
     document.body

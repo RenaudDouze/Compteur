@@ -40,29 +40,6 @@ function FlapValue({ value }: { value: number }) {
   )
 }
 
-// Léger flash de luminosité à chaque changement, comme un rafraîchissement
-// d'écran à cristaux liquides.
-function LcdValue({ value }: { value: number }) {
-  const text = value.toString()
-  return (
-    <div className="value-lcd">
-      <span className="value-lcd-led" aria-hidden="true" />
-      <span className="value-lcd-ghost" aria-hidden="true">
-        {'8'.repeat(text.length)}
-      </span>
-      <motion.span
-        key={text}
-        className="value-lcd-digits"
-        initial={{ opacity: 0.15, filter: 'brightness(2.4)' }}
-        animate={{ opacity: 1, filter: 'brightness(1)' }}
-        transition={{ duration: 0.22, ease: 'easeOut' }}
-      >
-        {text}
-      </motion.span>
-    </div>
-  )
-}
-
 // Segments allumés (a-g, cadran horaire classique) par caractère possible
 // dans la valeur d'un compteur (chiffres et signe moins).
 const SEGMENTS: Record<string, string> = {
@@ -200,8 +177,6 @@ export function CounterValueDisplay({ value, direction, style, progress }: Count
   switch (style) {
     case 'flap':
       return <FlapValue value={value} />
-    case 'lcd':
-      return <LcdValue value={value} />
     case 'segment7':
       return <Segment7Value value={value} />
     case 'ring':

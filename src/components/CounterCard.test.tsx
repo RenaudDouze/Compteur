@@ -677,7 +677,7 @@ describe('CounterCard', () => {
     it("ne calcule pas de taille de police en mode fill pour un style autre que 'default'", () => {
       const widthSpy = vi.spyOn(HTMLElement.prototype, 'offsetWidth', 'get').mockReturnValue(320)
       const heightSpy = vi.spyOn(HTMLElement.prototype, 'offsetHeight', 'get').mockReturnValue(480)
-      renderCard({ count: 12, displayStyle: 'lcd' }, { fill: true })
+      renderCard({ count: 12, displayStyle: 'flap' }, { fill: true })
       const valueEl = document.querySelector('.counter-value') as HTMLElement
       expect(valueEl.style.fontSize).toBe('')
       widthSpy.mockRestore()
@@ -920,7 +920,7 @@ describe('CounterCard', () => {
     })
 
     it('joue un son quel que soit le style d\'affichage (pas réservé au style par défaut)', () => {
-      const counter = makeCounter({ count: 1, displayStyle: 'lcd' })
+      const counter = makeCounter({ count: 1, displayStyle: 'flap' })
       const { rerender } = render(
         <Reorder.Group as="div" values={[counter]} onReorder={() => {}}>
           <CounterCard
