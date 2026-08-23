@@ -3,6 +3,12 @@
   <head>
     <meta charset="UTF-8" />
     <link rel="icon" type="image/svg+xml" href="./favicon.svg" />
+    <!-- Filet de secours pour les navigateurs qui ne savent pas utiliser un
+         favicon SVG comme icône de raccourci (ex: "Ajouter à l'écran
+         d'accueil" de Firefox Android, qui se rabat sur ce lien plutôt que
+         sur les icônes du manifest.webmanifest) : sans lui, l'icône ajoutée
+         au bureau reste générique. -->
+    <link rel="icon" type="image/png" sizes="192x192" href="./pwa-192x192.png" />
     <link rel="apple-touch-icon" href="./pwa-192x192.png" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, viewport-fit=cover" />
     <meta name="theme-color" content="#f8fafc" />
