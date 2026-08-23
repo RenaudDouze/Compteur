@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { cumulativeOdds, formatConstantChanceReminder, formatOdds, formatRemainingAttempts } from './odds'
+import { cumulativeOdds, formatConstantChanceReminder, formatOdds, formatRemainingAttempts, progressRatio } from './odds'
 
 function expectedPct(pct: number, decimals: number): string {
   return `${pct.toLocaleString('fr-FR', {
@@ -42,6 +42,32 @@ describe('cumulativeOdds', () => {
 
   it('tend vers 1 quand le nombre d\'essais est très grand', () => {
     expect(cumulativeOdds(10, 1000)).toBeGreaterThan(0.999)
+  })
+})
+
+describe('progressRatio', () => {
+  it('retourne null si le dénominateur est indéfini', () => {
+    expect(progressRatio(5, undefined)).toBeNull()
+  })
+
+  it('retourne null si le dénominateur est 0', () => {
+    expect(progressRatio(5, 0)).toBeNull()
+  })
+
+  it('calcule le ratio compte/dénominateur', () => {
+    expect(progressRatio(25, 100)).toBe(0.25)
+  })
+
+  it('borne à 1 au-delà du dénominateur', () => {
+    expect(progressRatio(150, 100)).toBe(1)
+  })
+
+  it('borne à 0 pour un compte négatif', () => {
+    expect(progressRatio(-10, 100)).toBe(0)
+  })
+
+  it('atteint exactement 1 quand le compte égale le dénominateur', () => {
+    expect(progressRatio(100, 100)).toBe(1)
   })
 })
 

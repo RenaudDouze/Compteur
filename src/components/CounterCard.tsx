@@ -2,7 +2,7 @@ import { useEffect, useRef, useState } from 'react'
 import { motion, Reorder, useAnimationControls, useDragControls } from 'framer-motion'
 import { CounterValueDisplay } from './CounterValueDisplay'
 import { CounterSettingsPanel } from './CounterSettingsPanel'
-import { cumulativeOdds, formatOdds } from '../odds'
+import { cumulativeOdds, formatOdds, progressRatio } from '../odds'
 import type { Counter, DisplayStyle } from '../types'
 
 // Délai avant qu'un appui maintenu sur +/- déclenche la répétition, puis
@@ -237,8 +237,8 @@ export function CounterCard({
   // Progression pour le style "anneau" : vers l'objectif libre s'il est
   // défini (le plus explicite), sinon vers le nombre moyen de tentatives —
   // mêmes formules que les barres de progression du panneau de réglages.
-  const targetProgress = counter.target ? Math.max(0, Math.min(counter.count / counter.target, 1)) : null
-  const oddsProgress = counter.oddsDenominator ? Math.min(counter.count / counter.oddsDenominator, 1) : null
+  const targetProgress = progressRatio(counter.count, counter.target)
+  const oddsProgress = progressRatio(counter.count, counter.oddsDenominator)
   const progress = targetProgress ?? oddsProgress
 
   return (

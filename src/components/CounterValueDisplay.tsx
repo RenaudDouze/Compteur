@@ -81,7 +81,11 @@ const SEGMENTS: Record<string, string> = {
 const SEGMENT_KEYS = ['a', 'b', 'c', 'd', 'e', 'f', 'g']
 
 function SegmentDigit({ char }: { char: string }) {
-  const on = SEGMENTS[char]
+  // Un caractère hors table (ex: notation exponentielle "1e+21" pour une
+  // très grande valeur saisie manuellement) ne doit jamais planter l'affichage :
+  // il s'affiche simplement comme un chiffre éteint plutôt que de faire
+  // planter le rendu.
+  const on = SEGMENTS[char] ?? ''
   return (
     <span className="value-segment-digit">
       {SEGMENT_KEYS.map((s) => (
