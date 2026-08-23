@@ -485,7 +485,10 @@
    LCD, 7 segments) restent dans des teintes neutres fixes, indépendantes du
    thème clair/sombre — au même titre qu'un vrai boîtier d'appareil — mais le
    chiffre lui-même (le volet imprimé, le contenu de l'écran, le segment
-   allumé) reprend toujours la couleur du compteur (`--accent`). */
+   allumé) reprend toujours la couleur du compteur (`--accent`). Le style LCD
+   n'a volontairement pas de bezel autour de l'écran (contrairement aux
+   volets et 7 segments) : l'écran occupe tout l'espace du compteur, sans
+   bordure interne. */
 
 .value-flap {
   display: flex;
@@ -526,15 +529,12 @@
 
 .value-lcd {
   position: relative;
-  background: #cec9b8;
-  border-radius: 0.14em;
-  padding: 0.16em 0.2em;
 }
 
 .value-lcd-led {
   position: absolute;
-  top: 0.14em;
-  right: 0.16em;
+  top: -0.1em;
+  right: -0.08em;
   width: 0.08em;
   height: 0.08em;
   border-radius: 50%;
