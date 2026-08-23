@@ -2,7 +2,12 @@ import { act, fireEvent, render, screen } from '@testing-library/react'
 import { Reorder } from 'framer-motion'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import { CounterCard } from './CounterCard'
+import { playIncrementSound } from '../sound'
 import type { Counter } from '../types'
+
+vi.mock('../sound', () => ({
+  playIncrementSound: vi.fn(),
+}))
 
 const TEST_COLORS = ['#2563eb', '#7c3aed', '#0d9488']
 
@@ -803,6 +808,162 @@ describe('CounterCard', () => {
         </Reorder.Group>
       )
       expect(screen.getByText('2')).toBeInTheDocument()
+    })
+  })
+
+  describe("son d'incrémentation", () => {
+    beforeEach(() => {
+      vi.mocked(playIncrementSound).mockClear()
+    })
+
+    it('ne joue pas de son au montage initial', () => {
+      renderCard({ count: 3 })
+      expect(playIncrementSound).not.toHaveBeenCalled()
+    })
+
+    it("joue un son après l'incrémentation, une fois la nouvelle valeur affichée (pas au clic)", () => {
+      const counter = makeCounter({ count: 1 })
+      const { rerender } = render(
+        <Reorder.Group as="div" values={[counter]} onReorder={() => {}}>
+          <CounterCard
+            counter={counter}
+            onChange={vi.fn()}
+            onSetCount={vi.fn()}
+            onRename={vi.fn()}
+            onSetOdds={vi.fn()}
+            onSetStartDate={vi.fn()}
+            colors={['#2563eb', '#7c3aed']}
+            onSetBackgroundImage={vi.fn()}
+            onSetColor={vi.fn()}
+            onSetStep={vi.fn()}
+            onSetDisplayStyle={vi.fn()}
+            onSetTarget={vi.fn()}
+            onDuplicate={vi.fn()}
+            onDelete={vi.fn()}
+          />
+        </Reorder.Group>
+      )
+      fireEvent.click(screen.getByRole('button', { name: 'Incrémenter' }))
+      // Le clic seul (onChange mocké, ne met pas à jour `counter.count`) ne
+      // doit pas encore avoir déclenché le son.
+      expect(playIncrementSound).not.toHaveBeenCalled()
+
+      const updated = { ...counter, count: 2 }
+      rerender(
+        <Reorder.Group as="div" values={[updated]} onReorder={() => {}}>
+          <CounterCard
+            counter={updated}
+            onChange={vi.fn()}
+            onSetCount={vi.fn()}
+            onRename={vi.fn()}
+            onSetOdds={vi.fn()}
+            onSetStartDate={vi.fn()}
+            colors={['#2563eb', '#7c3aed']}
+            onSetBackgroundImage={vi.fn()}
+            onSetColor={vi.fn()}
+            onSetStep={vi.fn()}
+            onSetDisplayStyle={vi.fn()}
+            onSetTarget={vi.fn()}
+            onDuplicate={vi.fn()}
+            onDelete={vi.fn()}
+          />
+        </Reorder.Group>
+      )
+      expect(playIncrementSound).toHaveBeenCalledTimes(1)
+    })
+
+    it('ne joue pas de son après une décrémentation', () => {
+      const counter = makeCounter({ count: 2 })
+      const { rerender } = render(
+        <Reorder.Group as="div" values={[counter]} onReorder={() => {}}>
+          <CounterCard
+            counter={counter}
+            onChange={vi.fn()}
+            onSetCount={vi.fn()}
+            onRename={vi.fn()}
+            onSetOdds={vi.fn()}
+            onSetStartDate={vi.fn()}
+            colors={['#2563eb', '#7c3aed']}
+            onSetBackgroundImage={vi.fn()}
+            onSetColor={vi.fn()}
+            onSetStep={vi.fn()}
+            onSetDisplayStyle={vi.fn()}
+            onSetTarget={vi.fn()}
+            onDuplicate={vi.fn()}
+            onDelete={vi.fn()}
+          />
+        </Reorder.Group>
+      )
+      fireEvent.click(screen.getByRole('button', { name: 'Décrémenter' }))
+      const updated = { ...counter, count: 1 }
+      rerender(
+        <Reorder.Group as="div" values={[updated]} onReorder={() => {}}>
+          <CounterCard
+            counter={updated}
+            onChange={vi.fn()}
+            onSetCount={vi.fn()}
+            onRename={vi.fn()}
+            onSetOdds={vi.fn()}
+            onSetStartDate={vi.fn()}
+            colors={['#2563eb', '#7c3aed']}
+            onSetBackgroundImage={vi.fn()}
+            onSetColor={vi.fn()}
+            onSetStep={vi.fn()}
+            onSetDisplayStyle={vi.fn()}
+            onSetTarget={vi.fn()}
+            onDuplicate={vi.fn()}
+            onDelete={vi.fn()}
+          />
+        </Reorder.Group>
+      )
+      expect(playIncrementSound).not.toHaveBeenCalled()
+    })
+
+    it('joue un son quel que soit le style d\'affichage (pas réservé au style par défaut)', () => {
+      const counter = makeCounter({ count: 1, displayStyle: 'lcd' })
+      const { rerender } = render(
+        <Reorder.Group as="div" values={[counter]} onReorder={() => {}}>
+          <CounterCard
+            counter={counter}
+            onChange={vi.fn()}
+            onSetCount={vi.fn()}
+            onRename={vi.fn()}
+            onSetOdds={vi.fn()}
+            onSetStartDate={vi.fn()}
+            colors={['#2563eb', '#7c3aed']}
+            onSetBackgroundImage={vi.fn()}
+            onSetColor={vi.fn()}
+            onSetStep={vi.fn()}
+            onSetDisplayStyle={vi.fn()}
+            onSetTarget={vi.fn()}
+            onDuplicate={vi.fn()}
+            onDelete={vi.fn()}
+          />
+        </Reorder.Group>
+      )
+      fireEvent.click(screen.getByRole('button', { name: 'Incrémenter' }))
+      const updated = { ...counter, count: 2 }
+      rerender(
+        <Reorder.Group as="div" values={[updated]} onReorder={() => {}}>
+          <CounterCard
+            counter={updated}
+            onChange={vi.fn()}
+            onSetCount={vi.fn()}
+            onRename={vi.fn()}
+            onSetOdds={vi.fn()}
+            onSetStartDate={vi.fn()}
+            colors={['#2563eb', '#7c3aed']}
+            onSetBackgroundImage={vi.fn()}
+            onSetColor={vi.fn()}
+            onSetStep={vi.fn()}
+            onSetDisplayStyle={vi.fn()}
+            onSetTarget={vi.fn()}
+            onDuplicate={vi.fn()}
+            onDelete={vi.fn()}
+          />
+        </Reorder.Group>
+      )
+      expect(playIncrementSound).toHaveBeenCalledTimes(1)
     })
   })
 
