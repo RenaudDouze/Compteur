@@ -79,6 +79,11 @@ export function CounterSettingsPanel({
     }
   }
 
+  const clearBackground = () => {
+    setDraftBackground('')
+    onSetBackgroundImage(undefined)
+  }
+
   const handleShare = async () => {
     const text = buildShareText(counter)
     if (navigator.share) {
@@ -200,18 +205,25 @@ export function CounterSettingsPanel({
 
         <section className="modal-section">
           <h3>Image de fond</h3>
-          <input
-            type="url"
-            inputMode="url"
-            className="modal-input"
-            value={draftBackground}
-            placeholder="https://exemple.com/image.jpg"
-            onChange={(e) => setDraftBackground(e.target.value)}
-            onBlur={commitBackground}
-            onKeyDown={(e) => {
-              if (e.key === 'Enter') commitBackground()
-            }}
-          />
+          <div className="modal-row">
+            <input
+              type="url"
+              inputMode="url"
+              className="modal-input"
+              value={draftBackground}
+              placeholder="https://exemple.com/image.jpg"
+              onChange={(e) => setDraftBackground(e.target.value)}
+              onBlur={commitBackground}
+              onKeyDown={(e) => {
+                if (e.key === 'Enter') commitBackground()
+              }}
+            />
+            {draftBackground !== '' && (
+              <button className="modal-close" onClick={clearBackground} aria-label="Vider l'image de fond">
+                ✕
+              </button>
+            )}
+          </div>
         </section>
 
         <section className="modal-section">

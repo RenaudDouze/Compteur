@@ -304,6 +304,29 @@ describe('CounterSettingsPanel', () => {
       fireEvent.keyDown(input, { key: 'a' })
       expect(onSetBackgroundImage).not.toHaveBeenCalled()
     })
+
+    it("n'affiche pas de bouton pour vider le champ quand il est vide", () => {
+      renderPanel()
+      expect(screen.queryByRole('button', { name: "Vider l'image de fond" })).not.toBeInTheDocument()
+    })
+
+    it('affiche un bouton pour vider le champ quand une image est définie', () => {
+      renderPanel({ backgroundImageUrl: 'https://exemple.com/actuel.jpg' })
+      expect(screen.getByRole('button', { name: "Vider l'image de fond" })).toBeInTheDocument()
+    })
+
+    it('vide le champ et efface l\'image de fond au clic sur le bouton', () => {
+      const { onSetBackgroundImage } = renderPanel({ backgroundImageUrl: 'https://exemple.com/actuel.jpg' })
+      fireEvent.click(screen.getByRole('button', { name: "Vider l'image de fond" }))
+      expect(onSetBackgroundImage).toHaveBeenCalledWith(undefined)
+      expect((screen.getByPlaceholderText('https://exemple.com/image.jpg') as HTMLInputElement).value).toBe('')
+    })
+
+    it('fait disparaître le bouton une fois le champ vidé', () => {
+      renderPanel({ backgroundImageUrl: 'https://exemple.com/actuel.jpg' })
+      fireEvent.click(screen.getByRole('button', { name: "Vider l'image de fond" }))
+      expect(screen.queryByRole('button', { name: "Vider l'image de fond" })).not.toBeInTheDocument()
+    })
   })
 
   describe('objectif', () => {

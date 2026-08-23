@@ -145,6 +145,24 @@ test.describe('Fonctionnalités avancées', () => {
     await expect(page.locator('.counter-bg')).toBeAttached()
   })
 
+  test("vide l'image de fond via le bouton dédié", async ({ page }) => {
+    await page.getByRole('button', { name: 'Personnaliser le compteur' }).click()
+    const input = page.getByPlaceholder('https://exemple.com/image.jpg')
+    await expect(page.getByRole('button', { name: "Vider l'image de fond" })).not.toBeVisible()
+
+    await input.fill('https://exemple.com/fond.jpg')
+    await input.press('Enter')
+    await page.getByRole('button', { name: 'Fermer' }).click()
+    await expect(page.locator('.counter-bg')).toBeAttached()
+
+    await page.getByRole('button', { name: 'Personnaliser le compteur' }).click()
+    await page.getByRole('button', { name: "Vider l'image de fond" }).click()
+    await expect(input).toHaveValue('')
+    await expect(page.getByRole('button', { name: "Vider l'image de fond" })).not.toBeVisible()
+    await page.getByRole('button', { name: 'Fermer' }).click()
+    await expect(page.locator('.counter-bg')).not.toBeAttached()
+  })
+
   test('ignore une URL invalide comme image de fond', async ({ page }) => {
     await page.getByRole('button', { name: 'Personnaliser le compteur' }).click()
     const input = page.getByPlaceholder('https://exemple.com/image.jpg')
