@@ -2,7 +2,6 @@ import { useRef, useState } from 'react'
 import { cumulativeOdds, formatOdds, formatRemainingAttempts, formatConstantChanceReminder, progressRatio } from '../odds'
 import { formatStartDate, toIsoDate, todayIsoDate } from '../date'
 import { buildShareText } from '../share'
-import { Sparkline } from './Sparkline'
 import { Modal } from './Modal'
 import type { Counter } from '../types'
 
@@ -17,7 +16,7 @@ function parsePositiveInt(trimmed: string): number | undefined {
   return value > 0 ? value : undefined
 }
 
-interface CounterOtherSettingsPanelProps {
+interface CounterBehaviorSettingsPanelProps {
   counter: Counter
   onClose: () => void
   onSetOdds: (denominator: number | undefined) => void
@@ -27,7 +26,7 @@ interface CounterOtherSettingsPanelProps {
   onDuplicate: () => void
 }
 
-export function CounterOtherSettingsPanel({
+export function CounterBehaviorSettingsPanel({
   counter,
   onClose,
   onSetOdds,
@@ -35,7 +34,7 @@ export function CounterOtherSettingsPanel({
   onSetStartDate,
   onSetStep,
   onDuplicate,
-}: CounterOtherSettingsPanelProps) {
+}: CounterBehaviorSettingsPanelProps) {
   const startDate = counter.startDate ?? toIsoDate(counter.createdAt)
 
   const [draftOdds, setDraftOdds] = useState(counter.oddsDenominator?.toString() ?? '')
@@ -148,7 +147,7 @@ export function CounterOtherSettingsPanel({
   }
 
   return (
-    <Modal title={`Autres réglages « ${counter.name} »`} onClose={onClose} accentColor={counter.color}>
+    <Modal title={`Comportement « ${counter.name} »`} onClose={onClose} accentColor={counter.color}>
       <section className="modal-section">
         <h3>Pas d'incrément</h3>
         <input
@@ -265,23 +264,6 @@ export function CounterOtherSettingsPanel({
         />
         {startDateError && <p className="modal-error">{startDateError}</p>}
         <p className="modal-hint">{formatStartDate(startDate)}</p>
-      </section>
-
-      <section className="modal-section">
-        <h3>Historique</h3>
-        {counter.history && counter.history.length >= 2 ? (
-          <>
-            <Sparkline points={counter.history} color={counter.color} />
-            <p className="modal-hint">
-              Min : {Math.min(...counter.history.map((p) => p.v))} · Max :{' '}
-              {Math.max(...counter.history.map((p) => p.v))}
-            </p>
-          </>
-        ) : (
-          <p className="modal-hint">
-            Pas encore assez d'historique : incrémente ou décrémente le compteur pour le voir apparaître.
-          </p>
-        )}
       </section>
 
       <section className="modal-section">

@@ -12,10 +12,11 @@ interface CounterSettingsPanelProps {
   onSetBackgroundImage: (url: string | undefined) => void
   onSetColor: (color: string) => void
   onSetDisplayStyle: (style: DisplayStyle | undefined) => void
-  // Bascule vers le panneau "Autres réglages" (pas d'incrément, objectif,
-  // probabilité, date de début, historique, partage, duplication) : géré
-  // dans une modale séparée, distincte de l'apparence de la carte.
-  onOpenOther: () => void
+  // Bascule vers les deux autres modales, chacune dans son propre panneau :
+  // le comportement du compteur (pas d'incrément, objectif, probabilité,
+  // date de début, partage, duplication) et son historique.
+  onOpenBehavior: () => void
+  onOpenHistory: () => void
 }
 
 export function CounterSettingsPanel({
@@ -25,7 +26,8 @@ export function CounterSettingsPanel({
   onSetBackgroundImage,
   onSetColor,
   onSetDisplayStyle,
-  onOpenOther,
+  onOpenBehavior,
+  onOpenHistory,
 }: CounterSettingsPanelProps) {
   const [draftBackground, setDraftBackground] = useState(counter.backgroundImageUrl ?? '')
   const [backgroundError, setBackgroundError] = useState<string | null>(null)
@@ -118,8 +120,11 @@ export function CounterSettingsPanel({
       </section>
 
       <section className="modal-section">
-        <button className="modal-btn" onClick={onOpenOther}>
-          → Autres réglages
+        <button className="modal-btn" onClick={onOpenBehavior}>
+          → Comportement
+        </button>
+        <button className="modal-btn" onClick={onOpenHistory}>
+          → Historique
         </button>
       </section>
     </Modal>
