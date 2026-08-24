@@ -1,0 +1,142 @@
+import { act, fireEvent, render, screen } from '@testing-library/react'
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
+import { CounterActionsPanel } from './CounterActionsPanel'
+import type { Counter } from '../types'
+
+const realNavigator = window.navigator
+
+function makeCounter(overrides: Partial<Counter> = {}): Counter {
+  return {
+    id: 'counter-1',
+    name: 'Compteur 1',
+    count: 0,
+    color: '#2563eb',
+    createdAt: new Date(2026, 7, 1).getTime(),
+    ...overrides,
+  }
+}
+
+function renderPanel(
+  counterOverrides: Partial<Counter> = {},
+  props: Partial<Parameters<typeof CounterActionsPanel>[0]> = {}
+) {
+  const counter = makeCounter(counterOverrides)
+  const handlers = {
+    onClose: vi.fn(),
+    onDuplicate: vi.fn(),
+    onNavigate: vi.fn(),
+    ...props,
+  }
+  const utils = render(<CounterActionsPanel counter={counter} {...handlers} {...props} />)
+  return { counter, ...handlers, ...utils }
+}
+
+describe('CounterActionsPanel', () => {
+  beforeEach(() => {
+    vi.useFakeTimers({ shouldAdvanceTime: true })
+  })
+
+  afterEach(() => {
+    vi.useRealTimers()
+  })
+
+  it('affiche le nom du compteur dans le titre', () => {
+    renderPanel({ name: 'Mon compteur' })
+    expect(screen.getByText('Actions « Mon compteur »')).toBeInTheDocument()
+  })
+
+  it('ferme au clic sur la croix', () => {
+    const { onClose } = renderPanel()
+    fireEvent.click(screen.getByRole('button', { name: 'Fermer' }))
+    expect(onClose).toHaveBeenCalledTimes(1)
+  })
+
+  it('navigue vers un autre panneau au clic sur un lien dédié', () => {
+    const { onNavigate } = renderPanel()
+    fireEvent.click(screen.getByRole('button', { name: '→ Comportement' }))
+    expect(onNavigate).toHaveBeenCalledWith('comportement')
+  })
+
+  describe('partage', () => {
+    afterEach(() => {
+      vi.stubGlobal('navigator', realNavigator)
+    })
+
+    it('utilise navigator.share quand disponible', async () => {
+      const shareMock = vi.fn().mockResolvedValue(undefined)
+      vi.stubGlobal('navigator', { ...navigator, share: shareMock, clipboard: { writeText: vi.fn() } })
+      renderPanel({ name: 'Partagé', count: 3 })
+      await act(async () => {
+        fireEvent.click(screen.getByText('⇪ Partager ce compteur'))
+      })
+      expect(shareMock).toHaveBeenCalledTimes(1)
+      expect(shareMock.mock.calls[0][0].text).toContain('Partagé : 3')
+    })
+
+    it('ignore silencieusement une annulation de navigator.share', async () => {
+      const shareMock = vi.fn().mockRejectedValue(new Error('annulé'))
+      vi.stubGlobal('navigator', { ...navigator, share: shareMock, clipboard: { writeText: vi.fn() } })
+      renderPanel()
+      await act(async () => {
+        fireEvent.click(screen.getByText('⇪ Partager ce compteur'))
+      })
+      expect(screen.getByText('⇪ Partager ce compteur')).toBeInTheDocument()
+    })
+
+    it('copie dans le presse-papiers quand navigator.share est indisponible', async () => {
+      const writeTextMock = vi.fn().mockResolvedValue(undefined)
+      vi.stubGlobal('navigator', { ...navigator, share: undefined, clipboard: { writeText: writeTextMock } })
+      renderPanel({ name: 'Copié', count: 9 })
+      await act(async () => {
+        fireEvent.click(screen.getByText('⇪ Partager ce compteur'))
+      })
+      expect(writeTextMock).toHaveBeenCalledTimes(1)
+      expect(writeTextMock.mock.calls[0][0]).toContain('Copié : 9')
+      expect(screen.getByText('Copié ✓')).toBeInTheDocument()
+    })
+
+    it('revient au libellé "Partager" après le délai', async () => {
+      vi.stubGlobal('navigator', {
+        ...navigator,
+        share: undefined,
+        clipboard: { writeText: vi.fn().mockResolvedValue(undefined) },
+      })
+      renderPanel()
+      await act(async () => {
+        fireEvent.click(screen.getByText('⇪ Partager ce compteur'))
+      })
+      expect(screen.getByText('Copié ✓')).toBeInTheDocument()
+      await act(async () => {
+        vi.advanceTimersByTime(2100)
+      })
+      expect(screen.getByText('⇪ Partager ce compteur')).toBeInTheDocument()
+    })
+
+    it('ignore silencieusement un échec de copie', async () => {
+      vi.stubGlobal('navigator', {
+        ...navigator,
+        share: undefined,
+        clipboard: { writeText: vi.fn().mockRejectedValue(new Error('refusé')) },
+      })
+      renderPanel()
+      await act(async () => {
+        fireEvent.click(screen.getByText('⇪ Partager ce compteur'))
+      })
+      expect(screen.getByText('⇪ Partager ce compteur')).toBeInTheDocument()
+    })
+  })
+
+  describe('duplication', () => {
+    it('déclenche la duplication au clic', () => {
+      const { onDuplicate } = renderPanel()
+      fireEvent.click(screen.getByText('⧉ Dupliquer ce compteur'))
+      expect(onDuplicate).toHaveBeenCalledTimes(1)
+    })
+
+    it('ferme le panneau après duplication', () => {
+      const { onClose } = renderPanel()
+      fireEvent.click(screen.getByText('⧉ Dupliquer ce compteur'))
+      expect(onClose).toHaveBeenCalledTimes(1)
+    })
+  })
+})

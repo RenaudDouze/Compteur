@@ -27,8 +27,7 @@ function renderPanel(
     onSetBackgroundImage: vi.fn(),
     onSetColor: vi.fn(),
     onSetDisplayStyle: vi.fn(),
-    onOpenBehavior: vi.fn(),
-    onOpenHistory: vi.fn(),
+    onNavigate: vi.fn(),
     ...props,
   }
   const utils = render(<CounterSettingsPanel counter={counter} {...handlers} {...props} />)
@@ -47,16 +46,22 @@ describe('CounterSettingsPanel', () => {
     expect(onClose).toHaveBeenCalledTimes(1)
   })
 
-  it('ouvre le panneau "Comportement" au clic sur le bouton dédié', () => {
-    const { onOpenBehavior } = renderPanel()
+  it('navigue vers le panneau "Comportement" au clic sur le lien dédié', () => {
+    const { onNavigate } = renderPanel()
     fireEvent.click(screen.getByRole('button', { name: '→ Comportement' }))
-    expect(onOpenBehavior).toHaveBeenCalledTimes(1)
+    expect(onNavigate).toHaveBeenCalledWith('comportement')
   })
 
-  it('ouvre le panneau "Historique" au clic sur le bouton dédié', () => {
-    const { onOpenHistory } = renderPanel()
+  it('navigue vers le panneau "Historique" au clic sur le lien dédié', () => {
+    const { onNavigate } = renderPanel()
     fireEvent.click(screen.getByRole('button', { name: '→ Historique' }))
-    expect(onOpenHistory).toHaveBeenCalledTimes(1)
+    expect(onNavigate).toHaveBeenCalledWith('historique')
+  })
+
+  it('navigue vers le panneau "Actions" au clic sur le lien dédié', () => {
+    const { onNavigate } = renderPanel()
+    fireEvent.click(screen.getByRole('button', { name: '→ Actions' }))
+    expect(onNavigate).toHaveBeenCalledWith('actions')
   })
 
   describe('couleur', () => {

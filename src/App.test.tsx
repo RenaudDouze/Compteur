@@ -208,7 +208,7 @@ describe('App', () => {
     fireEvent.click(screen.getByRole('button', { name: 'Personnaliser le compteur' }))
     fireEvent.click(screen.getByRole('button', { name: `Choisir la couleur ${COLORS[1]}` }))
     fireEvent.click(screen.getByRole('button', { name: 'Choisir le style Volets' }))
-    fireEvent.click(screen.getByRole('button', { name: '→ Comportement' }))
+    fireEvent.click(screen.getByRole('button', { name: '→ Actions' }))
     fireEvent.click(screen.getByRole('button', { name: '⧉ Dupliquer ce compteur' }))
 
     expect(screen.getByText('Compteur 1')).toBeInTheDocument()

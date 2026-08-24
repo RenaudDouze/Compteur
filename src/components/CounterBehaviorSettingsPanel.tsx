@@ -1,8 +1,9 @@
-import { useRef, useState } from 'react'
+import { useState } from 'react'
 import { cumulativeOdds, formatOdds, formatRemainingAttempts, formatConstantChanceReminder, progressRatio } from '../odds'
 import { formatStartDate, toIsoDate, todayIsoDate } from '../date'
-import { buildShareText } from '../share'
 import { Modal } from './Modal'
+import { PanelNav } from './PanelNav'
+import type { PanelKind } from './PanelNav'
 import type { Counter } from '../types'
 
 const POSITIVE_INT_ERROR = 'Nombre entier positif requis.'
@@ -23,7 +24,7 @@ interface CounterBehaviorSettingsPanelProps {
   onSetTarget: (target: number | undefined) => void
   onSetStartDate: (isoDate: string | undefined) => void
   onSetStep: (step: number | undefined) => void
-  onDuplicate: () => void
+  onNavigate: (panel: PanelKind) => void
 }
 
 export function CounterBehaviorSettingsPanel({
@@ -33,7 +34,7 @@ export function CounterBehaviorSettingsPanel({
   onSetTarget,
   onSetStartDate,
   onSetStep,
-  onDuplicate,
+  onNavigate,
 }: CounterBehaviorSettingsPanelProps) {
   const startDate = counter.startDate ?? toIsoDate(counter.createdAt)
 
@@ -45,8 +46,6 @@ export function CounterBehaviorSettingsPanel({
   const [stepError, setStepError] = useState<string | null>(null)
   const [draftStartDate, setDraftStartDate] = useState(startDate)
   const [startDateError, setStartDateError] = useState<string | null>(null)
-  const [shared, setShared] = useState(false)
-  const shareTimer = useRef<ReturnType<typeof setTimeout> | undefined>(undefined)
 
   const commitOdds = () => {
     const trimmed = draftOdds.trim()
@@ -115,36 +114,11 @@ export function CounterBehaviorSettingsPanel({
     }
   }
 
-  const handleShare = async () => {
-    const text = buildShareText(counter)
-    if (navigator.share) {
-      try {
-        await navigator.share({ text })
-      } catch {
-        // partage annulé par l'utilisateur : rien à faire
-      }
-      return
-    }
-    try {
-      await navigator.clipboard.writeText(text)
-      setShared(true)
-      clearTimeout(shareTimer.current)
-      shareTimer.current = setTimeout(() => setShared(false), 2000)
-    } catch {
-      // copie impossible (permissions navigateur) : on ignore silencieusement
-    }
-  }
-
   const denominator = counter.oddsDenominator
   const odds = denominator ? cumulativeOdds(denominator, counter.count) : null
   const target = counter.target
   const targetProgress = progressRatio(counter.count, target)
   const oddsProgress = progressRatio(counter.count, denominator)
-
-  const handleDuplicate = () => {
-    onDuplicate()
-    onClose()
-  }
 
   return (
     <Modal title={`Comportement « ${counter.name} »`} onClose={onClose} accentColor={counter.color}>
@@ -266,14 +240,7 @@ export function CounterBehaviorSettingsPanel({
         <p className="modal-hint">{formatStartDate(startDate)}</p>
       </section>
 
-      <section className="modal-section">
-        <button className="modal-btn" onClick={handleShare}>
-          {shared ? 'Copié ✓' : '⇪ Partager ce compteur'}
-        </button>
-        <button className="modal-btn" onClick={handleDuplicate}>
-          ⧉ Dupliquer ce compteur
-        </button>
-      </section>
+      <PanelNav current="comportement" onNavigate={onNavigate} />
     </Modal>
   )
 }

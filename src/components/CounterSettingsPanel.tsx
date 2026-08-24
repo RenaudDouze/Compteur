@@ -3,6 +3,8 @@ import { isValidImageUrl } from '../url'
 import { CounterValueDisplay } from './CounterValueDisplay'
 import { DISPLAY_STYLES } from '../displayStyles'
 import { Modal } from './Modal'
+import { PanelNav } from './PanelNav'
+import type { PanelKind } from './PanelNav'
 import type { Counter, DisplayStyle } from '../types'
 
 interface CounterSettingsPanelProps {
@@ -12,11 +14,7 @@ interface CounterSettingsPanelProps {
   onSetBackgroundImage: (url: string | undefined) => void
   onSetColor: (color: string) => void
   onSetDisplayStyle: (style: DisplayStyle | undefined) => void
-  // Bascule vers les deux autres modales, chacune dans son propre panneau :
-  // le comportement du compteur (pas d'incrément, objectif, probabilité,
-  // date de début, partage, duplication) et son historique.
-  onOpenBehavior: () => void
-  onOpenHistory: () => void
+  onNavigate: (panel: PanelKind) => void
 }
 
 export function CounterSettingsPanel({
@@ -26,8 +24,7 @@ export function CounterSettingsPanel({
   onSetBackgroundImage,
   onSetColor,
   onSetDisplayStyle,
-  onOpenBehavior,
-  onOpenHistory,
+  onNavigate,
 }: CounterSettingsPanelProps) {
   const [draftBackground, setDraftBackground] = useState(counter.backgroundImageUrl ?? '')
   const [backgroundError, setBackgroundError] = useState<string | null>(null)
@@ -119,14 +116,7 @@ export function CounterSettingsPanel({
         {backgroundError && <p className="modal-error">{backgroundError}</p>}
       </section>
 
-      <section className="modal-section">
-        <button className="modal-btn" onClick={onOpenBehavior}>
-          → Comportement
-        </button>
-        <button className="modal-btn" onClick={onOpenHistory}>
-          → Historique
-        </button>
-      </section>
+      <PanelNav current="personnalisation" onNavigate={onNavigate} />
     </Modal>
   )
 }

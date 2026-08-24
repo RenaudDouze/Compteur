@@ -91,7 +91,7 @@ test.describe('Fonctionnalités avancées', () => {
     await page.getByRole('button', { name: 'Personnaliser le compteur' }).click()
     await page.getByRole('button', { name: `Choisir la couleur` }).first().click()
     await page.getByRole('button', { name: 'Choisir le style Volets' }).click()
-    await page.getByRole('button', { name: '→ Comportement' }).click()
+    await page.getByRole('button', { name: '→ Actions' }).click()
     await page.getByRole('button', { name: '⧉ Dupliquer ce compteur' }).click()
 
     await expect(page.getByText('Compteur 1', { exact: true })).toBeVisible()
