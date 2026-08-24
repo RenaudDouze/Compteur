@@ -122,6 +122,24 @@ test.describe('Fonctionnalités avancées', () => {
     await expect(page.getByText(/Min : \d+ · Max : 2/)).toBeVisible()
   })
 
+  test("exporte l'historique en CSV", async ({ page }) => {
+    const plus = page.getByRole('button', { name: 'Incrémenter', exact: true })
+    await plus.click()
+
+    await page.getByRole('button', { name: 'Personnaliser le compteur' }).click()
+    await page.getByRole('button', { name: 'Historique', exact: true }).click()
+    const downloadPromise = page.waitForEvent('download')
+    await page.getByRole('button', { name: /Exporter en CSV/ }).click()
+    const download = await downloadPromise
+    expect(download.suggestedFilename()).toMatch(/^compteur-historique-Compteur-1-\d{4}-\d{2}-\d{2}\.csv$/)
+
+    const path = await download.path()
+    const fs = await import('fs')
+    const content = fs.readFileSync(path!, 'utf8')
+    expect(content.split('\n')[0]).toBe('Horodatage,Valeur')
+    expect(content).toMatch(/,1$/)
+  })
+
   test("définit un pas d'incrément personnalisé et l'applique aux boutons +/-", async ({ page }) => {
     await page.getByRole('button', { name: 'Personnaliser le compteur' }).click()
     await page.getByRole('button', { name: 'Comportement', exact: true }).click()
