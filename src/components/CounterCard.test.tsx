@@ -1027,4 +1027,54 @@ describe('CounterCard', () => {
     const card = screen.getByRole('button', { name: 'Incrémenter Compteur 1' })
     expect(card.style.getPropertyValue('--accent')).toBe('#16a34a')
   })
+
+  describe('compteur archivé (lecture seule)', () => {
+    it("n'incrémente pas au clic sur la carte", () => {
+      const { onChange } = renderCard({ archived: true })
+      fireEvent.click(screen.getByRole('button', { name: /Compteur 1/ }))
+      expect(onChange).not.toHaveBeenCalled()
+    })
+
+    it("n'incrémente pas via les boutons +/-, qui sont désactivés", () => {
+      const { onChange } = renderCard({ archived: true })
+      expect(screen.getByRole('button', { name: 'Incrémenter' })).toBeDisabled()
+      expect(screen.getByRole('button', { name: 'Décrémenter' })).toBeDisabled()
+      fireEvent.click(screen.getByRole('button', { name: 'Incrémenter' }))
+      fireEvent.click(screen.getByRole('button', { name: 'Décrémenter' }))
+      expect(onChange).not.toHaveBeenCalled()
+    })
+
+    it("n'incrémente pas via le clavier", () => {
+      const { onChange } = renderCard({ archived: true })
+      fireEvent.keyDown(screen.getByRole('button', { name: /Compteur 1/ }), { key: 'ArrowUp' })
+      expect(onChange).not.toHaveBeenCalled()
+    })
+
+    it('désactive le bouton de définition directe de la valeur', () => {
+      renderCard({ archived: true })
+      expect(screen.getByRole('button', { name: 'Définir la valeur du compteur' })).toBeDisabled()
+    })
+
+    it('ne passe pas en mode renommage au clic sur le nom', () => {
+      renderCard({ archived: true, name: 'Figé' })
+      fireEvent.click(screen.getByText('Figé'))
+      expect(screen.queryByDisplayValue('Figé')).not.toBeInTheDocument()
+    })
+
+    it('masque la poignée de glisser', () => {
+      renderCard({ archived: true })
+      expect(document.querySelector('.counter-drag-handle')).not.toBeInTheDocument()
+    })
+
+    it('adapte le libellé accessible de la carte', () => {
+      renderCard({ archived: true, name: 'Figé' })
+      expect(screen.getByRole('button', { name: 'Figé, archivé, lecture seule' })).toBeInTheDocument()
+    })
+
+    it('laisse les icônes de réglage accessibles (personnalisation, comportement, historique, actions)', () => {
+      renderCard({ archived: true, name: 'Figé' })
+      fireEvent.click(screen.getByRole('button', { name: 'Actions du compteur' }))
+      expect(screen.getByText('Actions « Figé »')).toBeInTheDocument()
+    })
+  })
 })

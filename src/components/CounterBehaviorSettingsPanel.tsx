@@ -119,15 +119,23 @@ export function CounterBehaviorSettingsPanel({
   const target = counter.target
   const targetProgress = progressRatio(counter.count, target)
   const oddsProgress = progressRatio(counter.count, denominator)
+  const locked = !!counter.archived
 
   return (
     <Modal title={`Comportement « ${counter.name} »`} onClose={onClose} accentColor={counter.color}>
+      {locked && (
+        <p className="modal-hint modal-hint--locked">
+          🔒 Compteur archivé : lecture seule. Désarchive-le pour le modifier.
+        </p>
+      )}
+
       <section className="modal-section">
         <h3>Pas d'incrément</h3>
         <input
           className="modal-input modal-input--odds"
           inputMode="numeric"
           pattern="[0-9]*"
+          disabled={locked}
           aria-invalid={stepError !== null}
           value={draftStep}
           placeholder="1"
@@ -152,6 +160,7 @@ export function CounterBehaviorSettingsPanel({
           className="modal-input modal-input--odds"
           inputMode="numeric"
           pattern="[0-9]*"
+          disabled={locked}
           aria-invalid={targetError !== null}
           value={draftTarget}
           placeholder="ex : 50"
@@ -193,6 +202,7 @@ export function CounterBehaviorSettingsPanel({
             className="modal-input modal-input--odds"
             inputMode="numeric"
             pattern="[0-9]*"
+            disabled={locked}
             aria-invalid={oddsError !== null}
             value={draftOdds}
             placeholder="4096"
@@ -234,6 +244,7 @@ export function CounterBehaviorSettingsPanel({
         <input
           type="date"
           className="modal-input"
+          disabled={locked}
           aria-invalid={startDateError !== null}
           value={draftStartDate}
           max={todayIsoDate()}

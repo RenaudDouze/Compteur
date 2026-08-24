@@ -442,4 +442,24 @@ describe('CounterBehaviorSettingsPanel', () => {
     fireEvent.click(screen.getByRole('button', { name: 'Actions' }))
     expect(onNavigate).toHaveBeenCalledWith('actions')
   })
+
+  describe('compteur archivé (lecture seule)', () => {
+    it('affiche un bandeau signalant la lecture seule', () => {
+      renderPanel({ archived: true })
+      expect(screen.getByText(/Compteur archivé : lecture seule/)).toBeInTheDocument()
+    })
+
+    it("n'affiche pas le bandeau pour un compteur actif", () => {
+      renderPanel({ archived: false })
+      expect(screen.queryByText(/Compteur archivé : lecture seule/)).not.toBeInTheDocument()
+    })
+
+    it("désactive les champs pas d'incrément, objectif, probabilité et date de début", () => {
+      renderPanel({ archived: true })
+      expect(screen.getByPlaceholderText('1')).toBeDisabled()
+      expect(screen.getByPlaceholderText('ex : 50')).toBeDisabled()
+      expect(screen.getByPlaceholderText('4096')).toBeDisabled()
+      expect(document.querySelector('input[type="date"]')).toBeDisabled()
+    })
+  })
 })

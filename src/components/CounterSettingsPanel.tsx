@@ -49,9 +49,16 @@ export function CounterSettingsPanel({
   }
 
   const activeStyle: DisplayStyle = counter.displayStyle ?? 'default'
+  const locked = !!counter.archived
 
   return (
     <Modal title={`Personnaliser « ${counter.name} »`} onClose={onClose} accentColor={counter.color}>
+      {locked && (
+        <p className="modal-hint modal-hint--locked">
+          🔒 Compteur archivé : lecture seule. Désarchive-le pour le modifier.
+        </p>
+      )}
+
       <section className="modal-section">
         <h3>Couleur</h3>
         <div className="settings-color-grid">
@@ -59,6 +66,7 @@ export function CounterSettingsPanel({
             <button
               key={c}
               type="button"
+              disabled={locked}
               className={`counter-color-option${c === counter.color ? ' selected' : ''}`}
               style={{ background: c }}
               aria-label={`Choisir la couleur ${c}`}
@@ -75,6 +83,7 @@ export function CounterSettingsPanel({
             <button
               key={opt.id}
               type="button"
+              disabled={locked}
               className={`display-style-option${opt.id === activeStyle ? ' selected' : ''}`}
               aria-label={`Choisir le style ${opt.label}`}
               onClick={() => onSetDisplayStyle(opt.id === 'default' ? undefined : opt.id)}
@@ -95,6 +104,7 @@ export function CounterSettingsPanel({
             type="url"
             inputMode="url"
             className="modal-input"
+            disabled={locked}
             aria-invalid={backgroundError !== null}
             value={draftBackground}
             placeholder="https://exemple.com/image.jpg"
@@ -108,7 +118,12 @@ export function CounterSettingsPanel({
             }}
           />
           {draftBackground !== '' && (
-            <button className="modal-close" onClick={clearBackground} aria-label="Vider l'image de fond">
+            <button
+              className="modal-close"
+              disabled={locked}
+              onClick={clearBackground}
+              aria-label="Vider l'image de fond"
+            >
               ✕
             </button>
           )}
