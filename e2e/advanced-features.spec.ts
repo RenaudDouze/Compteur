@@ -11,7 +11,7 @@ test.describe('Fonctionnalités avancées', () => {
     page,
   }) => {
     await page.getByRole('button', { name: 'Personnaliser le compteur' }).click()
-    await page.getByRole('button', { name: '→ Comportement' }).click()
+    await page.getByRole('button', { name: 'Comportement', exact: true }).click()
     const input = page.getByPlaceholder('4096')
     await input.fill('4')
     await input.press('Enter')
@@ -31,7 +31,7 @@ test.describe('Fonctionnalités avancées', () => {
     // progression visuelle (`.modal-hint` a un second usage pour la date de
     // début : on filtre sur le %).
     await page.getByRole('button', { name: 'Personnaliser le compteur' }).click()
-    await page.getByRole('button', { name: '→ Comportement' }).click()
+    await page.getByRole('button', { name: 'Comportement', exact: true }).click()
     const panel = page.locator('.modal-panel')
     await expect(panel.locator('.modal-hint', { hasText: '%' })).toHaveText(/25,0\s?%/)
     await expect(panel.locator('.odds-progress')).toHaveAttribute('aria-valuenow', '25')
@@ -60,7 +60,7 @@ test.describe('Fonctionnalités avancées', () => {
 
   test('définit un objectif libre et affiche sa progression', async ({ page }) => {
     await page.getByRole('button', { name: 'Personnaliser le compteur' }).click()
-    await page.getByRole('button', { name: '→ Comportement' }).click()
+    await page.getByRole('button', { name: 'Comportement', exact: true }).click()
     const input = page.getByPlaceholder('ex : 50')
     await input.fill('20')
     await input.press('Enter')
@@ -76,7 +76,7 @@ test.describe('Fonctionnalités avancées', () => {
     // l'anneau (choisi ici pour vérifier que l'objectif pilote bien
     // l'anneau plutôt qu'une probabilité, qui n'est pas définie ici).
     await page.getByRole('button', { name: 'Personnaliser le compteur' }).click()
-    await page.getByRole('button', { name: '→ Comportement' }).click()
+    await page.getByRole('button', { name: 'Comportement', exact: true }).click()
     await expect(page.locator('.odds-progress')).toHaveAttribute('aria-valuenow', '25')
     await expect(page.getByText('5 / 20 (25 %)')).toBeVisible()
     await page.getByRole('button', { name: 'Fermer' }).click()
@@ -91,7 +91,7 @@ test.describe('Fonctionnalités avancées', () => {
     await page.getByRole('button', { name: 'Personnaliser le compteur' }).click()
     await page.getByRole('button', { name: `Choisir la couleur` }).first().click()
     await page.getByRole('button', { name: 'Choisir le style Volets' }).click()
-    await page.getByRole('button', { name: '→ Actions' }).click()
+    await page.getByRole('button', { name: 'Actions', exact: true }).click()
     await page.getByRole('button', { name: '⧉ Dupliquer ce compteur' }).click()
 
     await expect(page.getByText('Compteur 1', { exact: true })).toBeVisible()
@@ -105,7 +105,7 @@ test.describe('Fonctionnalités avancées', () => {
 
   test("affiche un sparkline dans l'historique après plusieurs changements espacés", async ({ page }) => {
     await page.getByRole('button', { name: 'Personnaliser le compteur' }).click()
-    await page.getByRole('button', { name: '→ Historique' }).click()
+    await page.getByRole('button', { name: 'Historique', exact: true }).click()
     await expect(page.getByText(/Pas encore assez d'historique/)).toBeVisible()
     await page.getByRole('button', { name: 'Fermer' }).click()
 
@@ -116,14 +116,14 @@ test.describe('Fonctionnalités avancées', () => {
     await plus.click()
 
     await page.getByRole('button', { name: 'Personnaliser le compteur' }).click()
-    await page.getByRole('button', { name: '→ Historique' }).click()
+    await page.getByRole('button', { name: 'Historique', exact: true }).click()
     await expect(page.locator('.sparkline')).toBeVisible()
     await expect(page.getByText(/Min : \d+ · Max : 2/)).toBeVisible()
   })
 
   test("définit un pas d'incrément personnalisé et l'applique aux boutons +/-", async ({ page }) => {
     await page.getByRole('button', { name: 'Personnaliser le compteur' }).click()
-    await page.getByRole('button', { name: '→ Comportement' }).click()
+    await page.getByRole('button', { name: 'Comportement', exact: true }).click()
     const input = page.getByPlaceholder('1')
     await input.fill('5')
     await input.press('Enter')
@@ -140,7 +140,7 @@ test.describe('Fonctionnalités avancées', () => {
     page,
   }) => {
     await page.getByRole('button', { name: 'Personnaliser le compteur' }).click()
-    await page.getByRole('button', { name: '→ Comportement' }).click()
+    await page.getByRole('button', { name: 'Comportement', exact: true }).click()
     const input = page.getByPlaceholder('1')
     await input.fill('0')
     await input.press('Enter')
@@ -159,7 +159,7 @@ test.describe('Fonctionnalités avancées', () => {
 
   test('modifie la date de début et affiche un rappel textuel', async ({ page }) => {
     await page.getByRole('button', { name: 'Personnaliser le compteur' }).click()
-    await page.getByRole('button', { name: '→ Comportement' }).click()
+    await page.getByRole('button', { name: 'Comportement', exact: true }).click()
     const hint = page.locator('.modal-section:has(input[type="date"]) .modal-hint')
     const before = await hint.textContent()
     const input = page.locator('input[type="date"]')

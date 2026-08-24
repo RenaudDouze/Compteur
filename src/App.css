@@ -272,33 +272,9 @@
   opacity: var(--bg-overlay-opacity);
 }
 
-.counter-delete {
-  position: absolute;
-  top: 8px;
-  right: 8px;
-  width: 26px;
-  height: 26px;
-  border-radius: 50%;
-  border: none;
-  background: var(--bg-2);
-  color: var(--text-dim);
-  font-size: 0.8rem;
-  line-height: 1;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  transition: background 0.15s ease, color 0.15s ease;
-  z-index: 2;
-}
-
-.counter-delete:hover {
-  background: #fee2e2;
-  color: #dc2626;
-}
-
 /* Regroupe les icônes d'accès direct (glisser, personnalisation,
-   comportement, historique) dans une rangée : évite de recalculer un
-   décalage `left` en dur à chaque icône ajoutée. */
+   comportement, historique, actions) dans une rangée : évite de recalculer
+   un décalage `left` en dur à chaque icône ajoutée. */
 .counter-icon-row {
   position: absolute;
   top: 8px;
@@ -311,7 +287,8 @@
 .counter-drag-handle,
 .counter-settings-btn,
 .counter-behavior-btn,
-.counter-history-btn {
+.counter-history-btn,
+.counter-actions-btn {
   flex-shrink: 0;
   width: 26px;
   height: 26px;
@@ -340,7 +317,8 @@
 .counter-drag-handle:hover,
 .counter-settings-btn:hover,
 .counter-behavior-btn:hover,
-.counter-history-btn:hover {
+.counter-history-btn:hover,
+.counter-actions-btn:hover {
   background: color-mix(in srgb, var(--accent) 18%, var(--bg-2));
   color: var(--accent);
 }
@@ -954,6 +932,61 @@
 
 .modal-btn:not(:disabled):active {
   transform: scale(0.96);
+}
+
+.modal-btn--danger {
+  border-color: #dc2626;
+  color: #dc2626;
+}
+
+.modal-btn--danger:not(:disabled):hover,
+.modal-btn--danger:not(:disabled):active {
+  background: #fee2e2;
+}
+
+.modal-section--danger h3 {
+  color: #dc2626;
+}
+
+/* Rangée compacte de liens vers les autres modales : délibérément plus
+   discrète qu'un `.modal-btn` (pas de fond ni de bordure), pour ne pas
+   rivaliser visuellement avec les actions propres à la modale, et sur une
+   seule ligne plutôt qu'empilée. */
+.panel-nav {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  align-items: center;
+  gap: 4px;
+}
+
+.panel-nav-item {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.panel-nav-sep {
+  color: var(--text-dim);
+  font-size: 0.75rem;
+}
+
+.panel-nav-link {
+  border: none;
+  background: none;
+  padding: 2px 3px;
+  color: var(--text-dim);
+  font-size: 0.8rem;
+  font-weight: 500;
+  text-decoration: underline;
+  text-decoration-color: transparent;
+  transition: color 0.15s ease, text-decoration-color 0.15s ease;
+}
+
+.panel-nav-link:hover,
+.panel-nav-link:active {
+  color: var(--accent);
+  text-decoration-color: currentColor;
 }
 
 .modal-error {

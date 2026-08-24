@@ -69,8 +69,6 @@ export function CounterCard({
   const [draftCount, setDraftCount] = useState(counter.count.toString())
   const [countError, setCountError] = useState<string | null>(null)
   const [direction, setDirection] = useState<1 | -1>(1)
-  const [confirmDelete, setConfirmDelete] = useState(false)
-  const confirmTimer = useRef<ReturnType<typeof setTimeout> | undefined>(undefined)
   const valueRef = useRef<HTMLDivElement>(null)
   const [fillFontSize, setFillFontSize] = useState<number | null>(null)
   const pulseControls = useAnimationControls()
@@ -171,17 +169,6 @@ export function CounterCard({
     setDirection(parsed >= counter.count ? 1 : -1)
     onSetCount(parsed)
     setEditingCount(false)
-  }
-
-  const handleDeleteClick = (e: React.MouseEvent) => {
-    e.stopPropagation()
-    if (confirmDelete) {
-      clearTimeout(confirmTimer.current)
-      onDelete()
-      return
-    }
-    setConfirmDelete(true)
-    confirmTimer.current = setTimeout(() => setConfirmDelete(false), 2500)
   }
 
   // Quand il n'y a qu'1 ou 2 compteurs, on mesure l'espace réellement
@@ -301,16 +288,6 @@ export function CounterCard({
         />
       )}
 
-      <button
-        className="counter-delete"
-        onClick={handleDeleteClick}
-        onPointerDown={(e) => e.stopPropagation()}
-        aria-label="Supprimer le compteur"
-        title={confirmDelete ? 'Cliquer à nouveau pour confirmer' : 'Supprimer'}
-      >
-        {confirmDelete ? '✓' : '✕'}
-      </button>
-
       <div className="counter-icon-row">
         {draggable && (
           <button
@@ -364,6 +341,19 @@ export function CounterCard({
           title="Historique des valeurs"
         >
           ↗
+        </button>
+
+        <button
+          className="counter-actions-btn"
+          onClick={(e) => {
+            e.stopPropagation()
+            setOpenPanel('actions')
+          }}
+          onPointerDown={(e) => e.stopPropagation()}
+          aria-label="Actions du compteur"
+          title="Partager, dupliquer, supprimer"
+        >
+          ⋯
         </button>
       </div>
 
@@ -555,6 +545,7 @@ export function CounterCard({
           counter={counter}
           onClose={() => setOpenPanel(null)}
           onDuplicate={onDuplicate}
+          onDelete={onDelete}
           onNavigate={setOpenPanel}
         />
       )}

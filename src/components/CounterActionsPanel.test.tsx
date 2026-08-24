@@ -24,6 +24,7 @@ function renderPanel(
   const handlers = {
     onClose: vi.fn(),
     onDuplicate: vi.fn(),
+    onDelete: vi.fn(),
     onNavigate: vi.fn(),
     ...props,
   }
@@ -53,7 +54,7 @@ describe('CounterActionsPanel', () => {
 
   it('navigue vers un autre panneau au clic sur un lien dédié', () => {
     const { onNavigate } = renderPanel()
-    fireEvent.click(screen.getByRole('button', { name: '→ Comportement' }))
+    fireEvent.click(screen.getByRole('button', { name: 'Comportement' }))
     expect(onNavigate).toHaveBeenCalledWith('comportement')
   })
 
@@ -137,6 +138,37 @@ describe('CounterActionsPanel', () => {
       const { onClose } = renderPanel()
       fireEvent.click(screen.getByText('⧉ Dupliquer ce compteur'))
       expect(onClose).toHaveBeenCalledTimes(1)
+    })
+  })
+
+  describe('suppression', () => {
+    it('affiche la suppression dans une zone de danger séparée', () => {
+      renderPanel()
+      expect(screen.getByText('Zone de danger')).toBeInTheDocument()
+    })
+
+    it('demande une confirmation avant de supprimer', () => {
+      const { onDelete } = renderPanel()
+      fireEvent.click(screen.getByText('🗑 Supprimer ce compteur'))
+      expect(onDelete).not.toHaveBeenCalled()
+      expect(screen.getByText('✓ Confirmer la suppression')).toBeInTheDocument()
+    })
+
+    it('supprime au second clic de confirmation', () => {
+      const { onDelete } = renderPanel()
+      fireEvent.click(screen.getByText('🗑 Supprimer ce compteur'))
+      fireEvent.click(screen.getByText('✓ Confirmer la suppression'))
+      expect(onDelete).toHaveBeenCalledTimes(1)
+    })
+
+    it('annule la confirmation après le délai', () => {
+      renderPanel()
+      fireEvent.click(screen.getByText('🗑 Supprimer ce compteur'))
+      expect(screen.getByText('✓ Confirmer la suppression')).toBeInTheDocument()
+      act(() => {
+        vi.advanceTimersByTime(2600)
+      })
+      expect(screen.getByText('🗑 Supprimer ce compteur')).toBeInTheDocument()
     })
   })
 })

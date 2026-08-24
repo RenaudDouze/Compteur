@@ -421,7 +421,7 @@ describe('CounterBehaviorSettingsPanel', () => {
 
   it('navigue vers un autre panneau au clic sur un lien dédié', () => {
     const { onNavigate } = renderPanel()
-    fireEvent.click(screen.getByRole('button', { name: '→ Actions' }))
+    fireEvent.click(screen.getByRole('button', { name: 'Actions' }))
     expect(onNavigate).toHaveBeenCalledWith('actions')
   })
 })
