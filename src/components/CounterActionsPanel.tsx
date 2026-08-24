@@ -9,12 +9,15 @@ interface CounterActionsPanelProps {
   counter: Counter
   onClose: () => void
   onDuplicate: () => void
+  onDelete: () => void
   onNavigate: (panel: PanelKind) => void
 }
 
-export function CounterActionsPanel({ counter, onClose, onDuplicate, onNavigate }: CounterActionsPanelProps) {
+export function CounterActionsPanel({ counter, onClose, onDuplicate, onDelete, onNavigate }: CounterActionsPanelProps) {
   const [shared, setShared] = useState(false)
   const shareTimer = useRef<ReturnType<typeof setTimeout> | undefined>(undefined)
+  const [confirmDelete, setConfirmDelete] = useState(false)
+  const confirmTimer = useRef<ReturnType<typeof setTimeout> | undefined>(undefined)
 
   const handleShare = async () => {
     const text = buildShareText(counter)
@@ -41,6 +44,16 @@ export function CounterActionsPanel({ counter, onClose, onDuplicate, onNavigate 
     onClose()
   }
 
+  const handleDeleteClick = () => {
+    if (confirmDelete) {
+      clearTimeout(confirmTimer.current)
+      onDelete()
+      return
+    }
+    setConfirmDelete(true)
+    confirmTimer.current = setTimeout(() => setConfirmDelete(false), 2500)
+  }
+
   return (
     <Modal title={`Actions « ${counter.name} »`} onClose={onClose} accentColor={counter.color}>
       <section className="modal-section">
@@ -49,6 +62,13 @@ export function CounterActionsPanel({ counter, onClose, onDuplicate, onNavigate 
         </button>
         <button className="modal-btn" onClick={handleDuplicate}>
           ⧉ Dupliquer ce compteur
+        </button>
+      </section>
+
+      <section className="modal-section modal-section--danger">
+        <h3>Zone de danger</h3>
+        <button type="button" className="modal-btn modal-btn--danger" onClick={handleDeleteClick}>
+          {confirmDelete ? '✓ Confirmer la suppression' : '🗑 Supprimer ce compteur'}
         </button>
       </section>
 

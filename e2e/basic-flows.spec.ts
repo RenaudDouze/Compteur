@@ -83,10 +83,11 @@ test.describe('Parcours de base', () => {
 
   test('supprime un compteur après double confirmation', async ({ page }) => {
     await addCounter(page)
-    const deleteBtn = page.getByRole('button', { name: 'Supprimer le compteur' })
+    await page.getByRole('button', { name: 'Actions du compteur' }).click()
+    const deleteBtn = page.getByText('🗑 Supprimer ce compteur')
     await deleteBtn.click()
-    await expect(deleteBtn).toHaveText('✓')
-    await deleteBtn.click()
+    await expect(page.getByText('✓ Confirmer la suppression')).toBeVisible()
+    await page.getByText('✓ Confirmer la suppression').click()
     await expect(page.getByText("Aucun compteur pour l'instant.")).toBeVisible()
   })
 

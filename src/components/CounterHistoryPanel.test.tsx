@@ -62,7 +62,7 @@ describe('CounterHistoryPanel', () => {
 
   it('navigue vers un autre panneau au clic sur un lien dédié', () => {
     const { onNavigate } = renderPanel()
-    fireEvent.click(screen.getByRole('button', { name: '→ Personnalisation' }))
+    fireEvent.click(screen.getByRole('button', { name: 'Personnalisation' }))
     expect(onNavigate).toHaveBeenCalledWith('personnalisation')
   })
 })

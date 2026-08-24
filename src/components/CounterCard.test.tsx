@@ -342,43 +342,15 @@ describe('CounterCard', () => {
   })
 
   describe('suppression', () => {
-    it('demande une confirmation avant de supprimer', () => {
+    // Le double-clic de confirmation lui-même est testé dans
+    // CounterActionsPanel.test.tsx : ici on vérifie seulement que la carte
+    // relie bien `onDelete` à la modale Actions qui le porte désormais.
+    it('supprime via la modale Actions après double confirmation', () => {
       const { onDelete } = renderCard()
-      const deleteBtn = screen.getByRole('button', { name: 'Supprimer le compteur' })
-      fireEvent.click(deleteBtn)
-      expect(onDelete).not.toHaveBeenCalled()
-      expect(deleteBtn).toHaveTextContent('✓')
-    })
-
-    it('supprime au second clic de confirmation', () => {
-      const { onDelete } = renderCard()
-      const deleteBtn = screen.getByRole('button', { name: 'Supprimer le compteur' })
-      fireEvent.click(deleteBtn)
-      fireEvent.click(deleteBtn)
+      fireEvent.click(screen.getByRole('button', { name: 'Actions du compteur' }))
+      fireEvent.click(screen.getByText('🗑 Supprimer ce compteur'))
+      fireEvent.click(screen.getByText('✓ Confirmer la suppression'))
       expect(onDelete).toHaveBeenCalledTimes(1)
-    })
-
-    it('annule la confirmation après le délai', () => {
-      renderCard()
-      const deleteBtn = screen.getByRole('button', { name: 'Supprimer le compteur' })
-      fireEvent.click(deleteBtn)
-      expect(deleteBtn).toHaveTextContent('✓')
-      act(() => {
-        vi.advanceTimersByTime(2600)
-      })
-      expect(deleteBtn).toHaveTextContent('✕')
-    })
-
-    it("le clic sur le bouton supprimer n'incrémente pas le compteur", () => {
-      const { onChange } = renderCard()
-      fireEvent.click(screen.getByRole('button', { name: 'Supprimer le compteur' }))
-      expect(onChange).not.toHaveBeenCalled()
-    })
-
-    it("pointerdown sur le bouton supprimer n'incrémente pas le compteur", () => {
-      const { onChange } = renderCard()
-      fireEvent.pointerDown(screen.getByRole('button', { name: 'Supprimer le compteur' }))
-      expect(onChange).not.toHaveBeenCalled()
     })
   })
 
@@ -510,21 +482,21 @@ describe('CounterCard', () => {
     it('ouvre le panneau "Comportement" depuis la personnalisation', () => {
       renderCard({ name: 'Mon compteur' })
       fireEvent.click(screen.getByRole('button', { name: 'Personnaliser le compteur' }))
-      fireEvent.click(screen.getByRole('button', { name: '→ Comportement' }))
+      fireEvent.click(screen.getByRole('button', { name: 'Comportement' }))
       expect(screen.getByText('Comportement « Mon compteur »')).toBeInTheDocument()
     })
 
     it('ouvre puis ferme le panneau "Historique" depuis la personnalisation', () => {
       renderCard({ name: 'Mon compteur' })
       fireEvent.click(screen.getByRole('button', { name: 'Personnaliser le compteur' }))
-      fireEvent.click(screen.getByRole('button', { name: '→ Historique' }))
+      fireEvent.click(screen.getByRole('button', { name: 'Historique' }))
       expect(screen.getByText('Historique « Mon compteur »')).toBeInTheDocument()
       fireEvent.click(screen.getByRole('button', { name: 'Fermer' }))
       expect(screen.queryByText('Historique « Mon compteur »')).not.toBeInTheDocument()
     })
   })
 
-  describe('icônes d\'accès direct (comportement, historique)', () => {
+  describe('icônes d\'accès direct (comportement, historique, actions)', () => {
     it('ouvre directement le panneau "Comportement" au clic sur ±', () => {
       renderCard({ name: 'Mon compteur' })
       fireEvent.click(screen.getByRole('button', { name: 'Régler le comportement du compteur' }))
@@ -558,6 +530,24 @@ describe('CounterCard', () => {
     it("pointerdown sur ↗ n'incrémente pas le compteur", () => {
       const { onChange } = renderCard()
       fireEvent.pointerDown(screen.getByRole('button', { name: "Voir l'historique du compteur" }))
+      expect(onChange).not.toHaveBeenCalled()
+    })
+
+    it('ouvre directement le panneau "Actions" au clic sur ⋯', () => {
+      renderCard({ name: 'Mon compteur' })
+      fireEvent.click(screen.getByRole('button', { name: 'Actions du compteur' }))
+      expect(screen.getByText('Actions « Mon compteur »')).toBeInTheDocument()
+    })
+
+    it("le clic sur ⋯ n'incrémente pas le compteur", () => {
+      const { onChange } = renderCard()
+      fireEvent.click(screen.getByRole('button', { name: 'Actions du compteur' }))
+      expect(onChange).not.toHaveBeenCalled()
+    })
+
+    it("pointerdown sur ⋯ n'incrémente pas le compteur", () => {
+      const { onChange } = renderCard()
+      fireEvent.pointerDown(screen.getByRole('button', { name: 'Actions du compteur' }))
       expect(onChange).not.toHaveBeenCalled()
     })
   })
