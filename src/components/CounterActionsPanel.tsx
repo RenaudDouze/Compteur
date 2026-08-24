@@ -9,11 +9,19 @@ interface CounterActionsPanelProps {
   counter: Counter
   onClose: () => void
   onDuplicate: () => void
+  onToggleArchive: () => void
   onDelete: () => void
   onNavigate: (panel: PanelKind) => void
 }
 
-export function CounterActionsPanel({ counter, onClose, onDuplicate, onDelete, onNavigate }: CounterActionsPanelProps) {
+export function CounterActionsPanel({
+  counter,
+  onClose,
+  onDuplicate,
+  onToggleArchive,
+  onDelete,
+  onNavigate,
+}: CounterActionsPanelProps) {
   const [shared, setShared] = useState(false)
   const shareTimer = useRef<ReturnType<typeof setTimeout> | undefined>(undefined)
   const [confirmDelete, setConfirmDelete] = useState(false)
@@ -44,6 +52,11 @@ export function CounterActionsPanel({ counter, onClose, onDuplicate, onDelete, o
     onClose()
   }
 
+  const handleToggleArchive = () => {
+    onToggleArchive()
+    onClose()
+  }
+
   const handleDeleteClick = () => {
     if (confirmDelete) {
       clearTimeout(confirmTimer.current)
@@ -62,6 +75,9 @@ export function CounterActionsPanel({ counter, onClose, onDuplicate, onDelete, o
         </button>
         <button className="modal-btn" onClick={handleDuplicate}>
           ⧉ Dupliquer ce compteur
+        </button>
+        <button className="modal-btn" onClick={handleToggleArchive}>
+          {counter.archived ? '📤 Désarchiver ce compteur' : '📦 Archiver ce compteur'}
         </button>
       </section>
 

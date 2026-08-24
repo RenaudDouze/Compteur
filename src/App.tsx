@@ -35,7 +35,14 @@ export default function App() {
     const query = searchQuery.trim().toLowerCase()
     return query === '' || c.name.toLowerCase().includes(query)
   }
-  const filteredCounters = counters.filter(matchesSearch)
+
+  // Bascule l'ensemble de la liste (archivés masqués par défaut) ; la
+  // recherche filtre ensuite par nom à l'intérieur de la vue active.
+  const [archiveView, setArchiveView] = useState<'active' | 'archived'>('active')
+  const archivedCount = counters.filter((c) => c.archived).length
+  const filteredCounters = counters.filter(
+    (c) => (archiveView === 'archived' ? !!c.archived : !c.archived) && matchesSearch(c)
+  )
 
   const [themePreference, setThemePreference] = useLocalStorage<ThemePreference>('compteur.theme.v1', 'system')
   const systemDark = useSystemDarkMode()
@@ -101,6 +108,9 @@ export default function App() {
       history: appendHistoryPoint(undefined, 0),
     }
     setCounters((prev) => [...prev, newCounter])
+    // Sinon le nouveau compteur atterrit hors champ si on était sur l'onglet
+    // Archivés, sans indice visible pour l'utilisateur.
+    setArchiveView('active')
   }
 
   // Action rapide depuis un raccourci de l'app installée (?action=new|sync),
@@ -175,7 +185,8 @@ export default function App() {
 
   // Reprend l'apparence et la configuration du compteur source (couleur,
   // style, pas, probabilité, objectif, image de fond), mais repart de zéro :
-  // nouvel id, compte et historique vierges, pas de date de début figée.
+  // nouvel id, compte et historique vierges, pas de date de début figée. Un
+  // compteur archivé ne doit pas produire une copie elle-même déjà archivée.
   const duplicateCounter = (id: string) => {
     const source = counters.find((c) => c.id === id)!
     const copy: Counter = {
@@ -186,8 +197,13 @@ export default function App() {
       createdAt: Date.now(),
       startDate: undefined,
       history: appendHistoryPoint(undefined, 0),
+      archived: undefined,
     }
     setCounters((prev) => [...prev, copy])
+  }
+
+  const toggleArchive = (id: string) => {
+    setCounters((prev) => prev.map((c) => (c.id === id ? { ...c, archived: !c.archived } : c)))
   }
 
   const handleImport = (imported: Counter[], mode: 'replace' | 'merge') => {
@@ -224,6 +240,27 @@ export default function App() {
         </div>
       </header>
 
+      {counters.length > 0 && (
+        <div className="archive-toggle" role="tablist" aria-label="Filtrer par statut">
+          <button
+            role="tab"
+            aria-selected={archiveView === 'active'}
+            className={`archive-toggle-btn${archiveView === 'active' ? ' active' : ''}`}
+            onClick={() => setArchiveView('active')}
+          >
+            Actifs
+          </button>
+          <button
+            role="tab"
+            aria-selected={archiveView === 'archived'}
+            className={`archive-toggle-btn${archiveView === 'archived' ? ' active' : ''}`}
+            onClick={() => setArchiveView('archived')}
+          >
+            Archivés{archivedCount > 0 ? ` (${archivedCount})` : ''}
+          </button>
+        </div>
+      )}
+
       {searchOpen && counters.length > 0 && (
         <div className="search-bar">
           <input
@@ -252,8 +289,12 @@ export default function App() {
                 Créer mon premier compteur
               </button>
             </>
-          ) : (
+          ) : searchQuery.trim() !== '' ? (
             <p>Aucun compteur ne correspond à « {searchQuery.trim()} ».</p>
+          ) : archiveView === 'archived' ? (
+            <p>Aucun compteur archivé.</p>
+          ) : (
+            <p>Tous tes compteurs sont archivés.</p>
           )}
         </div>
       ) : (
@@ -276,7 +317,7 @@ export default function App() {
                 key={counter.id}
                 counter={counter}
                 fill={filteredCounters.length <= 2}
-                draggable={searchQuery.trim() === ''}
+                draggable={searchQuery.trim() === '' && filteredCounters.length === counters.length}
                 colors={COLORS}
                 onChange={(delta) => updateCount(counter.id, delta)}
                 onSetCount={(count) => setCount(counter.id, count)}
@@ -289,6 +330,7 @@ export default function App() {
                 onSetStep={(step) => setStep(counter.id, step)}
                 onSetDisplayStyle={(style) => setDisplayStyle(counter.id, style)}
                 onDuplicate={() => duplicateCounter(counter.id)}
+                onToggleArchive={() => toggleArchive(counter.id)}
                 onDelete={() => deleteCounter(counter.id)}
               />
             ))}

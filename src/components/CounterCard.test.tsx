@@ -37,6 +37,7 @@ function renderCard(counterOverrides: Partial<Counter> = {}, props: Partial<Para
     onSetDisplayStyle: vi.fn(),
     onSetTarget: vi.fn(),
     onDuplicate: vi.fn(),
+    onToggleArchive: vi.fn(),
     onDelete: vi.fn(),
     ...props,
   }
@@ -770,6 +771,7 @@ describe('CounterCard', () => {
             onSetDisplayStyle={vi.fn()}
             onSetTarget={vi.fn()}
             onDuplicate={vi.fn()}
+            onToggleArchive={vi.fn()}
             onDelete={vi.fn()}
           />
         </Reorder.Group>
@@ -793,6 +795,7 @@ describe('CounterCard', () => {
             onSetDisplayStyle={vi.fn()}
             onSetTarget={vi.fn()}
             onDuplicate={vi.fn()}
+            onToggleArchive={vi.fn()}
             onDelete={vi.fn()}
           />
         </Reorder.Group>
@@ -826,6 +829,7 @@ describe('CounterCard', () => {
             onSetDisplayStyle={vi.fn()}
             onSetTarget={vi.fn()}
             onDuplicate={vi.fn()}
+            onToggleArchive={vi.fn()}
             onDelete={vi.fn()}
           />
         </Reorder.Group>
@@ -847,6 +851,7 @@ describe('CounterCard', () => {
             onSetDisplayStyle={vi.fn()}
             onSetTarget={vi.fn()}
             onDuplicate={vi.fn()}
+            onToggleArchive={vi.fn()}
             onDelete={vi.fn()}
           />
         </Reorder.Group>
@@ -883,6 +888,7 @@ describe('CounterCard', () => {
             onSetDisplayStyle={vi.fn()}
             onSetTarget={vi.fn()}
             onDuplicate={vi.fn()}
+            onToggleArchive={vi.fn()}
             onDelete={vi.fn()}
           />
         </Reorder.Group>
@@ -909,6 +915,7 @@ describe('CounterCard', () => {
             onSetDisplayStyle={vi.fn()}
             onSetTarget={vi.fn()}
             onDuplicate={vi.fn()}
+            onToggleArchive={vi.fn()}
             onDelete={vi.fn()}
           />
         </Reorder.Group>
@@ -934,6 +941,7 @@ describe('CounterCard', () => {
             onSetDisplayStyle={vi.fn()}
             onSetTarget={vi.fn()}
             onDuplicate={vi.fn()}
+            onToggleArchive={vi.fn()}
             onDelete={vi.fn()}
           />
         </Reorder.Group>
@@ -956,6 +964,7 @@ describe('CounterCard', () => {
             onSetDisplayStyle={vi.fn()}
             onSetTarget={vi.fn()}
             onDuplicate={vi.fn()}
+            onToggleArchive={vi.fn()}
             onDelete={vi.fn()}
           />
         </Reorder.Group>
@@ -981,6 +990,7 @@ describe('CounterCard', () => {
             onSetDisplayStyle={vi.fn()}
             onSetTarget={vi.fn()}
             onDuplicate={vi.fn()}
+            onToggleArchive={vi.fn()}
             onDelete={vi.fn()}
           />
         </Reorder.Group>
@@ -1003,6 +1013,7 @@ describe('CounterCard', () => {
             onSetDisplayStyle={vi.fn()}
             onSetTarget={vi.fn()}
             onDuplicate={vi.fn()}
+            onToggleArchive={vi.fn()}
             onDelete={vi.fn()}
           />
         </Reorder.Group>

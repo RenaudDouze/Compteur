@@ -670,4 +670,128 @@ describe('App', () => {
       expect(screen.getByPlaceholderText('Rechercher un compteur…')).toBeInTheDocument()
     })
   })
+
+  describe('archivage', () => {
+    const archiveCounter = (name: string) => {
+      fireEvent.click(within(screen.getByText(name).closest('article')!).getByRole('button', { name: 'Actions du compteur' }))
+      fireEvent.click(screen.getByText('📦 Archiver ce compteur'))
+    }
+
+    it("n'affiche pas le sélecteur Actifs/Archivés sans compteur", () => {
+      render(<App />)
+      expect(screen.queryByRole('tab', { name: /Actifs/ })).not.toBeInTheDocument()
+    })
+
+    it('affiche "Actifs" comme onglet actif par défaut', () => {
+      window.localStorage.setItem('compteur.counters.v1', JSON.stringify([makeCounter()]))
+      render(<App />)
+      expect(screen.getByRole('tab', { name: 'Actifs' })).toHaveAttribute('aria-selected', 'true')
+      expect(screen.getByRole('tab', { name: 'Archivés' })).toHaveAttribute('aria-selected', 'false')
+    })
+
+    it("masque un compteur archivé de l'onglet Actifs", async () => {
+      window.localStorage.setItem('compteur.counters.v1', JSON.stringify([makeCounter({ name: 'À ranger' })]))
+      render(<App />)
+      archiveCounter('À ranger')
+      await waitFor(() => expect(screen.queryByText('À ranger')).not.toBeInTheDocument())
+    })
+
+    it("retrouve un compteur archivé via l'onglet Archivés", async () => {
+      window.localStorage.setItem('compteur.counters.v1', JSON.stringify([makeCounter({ name: 'À ranger' })]))
+      render(<App />)
+      archiveCounter('À ranger')
+      await waitFor(() => expect(screen.queryByText('À ranger')).not.toBeInTheDocument())
+
+      fireEvent.click(screen.getByRole('tab', { name: /Archivés/ }))
+      expect(screen.getByText('À ranger')).toBeInTheDocument()
+    })
+
+    it("indique le nombre de compteurs archivés sur l'onglet", async () => {
+      window.localStorage.setItem('compteur.counters.v1', JSON.stringify([makeCounter({ name: 'À ranger' })]))
+      render(<App />)
+      expect(screen.getByRole('tab', { name: 'Archivés' })).toBeInTheDocument()
+      archiveCounter('À ranger')
+      await waitFor(() => expect(screen.getByRole('tab', { name: 'Archivés (1)' })).toBeInTheDocument())
+    })
+
+    it('désarchive un compteur et le fait réapparaître dans les actifs', async () => {
+      window.localStorage.setItem('compteur.counters.v1', JSON.stringify([makeCounter({ name: 'À ranger' })]))
+      render(<App />)
+      archiveCounter('À ranger')
+      await waitFor(() => expect(screen.queryByText('À ranger')).not.toBeInTheDocument())
+
+      fireEvent.click(screen.getByRole('tab', { name: /Archivés/ }))
+      fireEvent.click(screen.getByRole('button', { name: 'Actions du compteur' }))
+      fireEvent.click(screen.getByText('📤 Désarchiver ce compteur'))
+      await waitFor(() => expect(screen.queryByText('À ranger')).not.toBeInTheDocument())
+
+      fireEvent.click(screen.getByRole('tab', { name: 'Actifs' }))
+      expect(screen.getByText('À ranger')).toBeInTheDocument()
+    })
+
+    it('affiche un message dédié quand tous les compteurs sont archivés', async () => {
+      window.localStorage.setItem('compteur.counters.v1', JSON.stringify([makeCounter({ name: 'Seul' })]))
+      render(<App />)
+      archiveCounter('Seul')
+      await waitFor(() => expect(screen.getByText('Tous tes compteurs sont archivés.')).toBeInTheDocument())
+    })
+
+    it("affiche un message dédié sur l'onglet Archivés quand rien n'est archivé", () => {
+      window.localStorage.setItem('compteur.counters.v1', JSON.stringify([makeCounter()]))
+      render(<App />)
+      fireEvent.click(screen.getByRole('tab', { name: /Archivés/ }))
+      expect(screen.getByText('Aucun compteur archivé.')).toBeInTheDocument()
+    })
+
+    it("filtre par nom à l'intérieur de l'onglet Archivés", async () => {
+      window.localStorage.setItem(
+        'compteur.counters.v1',
+        JSON.stringify([makeCounter({ id: 'a', name: 'Pompes' }), makeCounter({ id: 'b', name: 'Squats' })])
+      )
+      render(<App />)
+      archiveCounter('Pompes')
+      archiveCounter('Squats')
+      await waitFor(() => expect(screen.getByText('Tous tes compteurs sont archivés.')).toBeInTheDocument())
+
+      fireEvent.click(screen.getByRole('tab', { name: /Archivés/ }))
+      fireEvent.click(screen.getByRole('button', { name: 'Rechercher' }))
+      fireEvent.change(screen.getByPlaceholderText('Rechercher un compteur…'), { target: { value: 'pom' } })
+      expect(screen.getByText('Pompes')).toBeInTheDocument()
+      await waitFor(() => expect(screen.queryByText('Squats')).not.toBeInTheDocument())
+    })
+
+    it('duplique un compteur archivé en une copie active (non archivée)', async () => {
+      window.localStorage.setItem('compteur.counters.v1', JSON.stringify([makeCounter({ name: 'Source' })]))
+      render(<App />)
+      archiveCounter('Source')
+      await waitFor(() => expect(screen.getByText('Tous tes compteurs sont archivés.')).toBeInTheDocument())
+
+      fireEvent.click(screen.getByRole('tab', { name: /Archivés/ }))
+      fireEvent.click(screen.getByRole('button', { name: 'Actions du compteur' }))
+      fireEvent.click(screen.getByText('⧉ Dupliquer ce compteur'))
+
+      fireEvent.click(screen.getByRole('tab', { name: 'Actifs' }))
+      expect(screen.getByText('Source (copie)')).toBeInTheDocument()
+    })
+
+    it("revient sur l'onglet Actifs à la création d'un compteur depuis l'onglet Archivés", () => {
+      window.localStorage.setItem('compteur.counters.v1', JSON.stringify([makeCounter({ name: 'Existant' })]))
+      render(<App />)
+      fireEvent.click(screen.getByRole('tab', { name: /Archivés/ }))
+      fireEvent.click(screen.getByRole('button', { name: '+ Nouveau compteur' }))
+      expect(screen.getByRole('tab', { name: 'Actifs' })).toHaveAttribute('aria-selected', 'true')
+      expect(screen.getByText('Compteur 2')).toBeInTheDocument()
+    })
+
+    it('désactive le glisser-déposer tant que des compteurs sont archivés (pour ne pas perdre les masqués)', async () => {
+      window.localStorage.setItem(
+        'compteur.counters.v1',
+        JSON.stringify([makeCounter({ id: 'a', name: 'Un' }), makeCounter({ id: 'b', name: 'Deux' })])
+      )
+      render(<App />)
+      expect(document.querySelector('.counter-drag-handle')).toBeInTheDocument()
+      archiveCounter('Un')
+      await waitFor(() => expect(document.querySelector('.counter-drag-handle')).not.toBeInTheDocument())
+    })
+  })
 })

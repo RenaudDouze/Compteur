@@ -24,6 +24,7 @@ function renderPanel(
   const handlers = {
     onClose: vi.fn(),
     onDuplicate: vi.fn(),
+    onToggleArchive: vi.fn(),
     onDelete: vi.fn(),
     onNavigate: vi.fn(),
     ...props,
@@ -137,6 +138,32 @@ describe('CounterActionsPanel', () => {
     it('ferme le panneau après duplication', () => {
       const { onClose } = renderPanel()
       fireEvent.click(screen.getByText('⧉ Dupliquer ce compteur'))
+      expect(onClose).toHaveBeenCalledTimes(1)
+    })
+  })
+
+  describe('archivage', () => {
+    it('propose d\'archiver un compteur actif', () => {
+      renderPanel({ archived: false })
+      expect(screen.getByText('📦 Archiver ce compteur')).toBeInTheDocument()
+      expect(screen.queryByText('📤 Désarchiver ce compteur')).not.toBeInTheDocument()
+    })
+
+    it('propose de désarchiver un compteur déjà archivé', () => {
+      renderPanel({ archived: true })
+      expect(screen.getByText('📤 Désarchiver ce compteur')).toBeInTheDocument()
+      expect(screen.queryByText('📦 Archiver ce compteur')).not.toBeInTheDocument()
+    })
+
+    it('déclenche le basculement au clic', () => {
+      const { onToggleArchive } = renderPanel({ archived: false })
+      fireEvent.click(screen.getByText('📦 Archiver ce compteur'))
+      expect(onToggleArchive).toHaveBeenCalledTimes(1)
+    })
+
+    it('ferme le panneau après le basculement', () => {
+      const { onClose } = renderPanel({ archived: false })
+      fireEvent.click(screen.getByText('📦 Archiver ce compteur'))
       expect(onClose).toHaveBeenCalledTimes(1)
     })
   })

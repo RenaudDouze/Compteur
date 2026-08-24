@@ -22,8 +22,10 @@ const TAP_MOVE_THRESHOLD_PX = 10
 interface CounterCardProps {
   counter: Counter
   fill?: boolean
-  // Masque la poignée de glisser (ex: pendant une recherche, où `values` du
-  // Reorder.Group ne porte que sur le sous-ensemble filtré affiché).
+  // Masque la poignée de glisser dès que la liste affichée ne porte que sur
+  // un sous-ensemble filtré (recherche, vue archivés) : `values` du
+  // Reorder.Group ne couvrirait alors plus tous les compteurs, et réordonner
+  // remplacerait silencieusement la liste complète par ce sous-ensemble.
   draggable?: boolean
   colors: string[]
   onChange: (delta: number) => void
@@ -37,6 +39,7 @@ interface CounterCardProps {
   onSetStep: (step: number | undefined) => void
   onSetDisplayStyle: (style: DisplayStyle | undefined) => void
   onDuplicate: () => void
+  onToggleArchive: () => void
   onDelete: () => void
 }
 
@@ -56,6 +59,7 @@ export function CounterCard({
   onSetStep,
   onSetDisplayStyle,
   onDuplicate,
+  onToggleArchive,
   onDelete,
 }: CounterCardProps) {
   const [editing, setEditing] = useState(false)
@@ -545,6 +549,7 @@ export function CounterCard({
           counter={counter}
           onClose={() => setOpenPanel(null)}
           onDuplicate={onDuplicate}
+          onToggleArchive={onToggleArchive}
           onDelete={onDelete}
           onNavigate={setOpenPanel}
         />
