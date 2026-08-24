@@ -210,6 +210,9 @@ export function CounterBehaviorSettingsPanel({
         {denominator !== undefined && (
           <>
             <p className="modal-hint">{formatOdds(odds!)} de chances de l'avoir obtenu avant ce stade</p>
+            <p className="modal-hint">
+              {formatOdds(1 - odds!)} de chances de ne toujours pas l'avoir obtenu (autant d'échecs d'affilée)
+            </p>
             <div
               className="odds-progress"
               role="progressbar"
