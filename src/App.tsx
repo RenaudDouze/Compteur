@@ -240,7 +240,7 @@ export default function App() {
         </div>
       </header>
 
-      {counters.length > 0 && (
+      {(archivedCount > 0 || archiveView === 'archived') && (
         <div className="archive-toggle" role="tablist" aria-label="Filtrer par statut">
           <button
             role="tab"

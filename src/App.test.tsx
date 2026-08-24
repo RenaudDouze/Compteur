@@ -682,11 +682,19 @@ describe('App', () => {
       expect(screen.queryByRole('tab', { name: /Actifs/ })).not.toBeInTheDocument()
     })
 
-    it('affiche "Actifs" comme onglet actif par défaut', () => {
+    it("ne montre le sélecteur qu'une fois un compteur archivé (pas de place perdue sinon)", () => {
       window.localStorage.setItem('compteur.counters.v1', JSON.stringify([makeCounter()]))
       render(<App />)
+      expect(screen.queryByRole('tab', { name: /Actifs/ })).not.toBeInTheDocument()
+    })
+
+    it('affiche "Actifs" comme onglet actif par défaut une fois le sélecteur affiché', async () => {
+      window.localStorage.setItem('compteur.counters.v1', JSON.stringify([makeCounter({ name: 'À ranger' })]))
+      render(<App />)
+      archiveCounter('À ranger')
+      await waitFor(() => expect(screen.getByRole('tab', { name: 'Actifs' })).toBeInTheDocument())
       expect(screen.getByRole('tab', { name: 'Actifs' })).toHaveAttribute('aria-selected', 'true')
-      expect(screen.getByRole('tab', { name: 'Archivés' })).toHaveAttribute('aria-selected', 'false')
+      expect(screen.getByRole('tab', { name: 'Archivés (1)' })).toHaveAttribute('aria-selected', 'false')
     })
 
     it("masque un compteur archivé de l'onglet Actifs", async () => {
@@ -709,7 +717,6 @@ describe('App', () => {
     it("indique le nombre de compteurs archivés sur l'onglet", async () => {
       window.localStorage.setItem('compteur.counters.v1', JSON.stringify([makeCounter({ name: 'À ranger' })]))
       render(<App />)
-      expect(screen.getByRole('tab', { name: 'Archivés' })).toBeInTheDocument()
       archiveCounter('À ranger')
       await waitFor(() => expect(screen.getByRole('tab', { name: 'Archivés (1)' })).toBeInTheDocument())
     })
@@ -736,10 +743,15 @@ describe('App', () => {
       await waitFor(() => expect(screen.getByText('Tous tes compteurs sont archivés.')).toBeInTheDocument())
     })
 
-    it("affiche un message dédié sur l'onglet Archivés quand rien n'est archivé", () => {
-      window.localStorage.setItem('compteur.counters.v1', JSON.stringify([makeCounter()]))
+    it("affiche un message dédié sur l'onglet Archivés une fois vidé (dernier compteur désarchivé)", async () => {
+      window.localStorage.setItem('compteur.counters.v1', JSON.stringify([makeCounter({ name: 'À ranger' })]))
       render(<App />)
-      fireEvent.click(screen.getByRole('tab', { name: /Archivés/ }))
+      archiveCounter('À ranger')
+      await waitFor(() => expect(screen.getByRole('tab', { name: 'Archivés (1)' })).toBeInTheDocument())
+
+      fireEvent.click(screen.getByRole('tab', { name: 'Archivés (1)' }))
+      fireEvent.click(screen.getByRole('button', { name: 'Actions du compteur' }))
+      fireEvent.click(screen.getByText('📤 Désarchiver ce compteur'))
       expect(screen.getByText('Aucun compteur archivé.')).toBeInTheDocument()
     })
 
@@ -774,10 +786,13 @@ describe('App', () => {
       expect(screen.getByText('Source (copie)')).toBeInTheDocument()
     })
 
-    it("revient sur l'onglet Actifs à la création d'un compteur depuis l'onglet Archivés", () => {
+    it("revient sur l'onglet Actifs à la création d'un compteur depuis l'onglet Archivés", async () => {
       window.localStorage.setItem('compteur.counters.v1', JSON.stringify([makeCounter({ name: 'Existant' })]))
       render(<App />)
-      fireEvent.click(screen.getByRole('tab', { name: /Archivés/ }))
+      archiveCounter('Existant')
+      await waitFor(() => expect(screen.getByRole('tab', { name: 'Archivés (1)' })).toBeInTheDocument())
+
+      fireEvent.click(screen.getByRole('tab', { name: 'Archivés (1)' }))
       fireEvent.click(screen.getByRole('button', { name: '+ Nouveau compteur' }))
       expect(screen.getByRole('tab', { name: 'Actifs' })).toHaveAttribute('aria-selected', 'true')
       expect(screen.getByText('Compteur 2')).toBeInTheDocument()
