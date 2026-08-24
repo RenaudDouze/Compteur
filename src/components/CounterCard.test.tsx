@@ -524,6 +524,44 @@ describe('CounterCard', () => {
     })
   })
 
+  describe('icônes d\'accès direct (comportement, historique)', () => {
+    it('ouvre directement le panneau "Comportement" au clic sur ±', () => {
+      renderCard({ name: 'Mon compteur' })
+      fireEvent.click(screen.getByRole('button', { name: 'Régler le comportement du compteur' }))
+      expect(screen.getByText('Comportement « Mon compteur »')).toBeInTheDocument()
+    })
+
+    it("le clic sur ± n'incrémente pas le compteur", () => {
+      const { onChange } = renderCard()
+      fireEvent.click(screen.getByRole('button', { name: 'Régler le comportement du compteur' }))
+      expect(onChange).not.toHaveBeenCalled()
+    })
+
+    it("pointerdown sur ± n'incrémente pas le compteur", () => {
+      const { onChange } = renderCard()
+      fireEvent.pointerDown(screen.getByRole('button', { name: 'Régler le comportement du compteur' }))
+      expect(onChange).not.toHaveBeenCalled()
+    })
+
+    it('ouvre directement le panneau "Historique" au clic sur ↗', () => {
+      renderCard({ name: 'Mon compteur' })
+      fireEvent.click(screen.getByRole('button', { name: "Voir l'historique du compteur" }))
+      expect(screen.getByText('Historique « Mon compteur »')).toBeInTheDocument()
+    })
+
+    it("le clic sur ↗ n'incrémente pas le compteur", () => {
+      const { onChange } = renderCard()
+      fireEvent.click(screen.getByRole('button', { name: "Voir l'historique du compteur" }))
+      expect(onChange).not.toHaveBeenCalled()
+    })
+
+    it("pointerdown sur ↗ n'incrémente pas le compteur", () => {
+      const { onChange } = renderCard()
+      fireEvent.pointerDown(screen.getByRole('button', { name: "Voir l'historique du compteur" }))
+      expect(onChange).not.toHaveBeenCalled()
+    })
+  })
+
   describe('édition directe de la valeur', () => {
     it('ouvre un champ pré-rempli au clic sur le crayon', () => {
       renderCard({ count: 42 })
