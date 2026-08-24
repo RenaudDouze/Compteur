@@ -48,6 +48,41 @@ export default function App() {
   const systemDark = useSystemDarkMode()
   const activeTheme = themePreference === 'system' ? (systemDark ? 'dark' : 'light') : themePreference
 
+  // Masque l'en-tête (titre, icônes, recherche, filtre archivés) pour ne
+  // garder que les compteurs à l'écran, et bascule le navigateur en plein
+  // écran natif quand c'est supporté (ex : absent sur Safari iOS, où le
+  // masquage de l'en-tête reste quand même utile seul).
+  const [focusMode, setFocusMode] = useState(false)
+
+  useEffect(() => {
+    if (focusMode) {
+      document.documentElement.requestFullscreen?.().catch(() => {})
+    } else if (document.fullscreenElement) {
+      document.exitFullscreen?.().catch(() => {})
+    }
+  }, [focusMode])
+
+  // Synchronise l'état si le plein écran natif est quitté autrement que par
+  // notre bouton (ex : touche Échap gérée nativement par le navigateur).
+  useEffect(() => {
+    const onFullscreenChange = () => {
+      if (!document.fullscreenElement) setFocusMode(false)
+    }
+    document.addEventListener('fullscreenchange', onFullscreenChange)
+    return () => document.removeEventListener('fullscreenchange', onFullscreenChange)
+  }, [])
+
+  // Filet de sécurité pour les navigateurs sans API Fullscreen (ex : Safari
+  // iOS) : l'événement `fullscreenchange` ci-dessus n'y est jamais émis.
+  useEffect(() => {
+    if (!focusMode) return
+    const onKeyDown = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') setFocusMode(false)
+    }
+    document.addEventListener('keydown', onKeyDown)
+    return () => document.removeEventListener('keydown', onKeyDown)
+  }, [focusMode])
+
   // Applique le thème au document (déjà posé une première fois par le script
   // inline de index.html, pour éviter un flash) et adapte la couleur de la
   // barre de statut du navigateur/PWA en conséquence.
@@ -212,72 +247,87 @@ export default function App() {
 
   return (
     <div className="app">
-      <header className="app-header">
-        <h1>Compteur</h1>
-        <div className="app-header-actions">
-          <button
-            className="add-btn icon-btn"
-            onClick={() => setThemePreference(NEXT_THEME[themePreference])}
-            aria-label={`Thème : ${THEME_LABEL[themePreference]}`}
-          >
-            {THEME_ICON[themePreference]}
-          </button>
-          {counters.length > 0 && (
-            <button
-              className="add-btn icon-btn"
-              onClick={() => setSearchOpen((v) => !v)}
-              aria-label="Rechercher"
-            >
-              🔍
-            </button>
-          )}
-          <button className="add-btn icon-btn" onClick={() => setSyncOpen(true)} aria-label="Synchroniser">
-            ⇄
-          </button>
-          <button className="add-btn" onClick={addCounter}>
-            + Nouveau compteur
-          </button>
-        </div>
-      </header>
-
-      {(archivedCount > 0 || archiveView === 'archived') && (
-        <div className="archive-toggle" role="tablist" aria-label="Filtrer par statut">
-          <button
-            role="tab"
-            aria-selected={archiveView === 'active'}
-            className={`archive-toggle-btn${archiveView === 'active' ? ' active' : ''}`}
-            onClick={() => setArchiveView('active')}
-          >
-            Actifs
-          </button>
-          <button
-            role="tab"
-            aria-selected={archiveView === 'archived'}
-            className={`archive-toggle-btn${archiveView === 'archived' ? ' active' : ''}`}
-            onClick={() => setArchiveView('archived')}
-          >
-            Archivés{archivedCount > 0 ? ` (${archivedCount})` : ''}
-          </button>
-        </div>
+      {focusMode && (
+        <button className="focus-exit-btn" onClick={() => setFocusMode(false)} aria-label="Quitter le mode plein écran">
+          ✕
+        </button>
       )}
 
-      {searchOpen && counters.length > 0 && (
-        <div className="search-bar">
-          <input
-            autoFocus
-            type="text"
-            className="modal-input search-input"
-            placeholder="Rechercher un compteur…"
-            value={searchQuery}
-            onChange={(e) => setSearchQuery(e.target.value)}
-            onKeyDown={(e) => {
-              if (e.key === 'Escape') closeSearch()
-            }}
-          />
-          <button className="modal-close" onClick={closeSearch} aria-label="Fermer la recherche">
-            ✕
-          </button>
-        </div>
+      {!focusMode && (
+        <>
+          <header className="app-header">
+            <h1>Compteur</h1>
+            <div className="app-header-actions">
+              <button
+                className="add-btn icon-btn"
+                onClick={() => setThemePreference(NEXT_THEME[themePreference])}
+                aria-label={`Thème : ${THEME_LABEL[themePreference]}`}
+              >
+                {THEME_ICON[themePreference]}
+              </button>
+              {counters.length > 0 && (
+                <button
+                  className="add-btn icon-btn"
+                  onClick={() => setSearchOpen((v) => !v)}
+                  aria-label="Rechercher"
+                >
+                  🔍
+                </button>
+              )}
+              <button className="add-btn icon-btn" onClick={() => setSyncOpen(true)} aria-label="Synchroniser">
+                ⇄
+              </button>
+              {counters.length > 0 && (
+                <button className="add-btn icon-btn" onClick={() => setFocusMode(true)} aria-label="Mode plein écran">
+                  ⛶
+                </button>
+              )}
+              <button className="add-btn" onClick={addCounter}>
+                + Nouveau compteur
+              </button>
+            </div>
+          </header>
+
+          {(archivedCount > 0 || archiveView === 'archived') && (
+            <div className="archive-toggle" role="tablist" aria-label="Filtrer par statut">
+              <button
+                role="tab"
+                aria-selected={archiveView === 'active'}
+                className={`archive-toggle-btn${archiveView === 'active' ? ' active' : ''}`}
+                onClick={() => setArchiveView('active')}
+              >
+                Actifs
+              </button>
+              <button
+                role="tab"
+                aria-selected={archiveView === 'archived'}
+                className={`archive-toggle-btn${archiveView === 'archived' ? ' active' : ''}`}
+                onClick={() => setArchiveView('archived')}
+              >
+                Archivés{archivedCount > 0 ? ` (${archivedCount})` : ''}
+              </button>
+            </div>
+          )}
+
+          {searchOpen && counters.length > 0 && (
+            <div className="search-bar">
+              <input
+                autoFocus
+                type="text"
+                className="modal-input search-input"
+                placeholder="Rechercher un compteur…"
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                onKeyDown={(e) => {
+                  if (e.key === 'Escape') closeSearch()
+                }}
+              />
+              <button className="modal-close" onClick={closeSearch} aria-label="Fermer la recherche">
+                ✕
+              </button>
+            </div>
+          )}
+        </>
       )}
 
       {filteredCounters.length === 0 ? (

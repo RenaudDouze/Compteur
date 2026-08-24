@@ -809,4 +809,101 @@ describe('App', () => {
       await waitFor(() => expect(document.querySelector('.counter-drag-handle')).not.toBeInTheDocument())
     })
   })
+
+  describe('mode plein écran', () => {
+    // `document.fullscreenElement` est en lecture seule dans jsdom : on la
+    // redéfinit pour simuler l'état plein écran natif du navigateur.
+    function stubFullscreenElement(value: Element | null) {
+      Object.defineProperty(document, 'fullscreenElement', { value, configurable: true })
+    }
+
+    afterEach(() => {
+      stubFullscreenElement(null)
+    })
+
+    it("n'affiche pas le bouton plein écran sans compteur", () => {
+      render(<App />)
+      expect(screen.queryByRole('button', { name: 'Mode plein écran' })).not.toBeInTheDocument()
+    })
+
+    it('masque l\'en-tête et affiche le bouton de sortie au clic', () => {
+      window.localStorage.setItem('compteur.counters.v1', JSON.stringify([makeCounter()]))
+      render(<App />)
+      fireEvent.click(screen.getByRole('button', { name: 'Mode plein écran' }))
+      expect(screen.queryByText('Compteur')).not.toBeInTheDocument()
+      expect(screen.getByRole('button', { name: 'Quitter le mode plein écran' })).toBeInTheDocument()
+    })
+
+    it('quitte le mode plein écran au clic sur le bouton de sortie', () => {
+      window.localStorage.setItem('compteur.counters.v1', JSON.stringify([makeCounter()]))
+      render(<App />)
+      fireEvent.click(screen.getByRole('button', { name: 'Mode plein écran' }))
+      fireEvent.click(screen.getByRole('button', { name: 'Quitter le mode plein écran' }))
+      expect(screen.getByText('Compteur')).toBeInTheDocument()
+      expect(screen.queryByRole('button', { name: 'Quitter le mode plein écran' })).not.toBeInTheDocument()
+    })
+
+    it('quitte le mode plein écran avec Échap', () => {
+      window.localStorage.setItem('compteur.counters.v1', JSON.stringify([makeCounter()]))
+      render(<App />)
+      fireEvent.click(screen.getByRole('button', { name: 'Mode plein écran' }))
+      fireEvent.keyDown(document, { key: 'Escape' })
+      expect(screen.getByText('Compteur')).toBeInTheDocument()
+    })
+
+    it('ignore une autre touche que Échap en mode plein écran', () => {
+      window.localStorage.setItem('compteur.counters.v1', JSON.stringify([makeCounter()]))
+      render(<App />)
+      fireEvent.click(screen.getByRole('button', { name: 'Mode plein écran' }))
+      fireEvent.keyDown(document, { key: 'a' })
+      expect(screen.queryByText('Compteur')).not.toBeInTheDocument()
+    })
+
+    it("demande le plein écran natif du navigateur à l'activation, et ignore silencieusement un refus", async () => {
+      window.localStorage.setItem('compteur.counters.v1', JSON.stringify([makeCounter()]))
+      const requestFullscreen = vi.fn().mockRejectedValue(new Error('refusé'))
+      document.documentElement.requestFullscreen = requestFullscreen
+      render(<App />)
+      await act(async () => {
+        fireEvent.click(screen.getByRole('button', { name: 'Mode plein écran' }))
+      })
+      expect(requestFullscreen).toHaveBeenCalledTimes(1)
+      expect(screen.queryByText('Compteur')).not.toBeInTheDocument()
+      // @ts-expect-error nettoyage du stub posé pour ce test
+      delete document.documentElement.requestFullscreen
+    })
+
+    it('quitte le plein écran natif du navigateur à la désactivation, et ignore silencieusement un refus', async () => {
+      window.localStorage.setItem('compteur.counters.v1', JSON.stringify([makeCounter()]))
+      const exitFullscreen = vi.fn().mockRejectedValue(new Error('refusé'))
+      document.exitFullscreen = exitFullscreen
+      render(<App />)
+      fireEvent.click(screen.getByRole('button', { name: 'Mode plein écran' }))
+      stubFullscreenElement(document.body)
+      await act(async () => {
+        fireEvent.click(screen.getByRole('button', { name: 'Quitter le mode plein écran' }))
+      })
+      expect(exitFullscreen).toHaveBeenCalledTimes(1)
+      // @ts-expect-error nettoyage du stub posé pour ce test
+      delete document.exitFullscreen
+    })
+
+    it("resynchronise l'état si le plein écran natif est quitté autrement que par notre bouton", () => {
+      window.localStorage.setItem('compteur.counters.v1', JSON.stringify([makeCounter()]))
+      render(<App />)
+      fireEvent.click(screen.getByRole('button', { name: 'Mode plein écran' }))
+      stubFullscreenElement(null)
+      fireEvent(document, new Event('fullscreenchange'))
+      expect(screen.getByText('Compteur')).toBeInTheDocument()
+    })
+
+    it('ignore un changement de plein écran natif tant que celui-ci reste actif', () => {
+      window.localStorage.setItem('compteur.counters.v1', JSON.stringify([makeCounter()]))
+      render(<App />)
+      fireEvent.click(screen.getByRole('button', { name: 'Mode plein écran' }))
+      stubFullscreenElement(document.body)
+      fireEvent(document, new Event('fullscreenchange'))
+      expect(screen.queryByText('Compteur')).not.toBeInTheDocument()
+    })
+  })
 })
