@@ -19,7 +19,7 @@ function renderPanel(
   props: Partial<Parameters<typeof CounterHistoryPanel>[0]> = {}
 ) {
   const counter = makeCounter(counterOverrides)
-  const handlers = { onClose: vi.fn(), ...props }
+  const handlers = { onClose: vi.fn(), onNavigate: vi.fn(), ...props }
   const utils = render(<CounterHistoryPanel counter={counter} {...handlers} {...props} />)
   return { counter, ...handlers, ...utils }
 }
@@ -58,5 +58,11 @@ describe('CounterHistoryPanel', () => {
     })
     expect(document.querySelector('.sparkline')).toBeInTheDocument()
     expect(screen.getByText('Min : 0 · Max : 5')).toBeInTheDocument()
+  })
+
+  it('navigue vers un autre panneau au clic sur un lien dédié', () => {
+    const { onNavigate } = renderPanel()
+    fireEvent.click(screen.getByRole('button', { name: '→ Personnalisation' }))
+    expect(onNavigate).toHaveBeenCalledWith('personnalisation')
   })
 })

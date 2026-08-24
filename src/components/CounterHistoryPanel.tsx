@@ -1,13 +1,16 @@
 import { Sparkline } from './Sparkline'
 import { Modal } from './Modal'
+import { PanelNav } from './PanelNav'
+import type { PanelKind } from './PanelNav'
 import type { Counter } from '../types'
 
 interface CounterHistoryPanelProps {
   counter: Counter
   onClose: () => void
+  onNavigate: (panel: PanelKind) => void
 }
 
-export function CounterHistoryPanel({ counter, onClose }: CounterHistoryPanelProps) {
+export function CounterHistoryPanel({ counter, onClose, onNavigate }: CounterHistoryPanelProps) {
   return (
     <Modal title={`Historique « ${counter.name} »`} onClose={onClose} accentColor={counter.color}>
       <section className="modal-section">
@@ -25,6 +28,8 @@ export function CounterHistoryPanel({ counter, onClose }: CounterHistoryPanelPro
           </p>
         )}
       </section>
+
+      <PanelNav current="historique" onNavigate={onNavigate} />
     </Modal>
   )
 }

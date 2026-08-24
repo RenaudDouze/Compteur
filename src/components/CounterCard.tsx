@@ -4,6 +4,8 @@ import { CounterValueDisplay } from './CounterValueDisplay'
 import { CounterSettingsPanel } from './CounterSettingsPanel'
 import { CounterBehaviorSettingsPanel } from './CounterBehaviorSettingsPanel'
 import { CounterHistoryPanel } from './CounterHistoryPanel'
+import { CounterActionsPanel } from './CounterActionsPanel'
+import type { PanelKind } from './PanelNav'
 import { cumulativeOdds, formatOdds, progressRatio } from '../odds'
 import { playIncrementSound } from '../sound'
 import type { Counter, DisplayStyle } from '../types'
@@ -58,11 +60,11 @@ export function CounterCard({
 }: CounterCardProps) {
   const [editing, setEditing] = useState(false)
   const [draftName, setDraftName] = useState(counter.name)
-  // Trois modales distinctes : la personnalisation de l'apparence (couleur,
+  // 4 modales distinctes : la personnalisation de l'apparence (couleur,
   // style, image de fond), le comportement du compteur (pas d'incrément,
-  // objectif, probabilité, date de début, partage/duplication) et son
-  // historique.
-  const [openPanel, setOpenPanel] = useState<'personnalisation' | 'comportement' | 'historique' | null>(null)
+  // objectif, probabilité, date de début), son historique, et les actions
+  // (partage, duplication). Chacune peut naviguer vers les 3 autres.
+  const [openPanel, setOpenPanel] = useState<PanelKind | null>(null)
   const [editingCount, setEditingCount] = useState(false)
   const [draftCount, setDraftCount] = useState(counter.count.toString())
   const [countError, setCountError] = useState<string | null>(null)
@@ -528,8 +530,7 @@ export function CounterCard({
           onSetBackgroundImage={onSetBackgroundImage}
           onSetColor={onSetColor}
           onSetDisplayStyle={onSetDisplayStyle}
-          onOpenBehavior={() => setOpenPanel('comportement')}
-          onOpenHistory={() => setOpenPanel('historique')}
+          onNavigate={setOpenPanel}
         />
       )}
 
@@ -541,11 +542,22 @@ export function CounterCard({
           onSetTarget={onSetTarget}
           onSetStartDate={onSetStartDate}
           onSetStep={onSetStep}
-          onDuplicate={onDuplicate}
+          onNavigate={setOpenPanel}
         />
       )}
 
-      {openPanel === 'historique' && <CounterHistoryPanel counter={counter} onClose={() => setOpenPanel(null)} />}
+      {openPanel === 'historique' && (
+        <CounterHistoryPanel counter={counter} onClose={() => setOpenPanel(null)} onNavigate={setOpenPanel} />
+      )}
+
+      {openPanel === 'actions' && (
+        <CounterActionsPanel
+          counter={counter}
+          onClose={() => setOpenPanel(null)}
+          onDuplicate={onDuplicate}
+          onNavigate={setOpenPanel}
+        />
+      )}
     </Reorder.Item>
   )
 }
