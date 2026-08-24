@@ -74,6 +74,23 @@
   line-height: 1;
 }
 
+/* Seul point de sortie du mode plein écran : reste donc toujours visible
+   au-dessus de tout le reste, y compris par-dessus une modale ouverte. */
+.focus-exit-btn {
+  position: fixed;
+  top: max(12px, env(safe-area-inset-top));
+  right: 12px;
+  z-index: 70;
+  width: 34px;
+  height: 34px;
+  border: 1px solid var(--surface-border);
+  border-radius: 50%;
+  background: var(--surface);
+  color: var(--text-dim);
+  font-size: 0.9rem;
+  box-shadow: 0 1px 2px rgba(15, 23, 42, 0.06), 0 8px 24px rgba(15, 23, 42, 0.08);
+}
+
 .add-btn {
   border: 1px solid var(--surface-border);
   background: var(--surface);
