@@ -309,33 +309,61 @@ export function CounterCard({
         {confirmDelete ? '✓' : '✕'}
       </button>
 
-      {draggable && (
-        <button
-          className="counter-drag-handle"
-          onPointerDown={(e) => {
-            e.stopPropagation()
-            dragControls.start(e)
-          }}
-          onClick={(e) => e.stopPropagation()}
-          aria-label="Réordonner le compteur"
-          title="Glisser pour réordonner"
-        >
-          ⠿
-        </button>
-      )}
+      <div className="counter-icon-row">
+        {draggable && (
+          <button
+            className="counter-drag-handle"
+            onPointerDown={(e) => {
+              e.stopPropagation()
+              dragControls.start(e)
+            }}
+            onClick={(e) => e.stopPropagation()}
+            aria-label="Réordonner le compteur"
+            title="Glisser pour réordonner"
+          >
+            ⠿
+          </button>
+        )}
 
-      <button
-        className="counter-settings-btn"
-        onClick={(e) => {
-          e.stopPropagation()
-          setOpenPanel('personnalisation')
-        }}
-        onPointerDown={(e) => e.stopPropagation()}
-        aria-label="Personnaliser le compteur"
-        title="Couleur, style d'affichage, image de fond"
-      >
-        ⚙
-      </button>
+        <button
+          className="counter-settings-btn"
+          onClick={(e) => {
+            e.stopPropagation()
+            setOpenPanel('personnalisation')
+          }}
+          onPointerDown={(e) => e.stopPropagation()}
+          aria-label="Personnaliser le compteur"
+          title="Couleur, style d'affichage, image de fond"
+        >
+          ⚙
+        </button>
+
+        <button
+          className="counter-behavior-btn"
+          onClick={(e) => {
+            e.stopPropagation()
+            setOpenPanel('comportement')
+          }}
+          onPointerDown={(e) => e.stopPropagation()}
+          aria-label="Régler le comportement du compteur"
+          title="Pas d'incrément, objectif, probabilité, date de début, partage, duplication"
+        >
+          ±
+        </button>
+
+        <button
+          className="counter-history-btn"
+          onClick={(e) => {
+            e.stopPropagation()
+            setOpenPanel('historique')
+          }}
+          onPointerDown={(e) => e.stopPropagation()}
+          aria-label="Voir l'historique du compteur"
+          title="Historique des valeurs"
+        >
+          ↗
+        </button>
+      </div>
 
       {editing ? (
         <input
