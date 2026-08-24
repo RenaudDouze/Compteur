@@ -300,8 +300,8 @@ export function CounterCard({
         />
       )}
 
-      {draggable && !locked && (
-        <div className="counter-icon-row">
+      <div className="counter-options-row">
+        {draggable && !locked && (
           <button
             className="counter-drag-handle"
             onPointerDown={(e) => {
@@ -314,10 +314,8 @@ export function CounterCard({
           >
             ⠿
           </button>
-        </div>
-      )}
+        )}
 
-      <div className="counter-options-row">
         <button
           className="counter-settings-btn"
           onClick={(e) => {
