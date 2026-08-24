@@ -363,6 +363,11 @@
   border-color: var(--text);
 }
 
+.counter-color-option:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
 .counter-value-input {
   width: 100%;
   flex: 1;
@@ -754,6 +759,16 @@
   filter: brightness(0.92);
 }
 
+.counter-btn:disabled {
+  opacity: 0.45;
+  cursor: not-allowed;
+}
+
+.counter-btn:disabled:active {
+  transform: none;
+  filter: none;
+}
+
 .modal-overlay {
   position: fixed;
   inset: 0;
@@ -838,6 +853,18 @@
   color: var(--text-dim);
 }
 
+/* Bandeau d'avertissement en tête de modale pour un compteur archivé :
+   se démarque volontairement des `.modal-hint` habituels (fond plein,
+   centré) pour se lire comme un état plutôt qu'une info secondaire. */
+.modal-hint--locked {
+  background: var(--bg-2);
+  color: var(--text);
+  padding: 10px 14px;
+  border-radius: 10px;
+  text-align: center;
+  margin-bottom: 4px;
+}
+
 /* Se démarque des stats au-dessus : c'est un rappel rassurant, pas un
    chiffre à retenir. */
 .modal-hint--reminder {
@@ -891,6 +918,11 @@
   max-width: 320px;
 }
 
+.modal-input:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
 .modal-input--odds {
   width: 6em;
   max-width: 6em;
@@ -921,6 +953,11 @@
   border-radius: 12px;
   border: 2px solid transparent;
   background: var(--bg-1);
+}
+
+.display-style-option:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
 }
 
 .display-style-option.selected {

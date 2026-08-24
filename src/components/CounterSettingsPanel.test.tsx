@@ -228,4 +228,38 @@ describe('CounterSettingsPanel', () => {
       expect(screen.queryByRole('button', { name: "Vider l'image de fond" })).not.toBeInTheDocument()
     })
   })
+
+  describe('compteur archivé (lecture seule)', () => {
+    it('affiche un bandeau signalant la lecture seule', () => {
+      renderPanel({ archived: true })
+      expect(screen.getByText(/Compteur archivé : lecture seule/)).toBeInTheDocument()
+    })
+
+    it("n'affiche pas le bandeau pour un compteur actif", () => {
+      renderPanel({ archived: false })
+      expect(screen.queryByText(/Compteur archivé : lecture seule/)).not.toBeInTheDocument()
+    })
+
+    it('désactive les options de couleur', () => {
+      renderPanel({ archived: true, color: TEST_COLORS[0] })
+      expect(screen.getByRole('button', { name: `Choisir la couleur ${TEST_COLORS[1]}` })).toBeDisabled()
+    })
+
+    it('désactive les options de style', () => {
+      renderPanel({ archived: true })
+      expect(screen.getByRole('button', { name: 'Choisir le style Volets' })).toBeDisabled()
+    })
+
+    it("désactive le champ d'image de fond et le bouton pour le vider", () => {
+      renderPanel({ archived: true, backgroundImageUrl: 'https://exemple.com/actuel.jpg' })
+      expect(screen.getByDisplayValue('https://exemple.com/actuel.jpg')).toBeDisabled()
+      expect(screen.getByRole('button', { name: "Vider l'image de fond" })).toBeDisabled()
+    })
+
+    it('ignore un clic sur une couleur désactivée', () => {
+      const { onSetColor } = renderPanel({ archived: true, color: TEST_COLORS[0] })
+      fireEvent.click(screen.getByRole('button', { name: `Choisir la couleur ${TEST_COLORS[1]}` }))
+      expect(onSetColor).not.toHaveBeenCalled()
+    })
+  })
 })

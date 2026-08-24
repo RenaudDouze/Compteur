@@ -84,9 +84,17 @@ export function CounterCard({
   const tapStart = useRef<{ x: number; y: number } | null>(null)
   const tapHandledByPointer = useRef(false)
 
+  // Un compteur archivé est en lecture seule : le comptage, le renommage et
+  // le glisser-déposer sont bloqués (seuls désarchiver, dupliquer et
+  // supprimer, dans la modale Actions, restent possibles).
+  const locked = !!counter.archived
+
   // `sign` indique juste le sens (+1/-1) : l'amplitude réelle appliquée est
-  // le pas personnalisable du compteur (par défaut 1).
+  // le pas personnalisable du compteur (par défaut 1). Unique point d'entrée
+  // du comptage (tap, clic, +/-, clavier, rafale) : bloquer ici suffit à
+  // verrouiller un compteur archivé partout à la fois.
   const bump = (sign: 1 | -1) => {
+    if (locked) return
     setDirection(sign)
     // Absent sur la plupart des navigateurs desktop et sur iOS Safari :
     // l'appel optionnel évite une erreur silencieuse, le retour haptique
@@ -268,7 +276,7 @@ export function CounterCard({
       onPointerCancel={handleCardPointerCancel}
       role="button"
       tabIndex={0}
-      aria-label={`Incrémenter ${counter.name}`}
+      aria-label={locked ? `${counter.name}, archivé, lecture seule` : `Incrémenter ${counter.name}`}
       onKeyDown={(e) => {
         // Ignore les touches qui bouillonnent depuis un enfant (bouton,
         // champ...) : seule une touche appuyée sur la carte elle-même doit
@@ -293,7 +301,7 @@ export function CounterCard({
       )}
 
       <div className="counter-icon-row">
-        {draggable && (
+        {draggable && !locked && (
           <button
             className="counter-drag-handle"
             onPointerDown={(e) => {
@@ -384,11 +392,12 @@ export function CounterCard({
           className="counter-name"
           onClick={(e) => {
             e.stopPropagation()
+            if (locked) return
             setDraftName(counter.name)
             setEditing(true)
           }}
           onPointerDown={(e) => e.stopPropagation()}
-          title="Toucher pour renommer"
+          title={locked ? 'Compteur archivé : lecture seule' : 'Toucher pour renommer'}
         >
           {counter.name}
         </h2>
@@ -460,6 +469,7 @@ export function CounterCard({
       <div className="counter-actions">
         <button
           className="counter-btn edit"
+          disabled={locked}
           onClick={(e) => {
             e.stopPropagation()
             setDraftCount(counter.count.toString())
@@ -474,6 +484,7 @@ export function CounterCard({
         </button>
         <button
           className="counter-btn minus"
+          disabled={locked}
           onClick={(e) => {
             e.stopPropagation()
             if (longPressFired.current) {
@@ -495,6 +506,7 @@ export function CounterCard({
         </button>
         <button
           className="counter-btn plus"
+          disabled={locked}
           onClick={(e) => {
             e.stopPropagation()
             if (longPressFired.current) {

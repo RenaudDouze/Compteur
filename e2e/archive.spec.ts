@@ -51,4 +51,27 @@ test.describe('Archivage de compteurs', () => {
     await page.getByPlaceholder('Rechercher un compteur…').fill('pom')
     await expect(page.getByText('Pompes', { exact: true })).toBeVisible()
   })
+
+  test('un compteur archivé est en lecture seule (comptage et réglages bloqués)', async ({ page }) => {
+    await addCounter(page)
+    await page.getByRole('button', { name: 'Actions du compteur' }).click()
+    await page.getByText('📦 Archiver ce compteur').click()
+    await page.getByRole('tab', { name: 'Archivés (1)' }).click()
+
+    const card = page.locator('.counter-card')
+    await card.click()
+    await expect(card.locator('.counter-value')).toHaveText('0')
+    await expect(page.getByRole('button', { name: 'Incrémenter' })).toBeDisabled()
+    await expect(page.getByRole('button', { name: 'Décrémenter' })).toBeDisabled()
+    await expect(card.locator('.counter-drag-handle')).toHaveCount(0)
+
+    await page.getByRole('button', { name: 'Personnaliser le compteur' }).click()
+    await expect(page.getByText(/Compteur archivé : lecture seule/)).toBeVisible()
+    await expect(page.getByRole('button', { name: /Choisir la couleur/ }).first()).toBeDisabled()
+    await page.getByRole('button', { name: 'Fermer' }).click()
+
+    await page.getByRole('button', { name: 'Régler le comportement du compteur' }).click()
+    await expect(page.getByText(/Compteur archivé : lecture seule/)).toBeVisible()
+    await expect(page.getByPlaceholder('1')).toBeDisabled()
+  })
 })
