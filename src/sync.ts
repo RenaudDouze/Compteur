@@ -36,6 +36,7 @@ function normalizeCounter(raw: Partial<Counter>): Counter {
     history: raw.history,
     displayStyle: raw.displayStyle,
     target: raw.target,
+    archived: raw.archived,
   }
 }
 
@@ -66,6 +67,7 @@ interface CompactCounter {
   p?: number
   y?: DisplayStyle
   g?: number
+  a?: 1
 }
 
 function toCompact(counter: Counter): CompactCounter {
@@ -80,6 +82,7 @@ function toCompact(counter: Counter): CompactCounter {
     ...(counter.step ? { p: counter.step } : {}),
     ...(counter.displayStyle ? { y: counter.displayStyle } : {}),
     ...(counter.target ? { g: counter.target } : {}),
+    ...(counter.archived ? { a: 1 } : {}),
   }
 }
 
@@ -95,6 +98,7 @@ function fromCompact(raw: CompactCounter): Counter {
     step: raw.p,
     displayStyle: raw.y,
     target: raw.g,
+    archived: raw.a === 1 ? true : undefined,
   })
 }
 

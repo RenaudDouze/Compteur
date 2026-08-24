@@ -37,6 +37,33 @@
   margin-bottom: 20px;
 }
 
+.archive-toggle {
+  display: inline-flex;
+  align-self: flex-start;
+  gap: 2px;
+  padding: 3px;
+  border-radius: 999px;
+  background: var(--bg-2);
+  margin-bottom: 20px;
+}
+
+.archive-toggle-btn {
+  border: none;
+  background: none;
+  color: var(--text-dim);
+  padding: 6px 14px;
+  border-radius: 999px;
+  font-size: 0.85rem;
+  font-weight: 600;
+  transition: background 0.15s ease, color 0.15s ease;
+}
+
+.archive-toggle-btn.active {
+  background: var(--surface);
+  color: var(--text);
+  box-shadow: 0 1px 2px rgba(15, 23, 42, 0.08);
+}
+
 .modal-input.search-input {
   max-width: none;
 }

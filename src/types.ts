@@ -26,4 +26,6 @@ export interface Counter {
   displayStyle?: DisplayStyle
   /** Objectif libre (valeur à atteindre). Absent = pas d'objectif défini. */
   target?: number
+  /** Compteur archivé : masqué de la liste par défaut. Absent = actif. */
+  archived?: boolean
 }

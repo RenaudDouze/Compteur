@@ -253,6 +253,16 @@ describe('parseBackupJson', () => {
     const result = parseBackupJson(JSON.stringify([{ name: 'A', count: 1 }]))
     expect(result?.[0].history).toBeUndefined()
   })
+
+  it('conserve archived optionnel', () => {
+    const result = parseBackupJson(JSON.stringify([{ name: 'A', count: 1, archived: true }]))
+    expect(result?.[0].archived).toBe(true)
+  })
+
+  it('laisse archived indéfini si absent', () => {
+    const result = parseBackupJson(JSON.stringify([{ name: 'A', count: 1 }]))
+    expect(result?.[0].archived).toBeUndefined()
+  })
 })
 
 describe('encodeCountersToParam / decodeCountersFromParam', () => {
@@ -279,6 +289,7 @@ describe('encodeCountersToParam / decodeCountersFromParam', () => {
         step: 5,
         displayStyle: 'segment7',
         target: 100,
+        archived: true,
       }),
     ]
     const encoded = encodeCountersToParam(counters)
@@ -295,6 +306,7 @@ describe('encodeCountersToParam / decodeCountersFromParam', () => {
       step: 5,
       displayStyle: 'segment7',
       target: 100,
+      archived: true,
     })
   })
 
@@ -307,6 +319,7 @@ describe('encodeCountersToParam / decodeCountersFromParam', () => {
         step: undefined,
         displayStyle: undefined,
         target: undefined,
+        archived: undefined,
       }),
     ]
     const encoded = encodeCountersToParam(counters)
@@ -317,6 +330,14 @@ describe('encodeCountersToParam / decodeCountersFromParam', () => {
     expect(decoded?.[0].step).toBeUndefined()
     expect(decoded?.[0].displayStyle).toBeUndefined()
     expect(decoded?.[0].target).toBeUndefined()
+    expect(decoded?.[0].archived).toBeUndefined()
+  })
+
+  it('omet archived=false du lien compact (comme les autres champs falsy)', () => {
+    const counters = [makeCounter({ archived: false })]
+    const encoded = encodeCountersToParam(counters)
+    const decoded = decodeCountersFromParam(encoded)
+    expect(decoded?.[0].archived).toBeUndefined()
   })
 
   it('applique count=0 si le champ "c" décodé n\'est pas un nombre (payload corrompu)', () => {
