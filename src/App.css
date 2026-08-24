@@ -299,13 +299,25 @@
   opacity: var(--bg-overlay-opacity);
 }
 
-/* Regroupe les icônes d'accès direct (glisser, personnalisation,
-   comportement, historique, actions) dans une rangée : évite de recalculer
-   un décalage `left` en dur à chaque icône ajoutée. */
+/* Poignée de glisser isolée à gauche, séparée des icônes de réglage (à
+   droite) : un geste de tri ne doit jamais être à portée d'un tap visant un
+   réglage, et inversement. */
 .counter-icon-row {
   position: absolute;
   top: 8px;
   left: 8px;
+  display: flex;
+  gap: 6px;
+  z-index: 2;
+}
+
+/* Regroupe les icônes d'accès direct aux réglages (personnalisation,
+   comportement, historique, actions) dans une rangée à droite : évite de
+   recalculer un décalage `right` en dur à chaque icône ajoutée. */
+.counter-options-row {
+  position: absolute;
+  top: 8px;
+  right: 8px;
   display: flex;
   gap: 6px;
   z-index: 2;
