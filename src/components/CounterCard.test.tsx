@@ -38,6 +38,7 @@ function renderCard(counterOverrides: Partial<Counter> = {}, props: Partial<Para
     onSetTarget: vi.fn(),
     onDuplicate: vi.fn(),
     onToggleArchive: vi.fn(),
+    onTogglePin: vi.fn(),
     onDelete: vi.fn(),
     ...props,
   }
@@ -772,6 +773,7 @@ describe('CounterCard', () => {
             onSetTarget={vi.fn()}
             onDuplicate={vi.fn()}
             onToggleArchive={vi.fn()}
+            onTogglePin={vi.fn()}
             onDelete={vi.fn()}
           />
         </Reorder.Group>
@@ -796,6 +798,7 @@ describe('CounterCard', () => {
             onSetTarget={vi.fn()}
             onDuplicate={vi.fn()}
             onToggleArchive={vi.fn()}
+            onTogglePin={vi.fn()}
             onDelete={vi.fn()}
           />
         </Reorder.Group>
@@ -830,6 +833,7 @@ describe('CounterCard', () => {
             onSetTarget={vi.fn()}
             onDuplicate={vi.fn()}
             onToggleArchive={vi.fn()}
+            onTogglePin={vi.fn()}
             onDelete={vi.fn()}
           />
         </Reorder.Group>
@@ -852,6 +856,7 @@ describe('CounterCard', () => {
             onSetTarget={vi.fn()}
             onDuplicate={vi.fn()}
             onToggleArchive={vi.fn()}
+            onTogglePin={vi.fn()}
             onDelete={vi.fn()}
           />
         </Reorder.Group>
@@ -889,6 +894,7 @@ describe('CounterCard', () => {
             onSetTarget={vi.fn()}
             onDuplicate={vi.fn()}
             onToggleArchive={vi.fn()}
+            onTogglePin={vi.fn()}
             onDelete={vi.fn()}
           />
         </Reorder.Group>
@@ -916,6 +922,7 @@ describe('CounterCard', () => {
             onSetTarget={vi.fn()}
             onDuplicate={vi.fn()}
             onToggleArchive={vi.fn()}
+            onTogglePin={vi.fn()}
             onDelete={vi.fn()}
           />
         </Reorder.Group>
@@ -942,6 +949,7 @@ describe('CounterCard', () => {
             onSetTarget={vi.fn()}
             onDuplicate={vi.fn()}
             onToggleArchive={vi.fn()}
+            onTogglePin={vi.fn()}
             onDelete={vi.fn()}
           />
         </Reorder.Group>
@@ -965,6 +973,7 @@ describe('CounterCard', () => {
             onSetTarget={vi.fn()}
             onDuplicate={vi.fn()}
             onToggleArchive={vi.fn()}
+            onTogglePin={vi.fn()}
             onDelete={vi.fn()}
           />
         </Reorder.Group>
@@ -991,6 +1000,7 @@ describe('CounterCard', () => {
             onSetTarget={vi.fn()}
             onDuplicate={vi.fn()}
             onToggleArchive={vi.fn()}
+            onTogglePin={vi.fn()}
             onDelete={vi.fn()}
           />
         </Reorder.Group>
@@ -1014,11 +1024,115 @@ describe('CounterCard', () => {
             onSetTarget={vi.fn()}
             onDuplicate={vi.fn()}
             onToggleArchive={vi.fn()}
+            onTogglePin={vi.fn()}
             onDelete={vi.fn()}
           />
         </Reorder.Group>
       )
       expect(playIncrementSound).toHaveBeenCalledTimes(1)
+    })
+  })
+
+  describe('épinglage', () => {
+    it('affiche un repère quand le compteur est épinglé', () => {
+      renderCard({ pinned: true })
+      expect(document.querySelector('.counter-pin-badge')).toBeInTheDocument()
+    })
+
+    it("n'affiche pas de repère quand le compteur n'est pas épinglé", () => {
+      renderCard({ pinned: false })
+      expect(document.querySelector('.counter-pin-badge')).not.toBeInTheDocument()
+    })
+  })
+
+  describe("célébration à l'atteinte de l'objectif", () => {
+    it('affiche un confetti quand le compte franchit l\'objectif en incrémentant', () => {
+      const { rerender, counter, ...handlers } = renderCard({ target: 5, count: 4 })
+      const updated = { ...counter, count: 5 }
+      rerender(
+        <Reorder.Group as="div" values={[updated]} onReorder={() => {}}>
+          <CounterCard counter={updated} {...handlers} />
+        </Reorder.Group>
+      )
+      expect(document.querySelector('.counter-celebration')).toBeInTheDocument()
+      expect(screen.getByText('Objectif atteint')).toBeInTheDocument()
+    })
+
+    it('ne célèbre pas au montage même si le compte est déjà à l\'objectif', () => {
+      renderCard({ target: 5, count: 5 })
+      expect(document.querySelector('.counter-celebration')).not.toBeInTheDocument()
+    })
+
+    it("ne célèbre pas sans objectif défini", () => {
+      const { rerender, counter, ...handlers } = renderCard({ count: 4 })
+      const updated = { ...counter, count: 5 }
+      rerender(
+        <Reorder.Group as="div" values={[updated]} onReorder={() => {}}>
+          <CounterCard counter={updated} {...handlers} />
+        </Reorder.Group>
+      )
+      expect(document.querySelector('.counter-celebration')).not.toBeInTheDocument()
+    })
+
+    it('ne célèbre pas en décrémentant sous l\'objectif', () => {
+      const { rerender, counter, ...handlers } = renderCard({ target: 5, count: 6 })
+      const updated = { ...counter, count: 5 }
+      rerender(
+        <Reorder.Group as="div" values={[updated]} onReorder={() => {}}>
+          <CounterCard counter={updated} {...handlers} />
+        </Reorder.Group>
+      )
+      expect(document.querySelector('.counter-celebration')).not.toBeInTheDocument()
+    })
+
+    it("ne re-célèbre pas en continuant d'incrémenter au-delà d'un objectif déjà atteint", () => {
+      const { rerender, counter, ...handlers } = renderCard({ target: 5, count: 5 })
+      const updated = { ...counter, count: 6 }
+      rerender(
+        <Reorder.Group as="div" values={[updated]} onReorder={() => {}}>
+          <CounterCard counter={updated} {...handlers} />
+        </Reorder.Group>
+      )
+      expect(document.querySelector('.counter-celebration')).not.toBeInTheDocument()
+    })
+
+    it('célèbre à nouveau après être repassé sous l\'objectif puis l\'avoir de nouveau atteint', () => {
+      const { rerender, counter, ...handlers } = renderCard({ target: 5, count: 4 })
+      const wrap = (c: Counter) => (
+        <Reorder.Group as="div" values={[c]} onReorder={() => {}}>
+          <CounterCard counter={c} {...handlers} />
+        </Reorder.Group>
+      )
+      rerender(wrap({ ...counter, count: 5 }))
+      rerender(wrap({ ...counter, count: 4 }))
+      rerender(wrap({ ...counter, count: 5 }))
+      expect(document.querySelector('.counter-celebration')).toBeInTheDocument()
+    })
+
+    it("gère un pas d'incrément qui saute par-dessus l'objectif sans tomber pile dessus", () => {
+      const { rerender, counter, ...handlers } = renderCard({ target: 10, count: 9, step: 3 })
+      const updated = { ...counter, count: 12 }
+      rerender(
+        <Reorder.Group as="div" values={[updated]} onReorder={() => {}}>
+          <CounterCard counter={updated} {...handlers} />
+        </Reorder.Group>
+      )
+      expect(document.querySelector('.counter-celebration')).toBeInTheDocument()
+    })
+
+    it('masque le confetti après le délai', () => {
+      const { rerender, counter, ...handlers } = renderCard({ target: 5, count: 4 })
+      const updated = { ...counter, count: 5 }
+      rerender(
+        <Reorder.Group as="div" values={[updated]} onReorder={() => {}}>
+          <CounterCard counter={updated} {...handlers} />
+        </Reorder.Group>
+      )
+      expect(document.querySelector('.counter-celebration')).toBeInTheDocument()
+      act(() => {
+        vi.advanceTimersByTime(1200)
+      })
+      expect(document.querySelector('.counter-celebration')).not.toBeInTheDocument()
     })
   })
 

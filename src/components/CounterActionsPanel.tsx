@@ -10,6 +10,7 @@ interface CounterActionsPanelProps {
   onClose: () => void
   onDuplicate: () => void
   onToggleArchive: () => void
+  onTogglePin: () => void
   onDelete: () => void
   onNavigate: (panel: PanelKind) => void
 }
@@ -19,6 +20,7 @@ export function CounterActionsPanel({
   onClose,
   onDuplicate,
   onToggleArchive,
+  onTogglePin,
   onDelete,
   onNavigate,
 }: CounterActionsPanelProps) {
@@ -57,6 +59,11 @@ export function CounterActionsPanel({
     onClose()
   }
 
+  const handleTogglePin = () => {
+    onTogglePin()
+    onClose()
+  }
+
   const handleDeleteClick = () => {
     if (confirmDelete) {
       clearTimeout(confirmTimer.current)
@@ -75,6 +82,9 @@ export function CounterActionsPanel({
         </button>
         <button className="modal-btn" onClick={handleDuplicate}>
           ⧉ Dupliquer ce compteur
+        </button>
+        <button className="modal-btn" onClick={handleTogglePin}>
+          {counter.pinned ? '📌 Détacher ce compteur' : '📌 Épingler en haut'}
         </button>
         <button className="modal-btn" onClick={handleToggleArchive}>
           {counter.archived ? '📤 Désarchiver ce compteur' : '📦 Archiver ce compteur'}

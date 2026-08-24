@@ -303,4 +303,45 @@ test.describe('Fonctionnalités avancées', () => {
     await page.locator('.counter-drag-handle').click()
     await expect(page.locator('.counter-value')).toHaveText('0')
   })
+
+  test('épingle un compteur pour le faire remonter en tête de liste, plus vite que le glisser-déposer', async ({
+    page,
+  }) => {
+    await addCounter(page)
+    await addCounter(page)
+
+    const names = ['A', 'B', 'C']
+    const cards = page.locator('.counter-card')
+    for (let i = 0; i < 3; i++) {
+      await cards.nth(i).locator('.counter-name').click()
+      await cards.nth(i).locator('.counter-name-input').fill(names[i])
+      await cards.nth(i).locator('.counter-name-input').press('Enter')
+    }
+    await expect(page.locator('.counter-name')).toHaveText(['A', 'B', 'C'])
+
+    await cards.nth(2).getByRole('button', { name: 'Actions du compteur' }).click()
+    await page.getByText('📌 Épingler en haut').click()
+    await expect(page.locator('.counter-name')).toHaveText(['C', 'A', 'B'])
+    await expect(cards.first().locator('.counter-pin-badge')).toBeVisible()
+
+    await cards.first().getByRole('button', { name: 'Actions du compteur' }).click()
+    await page.getByText('📌 Détacher ce compteur').click()
+    await expect(page.locator('.counter-name')).toHaveText(['A', 'B', 'C'])
+  })
+
+  test("affiche un confetti à l'atteinte de l'objectif", async ({ page }) => {
+    await page.getByRole('button', { name: 'Personnaliser le compteur' }).click()
+    await page.getByRole('button', { name: 'Comportement', exact: true }).click()
+    await page.getByPlaceholder('ex : 50').fill('2')
+    await page.getByPlaceholder('ex : 50').press('Enter')
+    await page.getByRole('button', { name: 'Fermer' }).click()
+
+    await expect(page.locator('.counter-celebration')).not.toBeVisible()
+    await page.getByRole('button', { name: 'Incrémenter', exact: true }).click()
+    await expect(page.locator('.counter-celebration')).not.toBeVisible()
+    await page.getByRole('button', { name: 'Incrémenter', exact: true }).click()
+    await expect(page.locator('.counter-celebration')).toBeVisible()
+    await expect(page.getByText('Objectif atteint')).toBeAttached()
+    await expect(page.locator('.counter-celebration')).not.toBeVisible({ timeout: 2000 })
+  })
 })

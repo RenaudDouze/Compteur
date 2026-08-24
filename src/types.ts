@@ -28,4 +28,6 @@ export interface Counter {
   target?: number
   /** Compteur archivé : masqué de la liste par défaut. Absent = actif. */
   archived?: boolean
+  /** Épinglé en tête de liste, devant les compteurs non épinglés. Absent = non épinglé. */
+  pinned?: boolean
 }

@@ -369,6 +369,62 @@
   color: var(--accent);
 }
 
+/* Repère visuel statique (pas un bouton : l'action se fait depuis la modale
+   Actions) dans le coin libéré par le déplacement de la poignée de glisser
+   vers la rangée d'actions. */
+.counter-pin-badge {
+  position: absolute;
+  top: 8px;
+  left: 8px;
+  z-index: 2;
+  width: 26px;
+  height: 26px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 50%;
+  background: var(--bg-2);
+  font-size: 0.8rem;
+  pointer-events: none;
+}
+
+/* Confetti à l'atteinte d'un objectif : chaque particule part du centre de
+   la carte et file selon son propre angle. `pointer-events: none` sur le
+   conteneur laisse les taps traverser vers la carte/les boutons pendant
+   l'animation. */
+.counter-celebration {
+  position: absolute;
+  inset: 0;
+  z-index: 5;
+  pointer-events: none;
+  overflow: hidden;
+}
+
+.counter-confetti {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: 8px;
+  height: 8px;
+  margin: -4px;
+  border-radius: 2px;
+  background: var(--color);
+  opacity: 0;
+  animation: counter-confetti-fly 900ms ease-out forwards;
+  animation-delay: var(--delay);
+}
+
+@keyframes counter-confetti-fly {
+  0% {
+    transform: rotate(var(--angle)) translateY(0);
+    opacity: 1;
+  }
+  100% {
+    transform: rotate(var(--angle)) translateY(-80px) scale(0.4);
+    opacity: 0;
+  }
+}
+
 .counter-color-option {
   width: 26px;
   height: 26px;

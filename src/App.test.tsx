@@ -810,6 +810,40 @@ describe('App', () => {
     })
   })
 
+  describe('épinglage', () => {
+    const counterNames = () => Array.from(document.querySelectorAll('.counter-name')).map((el) => el.textContent)
+
+    const togglePinFor = (name: string) => {
+      fireEvent.click(within(screen.getByText(name).closest('article')!).getByRole('button', { name: 'Actions du compteur' }))
+      fireEvent.click(screen.getByRole('button', { name: /Épingler|Détacher/ }))
+    }
+
+    it('fait remonter un compteur épinglé en tête de liste, devant les compteurs non épinglés', async () => {
+      window.localStorage.setItem(
+        'compteur.counters.v1',
+        JSON.stringify([
+          makeCounter({ id: 'a', name: 'Un' }),
+          makeCounter({ id: 'b', name: 'Deux' }),
+          makeCounter({ id: 'c', name: 'Trois' }),
+        ])
+      )
+      render(<App />)
+      togglePinFor('Trois')
+      await waitFor(() => expect(counterNames()).toEqual(['Trois', 'Un', 'Deux']))
+    })
+
+    it('détache un compteur et le laisse à sa position de tri normale', async () => {
+      window.localStorage.setItem(
+        'compteur.counters.v1',
+        JSON.stringify([makeCounter({ id: 'a', name: 'Un' }), makeCounter({ id: 'b', name: 'Deux', pinned: true })])
+      )
+      render(<App />)
+      expect(counterNames()).toEqual(['Deux', 'Un'])
+      togglePinFor('Deux')
+      await waitFor(() => expect(counterNames()).toEqual(['Un', 'Deux']))
+    })
+  })
+
   describe('mode plein écran', () => {
     // `document.fullscreenElement` est en lecture seule dans jsdom : on la
     // redéfinit pour simuler l'état plein écran natif du navigateur.
