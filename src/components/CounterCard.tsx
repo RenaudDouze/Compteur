@@ -19,6 +19,14 @@ const HOLD_REPEAT_MS = 100
 // geste sur la carte compte comme un tap plutôt qu'un glissement/scroll.
 const TAP_MOVE_THRESHOLD_PX = 10
 
+// Durée d'affichage du confetti à l'atteinte de l'objectif.
+const CELEBRATION_DURATION_MS = 1100
+// Angles (en degrés) des particules du confetti, réparties en éventail sur
+// un demi-cercle plutôt qu'un cercle complet : le bas de la carte contient
+// souvent les boutons +/-, un confetti y retomberait dessus sans y être vu.
+const CONFETTI_ANGLES = [-90, -65, -40, -15, 15, 40, 65, 90, -110, 110]
+const CONFETTI_COLORS = ['#f43f5e', '#f59e0b', '#10b981', '#3b82f6', '#8b5cf6', '#ec4899']
+
 interface CounterCardProps {
   counter: Counter
   fill?: boolean
@@ -40,6 +48,7 @@ interface CounterCardProps {
   onSetDisplayStyle: (style: DisplayStyle | undefined) => void
   onDuplicate: () => void
   onToggleArchive: () => void
+  onTogglePin: () => void
   onDelete: () => void
 }
 
@@ -60,6 +69,7 @@ export function CounterCard({
   onSetDisplayStyle,
   onDuplicate,
   onToggleArchive,
+  onTogglePin,
   onDelete,
 }: CounterCardProps) {
   const [editing, setEditing] = useState(false)
@@ -77,6 +87,9 @@ export function CounterCard({
   const [fillFontSize, setFillFontSize] = useState<number | null>(null)
   const pulseControls = useAnimationControls()
   const isFirstCount = useRef(true)
+  const [celebrating, setCelebrating] = useState(false)
+  const celebrateTimer = useRef<ReturnType<typeof setTimeout> | undefined>(undefined)
+  const prevCountForTarget = useRef(counter.count)
   const dragControls = useDragControls()
   const holdTimer = useRef<ReturnType<typeof setTimeout> | undefined>(undefined)
   const holdInterval = useRef<ReturnType<typeof setInterval> | undefined>(undefined)
@@ -246,6 +259,23 @@ export function CounterCard({
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [counter.count, pulseControls])
 
+  // Célèbre le franchissement de l'objectif (d'en dessous vers au moins sa
+  // valeur), pas juste le fait de s'y trouver : sinon toucher l'objectif au
+  // montage (ex: après rechargement de la page) déclencherait la
+  // célébration à chaque fois. Un pas d'incrément personnalisé peut sauter
+  // par-dessus l'objectif sans tomber pile dessus (ex: pas de 3, objectif à
+  // 10 : 9 → 12) : on compare donc à un dépassement, pas à une égalité.
+  useEffect(() => {
+    const previous = prevCountForTarget.current
+    prevCountForTarget.current = counter.count
+    if (counter.target === undefined) return
+    if (previous < counter.target && counter.count >= counter.target) {
+      setCelebrating(true)
+      clearTimeout(celebrateTimer.current)
+      celebrateTimer.current = setTimeout(() => setCelebrating(false), CELEBRATION_DURATION_MS)
+    }
+  }, [counter.count, counter.target])
+
   const odds = counter.oddsDenominator ? cumulativeOdds(counter.oddsDenominator, counter.count) : null
   // Progression pour le style "anneau" : vers l'objectif libre s'il est
   // défini (le plus explicite), sinon vers le nombre moyen de tentatives —
@@ -298,6 +328,36 @@ export function CounterCard({
           style={{ backgroundImage: `url("${counter.backgroundImageUrl}")` }}
           aria-hidden="true"
         />
+      )}
+
+      {counter.pinned && (
+        <span className="counter-pin-badge" aria-hidden="true">
+          📌
+        </span>
+      )}
+
+      {celebrating && (
+        <div className="counter-celebration" aria-hidden="true">
+          {CONFETTI_ANGLES.map((angle, i) => (
+            <span
+              key={angle}
+              className="counter-confetti"
+              style={
+                {
+                  '--angle': `${angle}deg`,
+                  '--delay': `${i * 25}ms`,
+                  '--color': CONFETTI_COLORS[i % CONFETTI_COLORS.length],
+                } as React.CSSProperties
+              }
+            />
+          ))}
+        </div>
+      )}
+
+      {celebrating && (
+        <span className="sr-only" role="status">
+          Objectif atteint
+        </span>
       )}
 
       <div className="counter-options-row">
@@ -562,6 +622,7 @@ export function CounterCard({
           onClose={() => setOpenPanel(null)}
           onDuplicate={onDuplicate}
           onToggleArchive={onToggleArchive}
+          onTogglePin={onTogglePin}
           onDelete={onDelete}
           onNavigate={setOpenPanel}
         />

@@ -25,6 +25,7 @@ function renderPanel(
     onClose: vi.fn(),
     onDuplicate: vi.fn(),
     onToggleArchive: vi.fn(),
+    onTogglePin: vi.fn(),
     onDelete: vi.fn(),
     onNavigate: vi.fn(),
     ...props,
@@ -164,6 +165,32 @@ describe('CounterActionsPanel', () => {
     it('ferme le panneau après le basculement', () => {
       const { onClose } = renderPanel({ archived: false })
       fireEvent.click(screen.getByText('📦 Archiver ce compteur'))
+      expect(onClose).toHaveBeenCalledTimes(1)
+    })
+  })
+
+  describe('épinglage', () => {
+    it('propose d\'épingler un compteur non épinglé', () => {
+      renderPanel({ pinned: false })
+      expect(screen.getByText('📌 Épingler en haut')).toBeInTheDocument()
+      expect(screen.queryByText('📌 Détacher ce compteur')).not.toBeInTheDocument()
+    })
+
+    it('propose de détacher un compteur déjà épinglé', () => {
+      renderPanel({ pinned: true })
+      expect(screen.getByText('📌 Détacher ce compteur')).toBeInTheDocument()
+      expect(screen.queryByText('📌 Épingler en haut')).not.toBeInTheDocument()
+    })
+
+    it('déclenche le basculement au clic', () => {
+      const { onTogglePin } = renderPanel({ pinned: false })
+      fireEvent.click(screen.getByText('📌 Épingler en haut'))
+      expect(onTogglePin).toHaveBeenCalledTimes(1)
+    })
+
+    it('ferme le panneau après le basculement', () => {
+      const { onClose } = renderPanel({ pinned: false })
+      fireEvent.click(screen.getByText('📌 Épingler en haut'))
       expect(onClose).toHaveBeenCalledTimes(1)
     })
   })

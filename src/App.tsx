@@ -43,6 +43,10 @@ export default function App() {
   const filteredCounters = counters.filter(
     (c) => (archiveView === 'archived' ? !!c.archived : !c.archived) && matchesSearch(c)
   )
+  // Fait remonter les compteurs épinglés en tête d'affichage, sans toucher à
+  // leur ordre de tri manuel entre eux (tri stable) : une alternative rapide
+  // au glisser-déposer pour les compteurs qu'on veut garder à portée de main.
+  const sortedCounters = [...filteredCounters].sort((a, b) => Number(!!b.pinned) - Number(!!a.pinned))
 
   const [themePreference, setThemePreference] = useLocalStorage<ThemePreference>('compteur.theme.v1', 'system')
   const systemDark = useSystemDarkMode()
@@ -241,6 +245,10 @@ export default function App() {
     setCounters((prev) => prev.map((c) => (c.id === id ? { ...c, archived: !c.archived } : c)))
   }
 
+  const togglePin = (id: string) => {
+    setCounters((prev) => prev.map((c) => (c.id === id ? { ...c, pinned: !c.pinned } : c)))
+  }
+
   const handleImport = (imported: Counter[], mode: 'replace' | 'merge') => {
     setCounters((prev) => (mode === 'replace' ? imported : [...prev, ...imported]))
   }
@@ -351,7 +359,7 @@ export default function App() {
         <Reorder.Group
           as="div"
           axis="y"
-          values={filteredCounters}
+          values={sortedCounters}
           onReorder={setCounters}
           className={`counter-grid ${
             filteredCounters.length === 1
@@ -362,7 +370,7 @@ export default function App() {
           }`}
         >
           <AnimatePresence mode="popLayout">
-            {filteredCounters.map((counter) => (
+            {sortedCounters.map((counter) => (
               <CounterCard
                 key={counter.id}
                 counter={counter}
@@ -381,6 +389,7 @@ export default function App() {
                 onSetDisplayStyle={(style) => setDisplayStyle(counter.id, style)}
                 onDuplicate={() => duplicateCounter(counter.id)}
                 onToggleArchive={() => toggleArchive(counter.id)}
+                onTogglePin={() => togglePin(counter.id)}
                 onDelete={() => deleteCounter(counter.id)}
               />
             ))}
