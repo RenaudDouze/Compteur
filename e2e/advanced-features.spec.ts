@@ -27,13 +27,14 @@ test.describe('Fonctionnalités avancées', () => {
     await expect(card.getByText('Encore ~3 tentatives en moyenne (moyenne : 4)')).not.toBeVisible()
     await expect(card.getByText(/Chaque tentative garde exactement 1 chance sur 4,/)).not.toBeVisible()
 
-    // Le panneau affiche le détail complet, avec en plus une barre de
-    // progression visuelle (`.modal-hint` a un second usage pour la date de
-    // début : on filtre sur le %).
+    // Le panneau affiche le détail complet (probabilité de succès cumulée et
+    // sa complémentaire, l'enchaînement d'échecs), avec en plus une barre de
+    // progression visuelle.
     await page.getByRole('button', { name: 'Personnaliser le compteur' }).click()
     await page.getByRole('button', { name: 'Comportement', exact: true }).click()
     const panel = page.locator('.modal-panel')
-    await expect(panel.locator('.modal-hint', { hasText: '%' })).toHaveText(/25,0\s?%/)
+    await expect(panel.getByText(/de l'avoir obtenu avant ce stade/)).toHaveText(/25,0\s?%/)
+    await expect(panel.getByText(/d'échecs d'affilée/)).toHaveText(/75,0\s?%/)
     await expect(panel.locator('.odds-progress')).toHaveAttribute('aria-valuenow', '25')
     await expect(panel.getByText('Encore ~3 tentatives en moyenne (moyenne : 4)')).toBeVisible()
     await expect(panel.getByText(/Chaque tentative garde exactement 1 chance sur 4,/)).toBeVisible()

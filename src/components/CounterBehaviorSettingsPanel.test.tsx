@@ -318,6 +318,24 @@ describe('CounterBehaviorSettingsPanel', () => {
       expect(screen.queryByText(/de l'avoir obtenu avant ce stade/)).not.toBeInTheDocument()
     })
 
+    it("affiche la probabilité complémentaire d'avoir enchaîné autant d'échecs", () => {
+      renderPanel({ count: 500, oddsDenominator: 4096 })
+      expect(screen.getByText(/de chances de ne toujours pas l'avoir obtenu \(autant d'échecs d'affilée\)/)).toBeInTheDocument()
+    })
+
+    it("n'affiche pas la probabilité d'échecs successifs sans probabilité définie", () => {
+      renderPanel()
+      expect(screen.queryByText(/échecs d'affilée/)).not.toBeInTheDocument()
+    })
+
+    it("les deux probabilités se complètent (succès et échecs d'affilée)", () => {
+      renderPanel({ count: 500, oddsDenominator: 4096 })
+      // 1 - (1 - 1/4096)^500 ≈ 11,49 % de succès cumulé, donc ≈ 88,51 % d'échec
+      // (arrondis chacun à 1 décimale par formatOdds à ce stade).
+      expect(screen.getByText(/^11,5\s?%/)).toBeInTheDocument()
+      expect(screen.getByText(/^88,5\s?%/)).toBeInTheDocument()
+    })
+
     it("n'affiche pas les stats complémentaires sans probabilité définie", () => {
       renderPanel()
       expect(document.querySelector('.odds-progress')).not.toBeInTheDocument()
