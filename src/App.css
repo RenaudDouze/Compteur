@@ -79,7 +79,8 @@
 .focus-exit-btn {
   position: fixed;
   top: max(12px, env(safe-area-inset-top));
-  right: 12px;
+  left: 50%;
+  transform: translateX(-50%);
   z-index: 70;
   width: 34px;
   height: 34px;
