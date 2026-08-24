@@ -1,18 +1,38 @@
 import { makeId } from './id'
 import type { Counter, DisplayStyle } from './types'
 
-/** Déclenche le téléchargement d'un fichier JSON contenant tous les compteurs. */
-export function downloadBackup(counters: Counter[]) {
-  const blob = new Blob([JSON.stringify(counters, null, 2)], { type: 'application/json' })
+/** Déclenche le téléchargement d'un blob sous le nom de fichier donné. */
+function triggerDownload(blob: Blob, filename: string) {
   const url = URL.createObjectURL(blob)
   const a = document.createElement('a')
-  const date = new Date().toISOString().slice(0, 10)
   a.href = url
-  a.download = `compteur-sauvegarde-${date}.json`
+  a.download = filename
   document.body.appendChild(a)
   a.click()
   a.remove()
   URL.revokeObjectURL(url)
+}
+
+/** Déclenche le téléchargement d'un fichier JSON contenant tous les compteurs. */
+export function downloadBackup(counters: Counter[]) {
+  const blob = new Blob([JSON.stringify(counters, null, 2)], { type: 'application/json' })
+  const date = new Date().toISOString().slice(0, 10)
+  triggerDownload(blob, `compteur-sauvegarde-${date}.json`)
+}
+
+/** Formate l'historique d'un compteur en CSV (horodatage ISO, valeur), pour
+ * une analyse dans un tableur. */
+export function buildHistoryCsv(counter: Counter): string {
+  const rows = (counter.history ?? []).map((p) => `${new Date(p.t).toISOString()},${p.v}`)
+  return ['Horodatage,Valeur', ...rows].join('\n')
+}
+
+/** Déclenche le téléchargement de l'historique d'un compteur au format CSV. */
+export function downloadHistoryCsv(counter: Counter) {
+  const blob = new Blob([buildHistoryCsv(counter)], { type: 'text/csv' })
+  const date = new Date().toISOString().slice(0, 10)
+  const safeName = counter.name.replace(/[^a-zA-Z0-9-_]+/g, '-') || 'compteur'
+  triggerDownload(blob, `compteur-historique-${safeName}-${date}.csv`)
 }
 
 function isValidCounter(value: unknown): value is Partial<Counter> {
