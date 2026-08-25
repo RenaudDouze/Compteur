@@ -117,6 +117,8 @@ export function SyncPanel({ counters, onClose, onImport }: SyncPanelProps) {
         </section>
 
         {error && <p className="modal-error">{error}</p>}
+
+        <p className="sync-version">Version {__APP_VERSION__}</p>
       </div>
     </div>
   )

@@ -13,6 +13,11 @@ test.describe('Synchronisation et partage', () => {
     await expect(page.getByText('Synchroniser mes compteurs')).not.toBeVisible()
   })
 
+  test("affiche la version de l'application", async ({ page }) => {
+    await page.getByRole('button', { name: 'Synchroniser' }).click()
+    await expect(page.locator('.sync-version')).toHaveText(/^Version \S+$/)
+  })
+
   test('affiche un QR code une fois un compteur créé', async ({ page }) => {
     await addCounter(page)
     await page.getByRole('button', { name: 'Synchroniser' }).click()
