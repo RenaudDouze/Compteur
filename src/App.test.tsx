@@ -808,6 +808,44 @@ describe('App', () => {
       archiveCounter('Un')
       await waitFor(() => expect(document.querySelector('.counter-drag-handle')).not.toBeInTheDocument())
     })
+
+    describe('archivedAt (durée figée)', () => {
+      beforeEach(() => {
+        vi.useFakeTimers({ shouldAdvanceTime: true })
+        vi.setSystemTime(new Date(2026, 7, 10))
+      })
+
+      afterEach(() => {
+        vi.useRealTimers()
+      })
+
+      it("enregistre la date d'archivage", async () => {
+        window.localStorage.setItem('compteur.counters.v1', JSON.stringify([makeCounter({ name: 'À ranger' })]))
+        render(<App />)
+        archiveCounter('À ranger')
+        await waitFor(() => {
+          const stored = JSON.parse(window.localStorage.getItem('compteur.counters.v1') ?? '[]')
+          expect(stored[0].archivedAt).toBe(new Date(2026, 7, 10).getTime())
+        })
+      })
+
+      it("efface la date d'archivage au désarchivage", async () => {
+        window.localStorage.setItem(
+          'compteur.counters.v1',
+          JSON.stringify([
+            makeCounter({ name: 'À ranger', archived: true, archivedAt: new Date(2026, 7, 5).getTime() }),
+          ])
+        )
+        render(<App />)
+        fireEvent.click(screen.getByRole('tab', { name: /Archivés/ }))
+        fireEvent.click(screen.getByRole('button', { name: 'Actions du compteur' }))
+        fireEvent.click(screen.getByText('📤 Désarchiver ce compteur'))
+        await waitFor(() => {
+          const stored = JSON.parse(window.localStorage.getItem('compteur.counters.v1') ?? '[]')
+          expect(stored[0].archivedAt).toBeUndefined()
+        })
+      })
+    })
   })
 
   describe('épinglage', () => {

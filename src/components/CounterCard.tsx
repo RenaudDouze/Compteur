@@ -7,6 +7,7 @@ import { CounterHistoryPanel } from './CounterHistoryPanel'
 import { CounterActionsPanel } from './CounterActionsPanel'
 import type { PanelKind } from './PanelNav'
 import { cumulativeOdds, formatOdds, progressRatio } from '../odds'
+import { formatDuration, toIsoDate } from '../date'
 import { playIncrementSound } from '../sound'
 import type { Counter, DisplayStyle } from '../types'
 
@@ -277,6 +278,13 @@ export function CounterCard({
   }, [counter.count, counter.target])
 
   const odds = counter.oddsDenominator ? cumulativeOdds(counter.oddsDenominator, counter.count) : null
+  // Durée figée entre le début du comptage et l'archivage. `archivedAt`
+  // absent (compteur archivé avant l'ajout de ce champ) : pas de durée
+  // affichée plutôt qu'une valeur devinée.
+  const archivedDuration =
+    counter.archived && counter.archivedAt !== undefined
+      ? formatDuration(counter.startDate ?? toIsoDate(counter.createdAt), toIsoDate(counter.archivedAt))
+      : null
   // Progression pour le style "anneau" : vers l'objectif libre s'il est
   // défini (le plus explicite), sinon vers le nombre moyen de tentatives —
   // mêmes formules que les barres de progression du panneau de réglages.
@@ -523,6 +531,12 @@ export function CounterCard({
       {odds !== null && (
         <div className="counter-odds-stats">
           <p className="counter-odds-hint">{formatOdds(odds)} de chances de l'avoir obtenu avant ce stade</p>
+        </div>
+      )}
+
+      {archivedDuration !== null && (
+        <div className="counter-odds-stats">
+          <p className="counter-odds-hint">Durée totale : {archivedDuration}</p>
         </div>
       )}
 

@@ -1,5 +1,5 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
-import { daysSince, formatStartDate, toIsoDate, todayIsoDate } from './date'
+import { daysBetween, daysSince, formatDuration, formatStartDate, toIsoDate, todayIsoDate } from './date'
 
 const dateFormatter = new Intl.DateTimeFormat('fr-FR', { day: 'numeric', month: 'short', year: 'numeric' })
 const compactDateFormatter = new Intl.DateTimeFormat('fr-FR', { day: '2-digit', month: '2-digit' })
@@ -65,6 +65,20 @@ describe('daysSince', () => {
   })
 })
 
+describe('daysBetween', () => {
+  it('retourne 0 pour deux dates identiques', () => {
+    expect(daysBetween('2026-08-22', '2026-08-22')).toBe(0)
+  })
+
+  it('retourne le nombre de jours entre une date de début et une date de fin', () => {
+    expect(daysBetween('2026-08-01', '2026-08-22')).toBe(21)
+  })
+
+  it('ramène à 0 un intervalle négatif (fin avant le début)', () => {
+    expect(daysBetween('2026-08-22', '2026-08-01')).toBe(0)
+  })
+})
+
 describe('formatStartDate', () => {
   beforeEach(() => {
     vi.useFakeTimers()
@@ -117,5 +131,34 @@ describe('formatStartDate', () => {
   it('mode compact : "N j" pour plusieurs jours', () => {
     const label = compactDateFormatter.format(new Date('2026-08-01T00:00:00'))
     expect(formatStartDate('2026-08-01', true)).toBe(`${label} · 21 j`)
+  })
+})
+
+describe('formatDuration', () => {
+  it('utilise bien la locale française (mois abrégé "août", pas "Aug")', () => {
+    expect(formatDuration('2026-08-01', '2026-08-22')).toContain('août')
+  })
+
+  it('inclut la date de début et de fin séparées par une flèche', () => {
+    const startLabel = dateFormatter.format(new Date('2026-08-01T00:00:00'))
+    const endLabel = dateFormatter.format(new Date('2026-08-22T00:00:00'))
+    expect(formatDuration('2026-08-01', '2026-08-22')).toBe(`${startLabel} → ${endLabel} · 21 jours`)
+  })
+
+  it('mode complet : au singulier pour 1 jour', () => {
+    const startLabel = dateFormatter.format(new Date('2026-08-21T00:00:00'))
+    const endLabel = dateFormatter.format(new Date('2026-08-22T00:00:00'))
+    expect(formatDuration('2026-08-21', '2026-08-22')).toBe(`${startLabel} → ${endLabel} · 1 jour`)
+  })
+
+  it("mode complet : \"aujourd'hui\" quand début et fin sont la même date", () => {
+    const label = dateFormatter.format(new Date('2026-08-22T00:00:00'))
+    expect(formatDuration('2026-08-22', '2026-08-22')).toBe(`${label} → ${label} · aujourd'hui`)
+  })
+
+  it('mode compact : dates au format jour/mois séparées par une flèche', () => {
+    const startLabel = compactDateFormatter.format(new Date('2026-08-01T00:00:00'))
+    const endLabel = compactDateFormatter.format(new Date('2026-08-22T00:00:00'))
+    expect(formatDuration('2026-08-01', '2026-08-22', true)).toBe(`${startLabel} → ${endLabel} · 21 j`)
   })
 })

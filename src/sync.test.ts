@@ -376,6 +376,21 @@ describe('parseBackupJson', () => {
     const result = parseBackupJson(JSON.stringify([{ name: 'A', count: 1 }]))
     expect(result?.[0].pinned).toBeUndefined()
   })
+
+  it('conserve archivedAt optionnel', () => {
+    const result = parseBackupJson(JSON.stringify([{ name: 'A', count: 1, archivedAt: 123456 }]))
+    expect(result?.[0].archivedAt).toBe(123456)
+  })
+
+  it('laisse archivedAt indéfini si absent', () => {
+    const result = parseBackupJson(JSON.stringify([{ name: 'A', count: 1 }]))
+    expect(result?.[0].archivedAt).toBeUndefined()
+  })
+
+  it("laisse archivedAt indéfini s'il n'est pas un nombre (payload corrompu)", () => {
+    const result = parseBackupJson(JSON.stringify([{ name: 'A', count: 1, archivedAt: 'hier' }]))
+    expect(result?.[0].archivedAt).toBeUndefined()
+  })
 })
 
 describe('encodeCountersToParam / decodeCountersFromParam', () => {
@@ -404,6 +419,7 @@ describe('encodeCountersToParam / decodeCountersFromParam', () => {
         target: 100,
         archived: true,
         pinned: true,
+        archivedAt: 1_700_100_000_000,
       }),
     ]
     const encoded = encodeCountersToParam(counters)
@@ -422,6 +438,7 @@ describe('encodeCountersToParam / decodeCountersFromParam', () => {
       target: 100,
       archived: true,
       pinned: true,
+      archivedAt: 1_700_100_000_000,
     })
   })
 
@@ -436,6 +453,7 @@ describe('encodeCountersToParam / decodeCountersFromParam', () => {
         target: undefined,
         archived: undefined,
         pinned: undefined,
+        archivedAt: undefined,
       }),
     ]
     const encoded = encodeCountersToParam(counters)
@@ -448,6 +466,7 @@ describe('encodeCountersToParam / decodeCountersFromParam', () => {
     expect(decoded?.[0].target).toBeUndefined()
     expect(decoded?.[0].archived).toBeUndefined()
     expect(decoded?.[0].pinned).toBeUndefined()
+    expect(decoded?.[0].archivedAt).toBeUndefined()
   })
 
   it('omet archived=false du lien compact (comme les autres champs falsy)', () => {
@@ -462,6 +481,13 @@ describe('encodeCountersToParam / decodeCountersFromParam', () => {
     const encoded = encodeCountersToParam(counters)
     const decoded = decodeCountersFromParam(encoded)
     expect(decoded?.[0].pinned).toBeUndefined()
+  })
+
+  it('omet archivedAt=0 du lien compact (comme les autres champs falsy)', () => {
+    const counters = [makeCounter({ archivedAt: 0 })]
+    const encoded = encodeCountersToParam(counters)
+    const decoded = decodeCountersFromParam(encoded)
+    expect(decoded?.[0].archivedAt).toBeUndefined()
   })
 
   it('applique count=0 si le champ "c" décodé n\'est pas un nombre (payload corrompu)', () => {
