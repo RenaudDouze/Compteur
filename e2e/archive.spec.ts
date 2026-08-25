@@ -75,15 +75,21 @@ test.describe('Archivage de compteurs', () => {
     await expect(page.getByPlaceholder('1')).toBeDisabled()
   })
 
-  test('affiche la durée totale figée sur la carte et dans la modale une fois archivé', async ({ page }) => {
+  test('affiche la durée totale figée et la moyenne par jour sur la carte et dans la modale une fois archivé', async ({
+    page,
+  }) => {
     await addCounter(page)
+    await page.getByRole('button', { name: 'Incrémenter', exact: true }).click()
+    await page.getByRole('button', { name: 'Incrémenter', exact: true }).click()
     await page.getByRole('button', { name: 'Actions du compteur' }).click()
     await page.getByText('📦 Archiver ce compteur').click()
     await page.getByRole('tab', { name: 'Archivés (1)' }).click()
 
     await expect(page.getByText(/Durée totale : .*→.*aujourd'hui/)).toBeVisible()
+    await expect(page.getByText(/Moyenne : 2 \/ jour/)).toBeVisible()
 
     await page.getByRole('button', { name: 'Régler le comportement du compteur' }).click()
     await expect(page.locator('.modal-panel').getByText(/→.*aujourd'hui/)).toBeVisible()
+    await expect(page.locator('.modal-panel').getByText(/Moyenne : 2 \/ jour/)).toBeVisible()
   })
 })

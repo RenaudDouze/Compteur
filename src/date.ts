@@ -57,3 +57,12 @@ export function formatDuration(startIsoDate: string, endIsoDate: string, compact
   const suffix = days === 0 ? "aujourd'hui" : days === 1 ? '1 jour' : `${days} jours`
   return `${fmt.format(start)} → ${fmt.format(end)} · ${suffix}`
 }
+
+/** Moyenne d'incrément par jour sur une durée figée (compte total divisé par
+ * le nombre de jours écoulés), pour les stats d'un compteur archivé. Un
+ * intervalle de moins d'une journée compte comme 1 jour, pour éviter une
+ * division par zéro qui produirait une moyenne infinie. */
+export function formatAveragePerDay(count: number, days: number): string {
+  const average = count / Math.max(days, 1)
+  return `${average.toLocaleString('fr-FR', { minimumFractionDigits: 0, maximumFractionDigits: 1 })} / jour`
+}

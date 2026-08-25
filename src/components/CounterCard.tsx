@@ -7,7 +7,7 @@ import { CounterHistoryPanel } from './CounterHistoryPanel'
 import { CounterActionsPanel } from './CounterActionsPanel'
 import type { PanelKind } from './PanelNav'
 import { cumulativeOdds, formatOdds, progressRatio } from '../odds'
-import { formatDuration, toIsoDate } from '../date'
+import { daysBetween, formatAveragePerDay, formatDuration, toIsoDate } from '../date'
 import { playIncrementSound } from '../sound'
 import type { Counter, DisplayStyle } from '../types'
 
@@ -278,12 +278,16 @@ export function CounterCard({
   }, [counter.count, counter.target])
 
   const odds = counter.oddsDenominator ? cumulativeOdds(counter.oddsDenominator, counter.count) : null
-  // Durée figée entre le début du comptage et l'archivage. `archivedAt`
-  // absent (compteur archivé avant l'ajout de ce champ) : pas de durée
-  // affichée plutôt qu'une valeur devinée.
+  // Durée figée et moyenne d'incrément par jour entre le début du comptage
+  // et l'archivage. `archivedAt` absent (compteur archivé avant l'ajout de
+  // ce champ) : pas de stats affichées plutôt que des valeurs devinées.
+  const archivedStartIso = counter.startDate ?? toIsoDate(counter.createdAt)
+  const archivedEndIso = counter.archivedAt !== undefined ? toIsoDate(counter.archivedAt) : null
   const archivedDuration =
-    counter.archived && counter.archivedAt !== undefined
-      ? formatDuration(counter.startDate ?? toIsoDate(counter.createdAt), toIsoDate(counter.archivedAt))
+    counter.archived && archivedEndIso !== null ? formatDuration(archivedStartIso, archivedEndIso) : null
+  const archivedAveragePerDay =
+    counter.archived && archivedEndIso !== null
+      ? formatAveragePerDay(counter.count, daysBetween(archivedStartIso, archivedEndIso))
       : null
   // Progression pour le style "anneau" : vers l'objectif libre s'il est
   // défini (le plus explicite), sinon vers le nombre moyen de tentatives —
@@ -537,6 +541,7 @@ export function CounterCard({
       {archivedDuration !== null && (
         <div className="counter-odds-stats">
           <p className="counter-odds-hint">Durée totale : {archivedDuration}</p>
+          <p className="counter-odds-hint">Moyenne : {archivedAveragePerDay}</p>
         </div>
       )}
 
@@ -576,7 +581,7 @@ export function CounterCard({
           onPointerCancel={stopHold}
           aria-label="Décrémenter"
         >
-          −
+          −{counter.step ?? 1}
         </button>
         <button
           className="counter-btn plus"
@@ -598,7 +603,7 @@ export function CounterCard({
           onPointerCancel={stopHold}
           aria-label="Incrémenter"
         >
-          +
+          +{counter.step ?? 1}
         </button>
       </div>
 

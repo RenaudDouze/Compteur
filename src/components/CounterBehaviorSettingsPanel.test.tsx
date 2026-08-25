@@ -477,5 +477,20 @@ describe('CounterBehaviorSettingsPanel', () => {
       expect(screen.queryByText(/→/)).not.toBeInTheDocument()
       expect(screen.getByText(/août/)).toBeInTheDocument()
     })
+
+    it("affiche la moyenne d'incrément par jour aux côtés de la durée figée", () => {
+      renderPanel({
+        createdAt: new Date(2026, 7, 1).getTime(),
+        count: 90,
+        archived: true,
+        archivedAt: new Date(2026, 7, 10).getTime(),
+      })
+      expect(screen.getByText(/Moyenne : 10 \/ jour/)).toBeInTheDocument()
+    })
+
+    it("n'affiche pas de moyenne si archivedAt est absent", () => {
+      renderPanel({ createdAt: new Date(2026, 7, 1).getTime(), count: 90, archived: true, archivedAt: undefined })
+      expect(screen.queryByText(/Moyenne : /)).not.toBeInTheDocument()
+    })
   })
 })

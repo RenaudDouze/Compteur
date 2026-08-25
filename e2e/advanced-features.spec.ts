@@ -149,6 +149,9 @@ test.describe('Fonctionnalités avancées', () => {
     await expect(page.getByText('+5 / −5 à chaque appui')).toBeVisible()
     await page.getByRole('button', { name: 'Fermer' }).click()
 
+    await expect(page.getByRole('button', { name: 'Incrémenter', exact: true })).toHaveText('+5')
+    await expect(page.getByRole('button', { name: 'Décrémenter' })).toHaveText('−5')
+
     await page.getByRole('button', { name: 'Incrémenter', exact: true }).click()
     await expect(page.locator('.counter-value')).toHaveText('5')
     await page.getByRole('button', { name: 'Décrémenter' }).click()
