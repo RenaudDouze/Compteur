@@ -237,12 +237,18 @@ export default function App() {
       startDate: undefined,
       history: appendHistoryPoint(undefined, 0),
       archived: undefined,
+      archivedAt: undefined,
     }
     setCounters((prev) => [...prev, copy])
   }
 
+  // Fige `archivedAt` à l'archivage : sert de date de fin pour figer la
+  // durée totale affichée (carte + modale Comportement). Effacé au
+  // désarchivage, un ré-archivage ultérieur repart d'une nouvelle date.
   const toggleArchive = (id: string) => {
-    setCounters((prev) => prev.map((c) => (c.id === id ? { ...c, archived: !c.archived } : c)))
+    setCounters((prev) =>
+      prev.map((c) => (c.id === id ? { ...c, archived: !c.archived, archivedAt: c.archived ? undefined : Date.now() } : c))
+    )
   }
 
   const togglePin = (id: string) => {

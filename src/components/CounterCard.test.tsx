@@ -1190,5 +1190,28 @@ describe('CounterCard', () => {
       fireEvent.click(screen.getByRole('button', { name: 'Actions du compteur' }))
       expect(screen.getByText('Actions « Figé »')).toBeInTheDocument()
     })
+
+    describe('durée totale', () => {
+      it("affiche la durée totale entre le début du comptage et l'archivage", () => {
+        renderCard({ archived: true, archivedAt: new Date(2026, 7, 10).getTime() })
+        expect(screen.getByText(/Durée totale : /)).toBeInTheDocument()
+        expect(screen.getByText(/9 jours/)).toBeInTheDocument()
+      })
+
+      it('utilise la date de début personnalisée plutôt que la date de création si définie', () => {
+        renderCard({ archived: true, startDate: '2026-08-05', archivedAt: new Date(2026, 7, 10).getTime() })
+        expect(screen.getByText(/5 jours/)).toBeInTheDocument()
+      })
+
+      it("n'affiche pas de durée si archivedAt est absent (compteur archivé avant l'ajout de ce champ)", () => {
+        renderCard({ archived: true, archivedAt: undefined })
+        expect(screen.queryByText(/Durée totale/)).not.toBeInTheDocument()
+      })
+
+      it("n'affiche pas de durée pour un compteur actif même avec un archivedAt résiduel", () => {
+        renderCard({ archived: false, archivedAt: new Date(2026, 7, 10).getTime() })
+        expect(screen.queryByText(/Durée totale/)).not.toBeInTheDocument()
+      })
+    })
   })
 })

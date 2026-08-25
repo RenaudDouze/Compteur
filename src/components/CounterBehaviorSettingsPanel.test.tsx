@@ -461,5 +461,21 @@ describe('CounterBehaviorSettingsPanel', () => {
       expect(screen.getByPlaceholderText('4096')).toBeDisabled()
       expect(document.querySelector('input[type="date"]')).toBeDisabled()
     })
+
+    it("affiche la durée totale figée (début → archivage) plutôt que le rappel ouvert habituel", () => {
+      renderPanel({
+        createdAt: new Date(2026, 7, 1).getTime(),
+        archived: true,
+        archivedAt: new Date(2026, 7, 10).getTime(),
+      })
+      expect(screen.getByText(/→/)).toBeInTheDocument()
+      expect(screen.getByText(/9 jours/)).toBeInTheDocument()
+    })
+
+    it("garde le rappel ouvert habituel si archivedAt est absent (compteur archivé avant l'ajout de ce champ)", () => {
+      renderPanel({ createdAt: new Date(2026, 7, 1).getTime(), archived: true, archivedAt: undefined })
+      expect(screen.queryByText(/→/)).not.toBeInTheDocument()
+      expect(screen.getByText(/août/)).toBeInTheDocument()
+    })
   })
 })
