@@ -35,6 +35,11 @@ describe('SyncPanel', () => {
     vi.restoreAllMocks()
   })
 
+  it("affiche la version de l'application", () => {
+    render(<SyncPanel counters={[]} onClose={vi.fn()} onImport={vi.fn()} />)
+    expect(screen.getByText('Version test')).toBeInTheDocument()
+  })
+
   it('affiche un message quand aucun compteur ne permet de générer de QR code', () => {
     render(<SyncPanel counters={[]} onClose={vi.fn()} onImport={vi.fn()} />)
     expect(screen.getByText('Ajoute au moins un compteur pour générer un QR code.')).toBeInTheDocument()
