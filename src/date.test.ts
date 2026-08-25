@@ -1,5 +1,5 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
-import { daysBetween, daysSince, formatDuration, formatStartDate, toIsoDate, todayIsoDate } from './date'
+import { daysBetween, daysSince, formatAveragePerDay, formatDuration, formatStartDate, toIsoDate, todayIsoDate } from './date'
 
 const dateFormatter = new Intl.DateTimeFormat('fr-FR', { day: 'numeric', month: 'short', year: 'numeric' })
 const compactDateFormatter = new Intl.DateTimeFormat('fr-FR', { day: '2-digit', month: '2-digit' })
@@ -160,5 +160,27 @@ describe('formatDuration', () => {
     const startLabel = compactDateFormatter.format(new Date('2026-08-01T00:00:00'))
     const endLabel = compactDateFormatter.format(new Date('2026-08-22T00:00:00'))
     expect(formatDuration('2026-08-01', '2026-08-22', true)).toBe(`${startLabel} → ${endLabel} · 21 j`)
+  })
+})
+
+describe('formatAveragePerDay', () => {
+  it('retourne une moyenne entière quand la division tombe juste', () => {
+    expect(formatAveragePerDay(90, 9)).toBe('10 / jour')
+  })
+
+  it("retourne une décimale quand la division ne tombe pas juste", () => {
+    expect(formatAveragePerDay(100, 9)).toBe('11,1 / jour')
+  })
+
+  it('compte un intervalle de moins d\'une journée comme 1 jour (évite la division par zéro)', () => {
+    expect(formatAveragePerDay(5, 0)).toBe('5 / jour')
+  })
+
+  it('retourne 0 pour un compte nul', () => {
+    expect(formatAveragePerDay(0, 5)).toBe('0 / jour')
+  })
+
+  it('gère une moyenne négative (compte net décroissant)', () => {
+    expect(formatAveragePerDay(-6, 3)).toBe('-2 / jour')
   })
 })

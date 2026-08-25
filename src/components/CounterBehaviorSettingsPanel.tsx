@@ -1,6 +1,6 @@
 import { useState } from 'react'
 import { cumulativeOdds, formatOdds, formatRemainingAttempts, formatConstantChanceReminder, progressRatio } from '../odds'
-import { formatDuration, formatStartDate, toIsoDate, todayIsoDate } from '../date'
+import { daysBetween, formatAveragePerDay, formatDuration, formatStartDate, toIsoDate, todayIsoDate } from '../date'
 import { Modal } from './Modal'
 import { PanelNav } from './PanelNav'
 import type { PanelKind } from './PanelNav'
@@ -251,11 +251,16 @@ export function CounterBehaviorSettingsPanel({
           onChange={(e) => handleStartDateChange(e.target.value)}
         />
         {startDateError && <p className="modal-error">{startDateError}</p>}
-        <p className="modal-hint">
-          {locked && counter.archivedAt !== undefined
-            ? formatDuration(startDate, toIsoDate(counter.archivedAt))
-            : formatStartDate(startDate)}
-        </p>
+        {locked && counter.archivedAt !== undefined ? (
+          <>
+            <p className="modal-hint">{formatDuration(startDate, toIsoDate(counter.archivedAt))}</p>
+            <p className="modal-hint">
+              Moyenne : {formatAveragePerDay(counter.count, daysBetween(startDate, toIsoDate(counter.archivedAt)))}
+            </p>
+          </>
+        ) : (
+          <p className="modal-hint">{formatStartDate(startDate)}</p>
+        )}
       </section>
 
       <PanelNav current="comportement" onNavigate={onNavigate} />

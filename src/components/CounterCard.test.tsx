@@ -1212,6 +1212,30 @@ describe('CounterCard', () => {
         renderCard({ archived: false, archivedAt: new Date(2026, 7, 10).getTime() })
         expect(screen.queryByText(/Durée totale/)).not.toBeInTheDocument()
       })
+
+      it("affiche la moyenne d'incrément par jour", () => {
+        renderCard({ archived: true, count: 90, archivedAt: new Date(2026, 7, 10).getTime() })
+        expect(screen.getByText(/Moyenne : 10 \/ jour/)).toBeInTheDocument()
+      })
+
+      it("n'affiche pas de moyenne si archivedAt est absent", () => {
+        renderCard({ archived: true, count: 90, archivedAt: undefined })
+        expect(screen.queryByText(/Moyenne : /)).not.toBeInTheDocument()
+      })
+    })
+  })
+
+  describe('affichage du pas sur les boutons +/-', () => {
+    it('affiche le pas par défaut (1) sur les boutons', () => {
+      renderCard()
+      expect(screen.getByRole('button', { name: 'Incrémenter' })).toHaveTextContent('+1')
+      expect(screen.getByRole('button', { name: 'Décrémenter' })).toHaveTextContent('−1')
+    })
+
+    it('affiche le pas personnalisé sur les boutons', () => {
+      renderCard({ step: 5 })
+      expect(screen.getByRole('button', { name: 'Incrémenter' })).toHaveTextContent('+5')
+      expect(screen.getByRole('button', { name: 'Décrémenter' })).toHaveTextContent('−5')
     })
   })
 })
