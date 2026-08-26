@@ -19,7 +19,7 @@ test.describe('PWA et fonctionnement hors-ligne', () => {
 
   test('le raccourci "Nouveau compteur" crée un compteur au chargement', async ({ page, baseURL }) => {
     await page.goto(`${baseURL}/?action=new`)
-    await expect(page.getByText('Compteur 1', { exact: true })).toBeVisible()
+    await expect(page.locator('.counter-name-input')).toHaveValue('Compteur 1')
     expect(new URL(page.url()).search).toBe('')
   })
 
