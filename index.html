@@ -16,14 +16,17 @@
     <meta name="apple-mobile-web-app-capable" content="yes" />
     <meta name="apple-mobile-web-app-status-bar-style" content="default" />
     <meta name="description" content="Compteurs locaux avec incrément, décrément et effet de défilement." />
-    <title>Compteur</title>
+    <title>+1</title>
     <script>
       // Pose le thème avant le premier rendu, pour éviter un flash du thème
       // clair par défaut le temps que React s'hydrate. Miroir de la logique
       // de src/App.tsx (clé de stockage et repli sur la préférence système).
+      // Lit d'abord la clé actuelle, puis l'ancienne ("compteur.*", avant le
+      // renommage du projet en « +1 ») : la migration proprement dite (copie
+      // + nettoyage) n'a lieu qu'au chargement du module App.tsx, juste après.
       ;(function () {
         try {
-          var stored = localStorage.getItem('compteur.theme.v1')
+          var stored = localStorage.getItem('+1.theme.v1') ?? localStorage.getItem('compteur.theme.v1')
           var pref = stored ? JSON.parse(stored) : 'system'
           var theme =
             pref === 'system'

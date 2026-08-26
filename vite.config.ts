@@ -27,8 +27,8 @@ export default defineConfig({
       registerType: 'autoUpdate',
       includeAssets: ['favicon.svg'],
       manifest: {
-        name: 'Compteur',
-        short_name: 'Compteur',
+        name: '+1',
+        short_name: '+1',
         description: 'Compteurs locaux avec incrément/décrément',
         theme_color: '#f8fafc',
         background_color: '#f8fafc',
