@@ -19,8 +19,32 @@ const THEME_ICON: Record<ThemePreference, string> = { system: '🌓', light: '�
 const THEME_LABEL: Record<ThemePreference, string> = { system: 'Auto', light: 'Clair', dark: 'Sombre' }
 const NEXT_THEME: Record<ThemePreference, ThemePreference> = { system: 'light', light: 'dark', dark: 'system' }
 
+// Migration depuis les clés "compteur.*" (nom du projet avant son renommage
+// en « +1 ») : copie puis nettoie, pour ne pas perdre les compteurs déjà
+// enregistrés chez les utilisateurs existants. Appelée en tête du composant,
+// avant les `useLocalStorage` ci-dessous : sur le premier rendu (le seul qui
+// compte, leur état initial n'étant lu qu'une fois), la clé est donc déjà
+// migrée au moment où ils la lisent. Cette fonction n'est pas un hook (pas
+// d'appel à une API React) : l'appeler directement dans le corps du composant
+// ne viole pas les règles des hooks, et la reste des rendus suivants ne
+// coûte que quelques lectures `localStorage` (`newKey` déjà présente).
+function migrateLegacyStorageKey(oldKey: string, newKey: string) {
+  try {
+    if (window.localStorage.getItem(newKey) !== null) return
+    const legacy = window.localStorage.getItem(oldKey)
+    if (legacy === null) return
+    window.localStorage.setItem(newKey, legacy)
+    window.localStorage.removeItem(oldKey)
+  } catch {
+    // stockage indisponible : rien à migrer
+  }
+}
+
 export default function App() {
-  const [counters, setCounters] = useLocalStorage<Counter[]>('compteur.counters.v1', [])
+  migrateLegacyStorageKey('compteur.counters.v1', '+1.counters.v1')
+  migrateLegacyStorageKey('compteur.theme.v1', '+1.theme.v1')
+
+  const [counters, setCounters] = useLocalStorage<Counter[]>('+1.counters.v1', [])
   const [syncOpen, setSyncOpen] = useState(false)
   const [undo, setUndo] = useState<{ label: string; counters: Counter[] } | null>(null)
   const undoTimer = useRef<ReturnType<typeof setTimeout> | undefined>(undefined)
@@ -48,7 +72,7 @@ export default function App() {
   // au glisser-déposer pour les compteurs qu'on veut garder à portée de main.
   const sortedCounters = [...filteredCounters].sort((a, b) => Number(!!b.pinned) - Number(!!a.pinned))
 
-  const [themePreference, setThemePreference] = useLocalStorage<ThemePreference>('compteur.theme.v1', 'system')
+  const [themePreference, setThemePreference] = useLocalStorage<ThemePreference>('+1.theme.v1', 'system')
   const systemDark = useSystemDarkMode()
   const activeTheme = themePreference === 'system' ? (systemDark ? 'dark' : 'light') : themePreference
 
@@ -270,7 +294,7 @@ export default function App() {
       {!focusMode && (
         <>
           <header className="app-header">
-            <h1>Compteur</h1>
+            <h1>+1</h1>
             <div className="app-header-actions">
               <button
                 className="add-btn icon-btn"

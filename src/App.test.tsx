@@ -359,20 +359,58 @@ describe('App', () => {
   it('persiste les compteurs dans le localStorage', () => {
     render(<App />)
     fireEvent.click(screen.getByRole('button', { name: '+ Nouveau compteur' }))
-    const stored = JSON.parse(window.localStorage.getItem('compteur.counters.v1') ?? '[]')
+    const stored = JSON.parse(window.localStorage.getItem('+1.counters.v1') ?? '[]')
     expect(stored).toHaveLength(1)
     expect(stored[0].name).toBe('Compteur 1')
   })
 
   it('recharge les compteurs déjà stockés', () => {
-    window.localStorage.setItem('compteur.counters.v1', JSON.stringify([makeCounter({ name: 'Persisté' })]))
+    window.localStorage.setItem('+1.counters.v1', JSON.stringify([makeCounter({ name: 'Persisté' })]))
     render(<App />)
     expect(screen.getByText('Persisté')).toBeInTheDocument()
   })
 
+  describe('migration du stockage (renommage du projet en "+1")', () => {
+    it("migre les compteurs depuis l'ancienne clé et la nettoie", () => {
+      window.localStorage.setItem('compteur.counters.v1', JSON.stringify([makeCounter({ name: 'Historique' })]))
+      render(<App />)
+      expect(screen.getByText('Historique')).toBeInTheDocument()
+      expect(window.localStorage.getItem('compteur.counters.v1')).toBeNull()
+      expect(JSON.parse(window.localStorage.getItem('+1.counters.v1') ?? '[]')).toHaveLength(1)
+    })
+
+    it("ne migre pas si la nouvelle clé existe déjà (n'écrase pas des données plus récentes)", () => {
+      window.localStorage.setItem('compteur.counters.v1', JSON.stringify([makeCounter({ name: 'Ancien' })]))
+      window.localStorage.setItem('+1.counters.v1', JSON.stringify([makeCounter({ name: 'Actuel' })]))
+      render(<App />)
+      expect(screen.getByText('Actuel')).toBeInTheDocument()
+      expect(screen.queryByText('Ancien')).not.toBeInTheDocument()
+    })
+
+    it("migre la préférence de thème depuis l'ancienne clé et la nettoie", () => {
+      window.localStorage.setItem('compteur.theme.v1', JSON.stringify('dark'))
+      render(<App />)
+      expect(screen.getByRole('button', { name: 'Thème : Sombre' })).toBeInTheDocument()
+      expect(window.localStorage.getItem('compteur.theme.v1')).toBeNull()
+    })
+
+    it("ne fait rien si ni l'ancienne ni la nouvelle clé n'existent (premier lancement)", () => {
+      render(<App />)
+      expect(screen.getByText("Aucun compteur pour l'instant.")).toBeInTheDocument()
+    })
+
+    it("n'explose pas si le stockage est indisponible pendant la migration", () => {
+      const getItemSpy = vi.spyOn(window.localStorage.__proto__, 'getItem').mockImplementation(() => {
+        throw new Error('stockage indisponible')
+      })
+      expect(() => render(<App />)).not.toThrow()
+      getItemSpy.mockRestore()
+    })
+  })
+
   it("ne modifie que le compteur ciblé quand plusieurs compteurs existent", () => {
     window.localStorage.setItem(
-      'compteur.counters.v1',
+      '+1.counters.v1',
       JSON.stringify([makeCounter({ id: 'a', name: 'Un', count: 0 }), makeCounter({ id: 'b', name: 'Deux', count: 0 })])
     )
     render(<App />)
@@ -499,7 +537,7 @@ describe('App', () => {
     })
 
     it('fusionne les compteurs importés quand refusé et existants', async () => {
-      window.localStorage.setItem('compteur.counters.v1', JSON.stringify([makeCounter({ name: 'Déjà là' })]))
+      window.localStorage.setItem('+1.counters.v1', JSON.stringify([makeCounter({ name: 'Déjà là' })]))
       render(<App />)
       vi.spyOn(window, 'confirm').mockReturnValue(false)
       fireEvent.click(screen.getByRole('button', { name: 'Synchroniser' }))
@@ -546,7 +584,7 @@ describe('App', () => {
     })
 
     it('remplace les compteurs existants si confirmé', async () => {
-      window.localStorage.setItem('compteur.counters.v1', JSON.stringify([makeCounter({ name: 'Ancien' })]))
+      window.localStorage.setItem('+1.counters.v1', JSON.stringify([makeCounter({ name: 'Ancien' })]))
       vi.spyOn(window, 'confirm').mockReturnValue(true)
       const encoded = encodeCountersToParam([makeCounter({ name: 'Nouveau' })])
       window.history.pushState({}, '', `/?import=${encoded}`)
@@ -558,7 +596,7 @@ describe('App', () => {
     })
 
     it('ajoute à la suite des compteurs existants si non confirmé', () => {
-      window.localStorage.setItem('compteur.counters.v1', JSON.stringify([makeCounter({ name: 'Ancien' })]))
+      window.localStorage.setItem('+1.counters.v1', JSON.stringify([makeCounter({ name: 'Ancien' })]))
       vi.spyOn(window, 'confirm').mockReturnValue(false)
       const encoded = encodeCountersToParam([makeCounter({ name: 'Nouveau' })])
       window.history.pushState({}, '', `/?import=${encoded}`)
@@ -603,7 +641,7 @@ describe('App', () => {
     })
 
     it('aucun champ de recherche visible avant un clic sur le bouton', () => {
-      window.localStorage.setItem('compteur.counters.v1', JSON.stringify([makeCounter({ name: 'Un' })]))
+      window.localStorage.setItem('+1.counters.v1', JSON.stringify([makeCounter({ name: 'Un' })]))
       render(<App />)
       expect(screen.getByRole('button', { name: 'Rechercher' })).toBeInTheDocument()
       expect(screen.queryByPlaceholderText('Rechercher un compteur…')).not.toBeInTheDocument()
@@ -611,7 +649,7 @@ describe('App', () => {
 
     it('révèle le champ au clic et filtre les compteurs par nom', async () => {
       window.localStorage.setItem(
-        'compteur.counters.v1',
+        '+1.counters.v1',
         JSON.stringify([makeCounter({ id: 'a', name: 'Pompes' }), makeCounter({ id: 'b', name: 'Squats' })])
       )
       render(<App />)
@@ -625,7 +663,7 @@ describe('App', () => {
     })
 
     it("affiche un message dédié quand aucun compteur ne correspond", () => {
-      window.localStorage.setItem('compteur.counters.v1', JSON.stringify([makeCounter({ name: 'Pompes' })]))
+      window.localStorage.setItem('+1.counters.v1', JSON.stringify([makeCounter({ name: 'Pompes' })]))
       render(<App />)
       fireEvent.click(screen.getByRole('button', { name: 'Rechercher' }))
       fireEvent.change(screen.getByPlaceholderText('Rechercher un compteur…'), { target: { value: 'zzz' } })
@@ -635,7 +673,7 @@ describe('App', () => {
 
     it('ferme et réinitialise la recherche au clic sur la croix', () => {
       window.localStorage.setItem(
-        'compteur.counters.v1',
+        '+1.counters.v1',
         JSON.stringify([makeCounter({ id: 'a', name: 'Pompes' }), makeCounter({ id: 'b', name: 'Squats' })])
       )
       render(<App />)
@@ -649,7 +687,7 @@ describe('App', () => {
 
     it('ferme et réinitialise la recherche sur Échap', () => {
       window.localStorage.setItem(
-        'compteur.counters.v1',
+        '+1.counters.v1',
         JSON.stringify([makeCounter({ id: 'a', name: 'Pompes' }), makeCounter({ id: 'b', name: 'Squats' })])
       )
       render(<App />)
@@ -662,7 +700,7 @@ describe('App', () => {
     })
 
     it("ignore une touche sans effet dans le champ de recherche", () => {
-      window.localStorage.setItem('compteur.counters.v1', JSON.stringify([makeCounter({ name: 'Pompes' })]))
+      window.localStorage.setItem('+1.counters.v1', JSON.stringify([makeCounter({ name: 'Pompes' })]))
       render(<App />)
       fireEvent.click(screen.getByRole('button', { name: 'Rechercher' }))
       const input = screen.getByPlaceholderText('Rechercher un compteur…')
@@ -683,13 +721,13 @@ describe('App', () => {
     })
 
     it("ne montre le sélecteur qu'une fois un compteur archivé (pas de place perdue sinon)", () => {
-      window.localStorage.setItem('compteur.counters.v1', JSON.stringify([makeCounter()]))
+      window.localStorage.setItem('+1.counters.v1', JSON.stringify([makeCounter()]))
       render(<App />)
       expect(screen.queryByRole('tab', { name: /Actifs/ })).not.toBeInTheDocument()
     })
 
     it('affiche "Actifs" comme onglet actif par défaut une fois le sélecteur affiché', async () => {
-      window.localStorage.setItem('compteur.counters.v1', JSON.stringify([makeCounter({ name: 'À ranger' })]))
+      window.localStorage.setItem('+1.counters.v1', JSON.stringify([makeCounter({ name: 'À ranger' })]))
       render(<App />)
       archiveCounter('À ranger')
       await waitFor(() => expect(screen.getByRole('tab', { name: 'Actifs' })).toBeInTheDocument())
@@ -698,14 +736,14 @@ describe('App', () => {
     })
 
     it("masque un compteur archivé de l'onglet Actifs", async () => {
-      window.localStorage.setItem('compteur.counters.v1', JSON.stringify([makeCounter({ name: 'À ranger' })]))
+      window.localStorage.setItem('+1.counters.v1', JSON.stringify([makeCounter({ name: 'À ranger' })]))
       render(<App />)
       archiveCounter('À ranger')
       await waitFor(() => expect(screen.queryByText('À ranger')).not.toBeInTheDocument())
     })
 
     it("retrouve un compteur archivé via l'onglet Archivés", async () => {
-      window.localStorage.setItem('compteur.counters.v1', JSON.stringify([makeCounter({ name: 'À ranger' })]))
+      window.localStorage.setItem('+1.counters.v1', JSON.stringify([makeCounter({ name: 'À ranger' })]))
       render(<App />)
       archiveCounter('À ranger')
       await waitFor(() => expect(screen.queryByText('À ranger')).not.toBeInTheDocument())
@@ -715,14 +753,14 @@ describe('App', () => {
     })
 
     it("indique le nombre de compteurs archivés sur l'onglet", async () => {
-      window.localStorage.setItem('compteur.counters.v1', JSON.stringify([makeCounter({ name: 'À ranger' })]))
+      window.localStorage.setItem('+1.counters.v1', JSON.stringify([makeCounter({ name: 'À ranger' })]))
       render(<App />)
       archiveCounter('À ranger')
       await waitFor(() => expect(screen.getByRole('tab', { name: 'Archivés (1)' })).toBeInTheDocument())
     })
 
     it('désarchive un compteur et le fait réapparaître dans les actifs', async () => {
-      window.localStorage.setItem('compteur.counters.v1', JSON.stringify([makeCounter({ name: 'À ranger' })]))
+      window.localStorage.setItem('+1.counters.v1', JSON.stringify([makeCounter({ name: 'À ranger' })]))
       render(<App />)
       archiveCounter('À ranger')
       await waitFor(() => expect(screen.queryByText('À ranger')).not.toBeInTheDocument())
@@ -737,14 +775,14 @@ describe('App', () => {
     })
 
     it('affiche un message dédié quand tous les compteurs sont archivés', async () => {
-      window.localStorage.setItem('compteur.counters.v1', JSON.stringify([makeCounter({ name: 'Seul' })]))
+      window.localStorage.setItem('+1.counters.v1', JSON.stringify([makeCounter({ name: 'Seul' })]))
       render(<App />)
       archiveCounter('Seul')
       await waitFor(() => expect(screen.getByText('Tous tes compteurs sont archivés.')).toBeInTheDocument())
     })
 
     it("affiche un message dédié sur l'onglet Archivés une fois vidé (dernier compteur désarchivé)", async () => {
-      window.localStorage.setItem('compteur.counters.v1', JSON.stringify([makeCounter({ name: 'À ranger' })]))
+      window.localStorage.setItem('+1.counters.v1', JSON.stringify([makeCounter({ name: 'À ranger' })]))
       render(<App />)
       archiveCounter('À ranger')
       await waitFor(() => expect(screen.getByRole('tab', { name: 'Archivés (1)' })).toBeInTheDocument())
@@ -757,7 +795,7 @@ describe('App', () => {
 
     it("filtre par nom à l'intérieur de l'onglet Archivés", async () => {
       window.localStorage.setItem(
-        'compteur.counters.v1',
+        '+1.counters.v1',
         JSON.stringify([makeCounter({ id: 'a', name: 'Pompes' }), makeCounter({ id: 'b', name: 'Squats' })])
       )
       render(<App />)
@@ -773,7 +811,7 @@ describe('App', () => {
     })
 
     it('duplique un compteur archivé en une copie active (non archivée)', async () => {
-      window.localStorage.setItem('compteur.counters.v1', JSON.stringify([makeCounter({ name: 'Source' })]))
+      window.localStorage.setItem('+1.counters.v1', JSON.stringify([makeCounter({ name: 'Source' })]))
       render(<App />)
       archiveCounter('Source')
       await waitFor(() => expect(screen.getByText('Tous tes compteurs sont archivés.')).toBeInTheDocument())
@@ -787,7 +825,7 @@ describe('App', () => {
     })
 
     it("revient sur l'onglet Actifs à la création d'un compteur depuis l'onglet Archivés", async () => {
-      window.localStorage.setItem('compteur.counters.v1', JSON.stringify([makeCounter({ name: 'Existant' })]))
+      window.localStorage.setItem('+1.counters.v1', JSON.stringify([makeCounter({ name: 'Existant' })]))
       render(<App />)
       archiveCounter('Existant')
       await waitFor(() => expect(screen.getByRole('tab', { name: 'Archivés (1)' })).toBeInTheDocument())
@@ -800,7 +838,7 @@ describe('App', () => {
 
     it('désactive le glisser-déposer tant que des compteurs sont archivés (pour ne pas perdre les masqués)', async () => {
       window.localStorage.setItem(
-        'compteur.counters.v1',
+        '+1.counters.v1',
         JSON.stringify([makeCounter({ id: 'a', name: 'Un' }), makeCounter({ id: 'b', name: 'Deux' })])
       )
       render(<App />)
@@ -820,18 +858,18 @@ describe('App', () => {
       })
 
       it("enregistre la date d'archivage", async () => {
-        window.localStorage.setItem('compteur.counters.v1', JSON.stringify([makeCounter({ name: 'À ranger' })]))
+        window.localStorage.setItem('+1.counters.v1', JSON.stringify([makeCounter({ name: 'À ranger' })]))
         render(<App />)
         archiveCounter('À ranger')
         await waitFor(() => {
-          const stored = JSON.parse(window.localStorage.getItem('compteur.counters.v1') ?? '[]')
+          const stored = JSON.parse(window.localStorage.getItem('+1.counters.v1') ?? '[]')
           expect(stored[0].archivedAt).toBe(new Date(2026, 7, 10).getTime())
         })
       })
 
       it("efface la date d'archivage au désarchivage", async () => {
         window.localStorage.setItem(
-          'compteur.counters.v1',
+          '+1.counters.v1',
           JSON.stringify([
             makeCounter({ name: 'À ranger', archived: true, archivedAt: new Date(2026, 7, 5).getTime() }),
           ])
@@ -841,7 +879,7 @@ describe('App', () => {
         fireEvent.click(screen.getByRole('button', { name: 'Actions du compteur' }))
         fireEvent.click(screen.getByText('📤 Désarchiver ce compteur'))
         await waitFor(() => {
-          const stored = JSON.parse(window.localStorage.getItem('compteur.counters.v1') ?? '[]')
+          const stored = JSON.parse(window.localStorage.getItem('+1.counters.v1') ?? '[]')
           expect(stored[0].archivedAt).toBeUndefined()
         })
       })
@@ -858,7 +896,7 @@ describe('App', () => {
 
     it('fait remonter un compteur épinglé en tête de liste, devant les compteurs non épinglés', async () => {
       window.localStorage.setItem(
-        'compteur.counters.v1',
+        '+1.counters.v1',
         JSON.stringify([
           makeCounter({ id: 'a', name: 'Un' }),
           makeCounter({ id: 'b', name: 'Deux' }),
@@ -872,7 +910,7 @@ describe('App', () => {
 
     it('détache un compteur et le laisse à sa position de tri normale', async () => {
       window.localStorage.setItem(
-        'compteur.counters.v1',
+        '+1.counters.v1',
         JSON.stringify([makeCounter({ id: 'a', name: 'Un' }), makeCounter({ id: 'b', name: 'Deux', pinned: true })])
       )
       render(<App />)
@@ -899,40 +937,40 @@ describe('App', () => {
     })
 
     it('masque l\'en-tête et affiche le bouton de sortie au clic', () => {
-      window.localStorage.setItem('compteur.counters.v1', JSON.stringify([makeCounter()]))
+      window.localStorage.setItem('+1.counters.v1', JSON.stringify([makeCounter()]))
       render(<App />)
       fireEvent.click(screen.getByRole('button', { name: 'Mode plein écran' }))
-      expect(screen.queryByText('Compteur')).not.toBeInTheDocument()
+      expect(screen.queryByRole('heading', { name: '+1' })).not.toBeInTheDocument()
       expect(screen.getByRole('button', { name: 'Quitter le mode plein écran' })).toBeInTheDocument()
     })
 
     it('quitte le mode plein écran au clic sur le bouton de sortie', () => {
-      window.localStorage.setItem('compteur.counters.v1', JSON.stringify([makeCounter()]))
+      window.localStorage.setItem('+1.counters.v1', JSON.stringify([makeCounter()]))
       render(<App />)
       fireEvent.click(screen.getByRole('button', { name: 'Mode plein écran' }))
       fireEvent.click(screen.getByRole('button', { name: 'Quitter le mode plein écran' }))
-      expect(screen.getByText('Compteur')).toBeInTheDocument()
+      expect(screen.getByRole('heading', { name: '+1' })).toBeInTheDocument()
       expect(screen.queryByRole('button', { name: 'Quitter le mode plein écran' })).not.toBeInTheDocument()
     })
 
     it('quitte le mode plein écran avec Échap', () => {
-      window.localStorage.setItem('compteur.counters.v1', JSON.stringify([makeCounter()]))
+      window.localStorage.setItem('+1.counters.v1', JSON.stringify([makeCounter()]))
       render(<App />)
       fireEvent.click(screen.getByRole('button', { name: 'Mode plein écran' }))
       fireEvent.keyDown(document, { key: 'Escape' })
-      expect(screen.getByText('Compteur')).toBeInTheDocument()
+      expect(screen.getByRole('heading', { name: '+1' })).toBeInTheDocument()
     })
 
     it('ignore une autre touche que Échap en mode plein écran', () => {
-      window.localStorage.setItem('compteur.counters.v1', JSON.stringify([makeCounter()]))
+      window.localStorage.setItem('+1.counters.v1', JSON.stringify([makeCounter()]))
       render(<App />)
       fireEvent.click(screen.getByRole('button', { name: 'Mode plein écran' }))
       fireEvent.keyDown(document, { key: 'a' })
-      expect(screen.queryByText('Compteur')).not.toBeInTheDocument()
+      expect(screen.queryByRole('heading', { name: '+1' })).not.toBeInTheDocument()
     })
 
     it("demande le plein écran natif du navigateur à l'activation, et ignore silencieusement un refus", async () => {
-      window.localStorage.setItem('compteur.counters.v1', JSON.stringify([makeCounter()]))
+      window.localStorage.setItem('+1.counters.v1', JSON.stringify([makeCounter()]))
       const requestFullscreen = vi.fn().mockRejectedValue(new Error('refusé'))
       document.documentElement.requestFullscreen = requestFullscreen
       render(<App />)
@@ -940,13 +978,13 @@ describe('App', () => {
         fireEvent.click(screen.getByRole('button', { name: 'Mode plein écran' }))
       })
       expect(requestFullscreen).toHaveBeenCalledTimes(1)
-      expect(screen.queryByText('Compteur')).not.toBeInTheDocument()
+      expect(screen.queryByRole('heading', { name: '+1' })).not.toBeInTheDocument()
       // @ts-expect-error nettoyage du stub posé pour ce test
       delete document.documentElement.requestFullscreen
     })
 
     it('quitte le plein écran natif du navigateur à la désactivation, et ignore silencieusement un refus', async () => {
-      window.localStorage.setItem('compteur.counters.v1', JSON.stringify([makeCounter()]))
+      window.localStorage.setItem('+1.counters.v1', JSON.stringify([makeCounter()]))
       const exitFullscreen = vi.fn().mockRejectedValue(new Error('refusé'))
       document.exitFullscreen = exitFullscreen
       render(<App />)
@@ -961,21 +999,21 @@ describe('App', () => {
     })
 
     it("resynchronise l'état si le plein écran natif est quitté autrement que par notre bouton", () => {
-      window.localStorage.setItem('compteur.counters.v1', JSON.stringify([makeCounter()]))
+      window.localStorage.setItem('+1.counters.v1', JSON.stringify([makeCounter()]))
       render(<App />)
       fireEvent.click(screen.getByRole('button', { name: 'Mode plein écran' }))
       stubFullscreenElement(null)
       fireEvent(document, new Event('fullscreenchange'))
-      expect(screen.getByText('Compteur')).toBeInTheDocument()
+      expect(screen.getByRole('heading', { name: '+1' })).toBeInTheDocument()
     })
 
     it('ignore un changement de plein écran natif tant que celui-ci reste actif', () => {
-      window.localStorage.setItem('compteur.counters.v1', JSON.stringify([makeCounter()]))
+      window.localStorage.setItem('+1.counters.v1', JSON.stringify([makeCounter()]))
       render(<App />)
       fireEvent.click(screen.getByRole('button', { name: 'Mode plein écran' }))
       stubFullscreenElement(document.body)
       fireEvent(document, new Event('fullscreenchange'))
-      expect(screen.queryByText('Compteur')).not.toBeInTheDocument()
+      expect(screen.queryByRole('heading', { name: '+1' })).not.toBeInTheDocument()
     })
   })
 })

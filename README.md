@@ -1,4 +1,4 @@
-# Compteur
+# +1
 
 Application web (PWA) pour gérer plusieurs compteurs indépendants, à installer sur
 téléphone ou tablette et utiliser 100% en local (aucun serveur, aucune donnée envoyée
