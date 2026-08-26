@@ -81,6 +81,15 @@ test.describe('Parcours de base', () => {
     await expect(page.getByText('Mon compteur', { exact: true })).toBeVisible()
   })
 
+  test('ouvre directement le champ de nom en édition à la création', async ({ page }) => {
+    await page.getByRole('button', { name: 'Créer mon premier compteur' }).click()
+    const input = page.locator('.counter-name-input')
+    await expect(input).toBeFocused()
+    await input.fill('Dès la création')
+    await input.press('Enter')
+    await expect(page.getByText('Dès la création', { exact: true })).toBeVisible()
+  })
+
   test('renomme un compteur depuis la modale Personnalisation', async ({ page }) => {
     await addCounter(page)
     await page.getByRole('button', { name: 'Personnaliser le compteur' }).click()

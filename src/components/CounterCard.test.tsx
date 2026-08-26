@@ -376,6 +376,17 @@ describe('CounterCard', () => {
   })
 
   describe('renommage', () => {
+    it("ouvre directement le champ de nom en édition si autoEdit est activé", () => {
+      renderCard({ name: 'Nouveau' }, { autoEdit: true })
+      expect(screen.getByDisplayValue('Nouveau')).toBeInTheDocument()
+    })
+
+    it("n'ouvre pas le champ de nom par défaut", () => {
+      renderCard({ name: 'Existant' })
+      expect(screen.queryByDisplayValue('Existant')).not.toBeInTheDocument()
+      expect(screen.getByText('Existant')).toBeInTheDocument()
+    })
+
     it('ouvre un champ pré-rempli au clic sur le nom', () => {
       renderCard({ name: 'Avant' })
       fireEvent.click(screen.getByText('Avant'))

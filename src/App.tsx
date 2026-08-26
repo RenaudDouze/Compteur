@@ -45,6 +45,16 @@ export default function App() {
   migrateLegacyStorageKey('compteur.theme.v1', '+1.theme.v1')
 
   const [counters, setCounters] = useLocalStorage<Counter[]>('+1.counters.v1', [])
+  // Id du compteur qui vient d'être créé, pour ouvrir directement son champ
+  // de nom en édition (voir `addCounter`). Remis à `null` juste après le
+  // montage de la carte concernée : sans ça, un futur remontage de la même
+  // carte (ex: réordonnée hors puis de nouveau dans la liste filtrée)
+  // rouvrirait l'édition de façon inattendue.
+  const [autoEditId, setAutoEditId] = useState<string | null>(null)
+  useEffect(() => {
+    setAutoEditId(null)
+  }, [autoEditId])
+
   const [syncOpen, setSyncOpen] = useState(false)
   const [undo, setUndo] = useState<{ label: string; counters: Counter[] } | null>(null)
   const undoTimer = useRef<ReturnType<typeof setTimeout> | undefined>(undefined)
@@ -174,6 +184,7 @@ export default function App() {
     // Sinon le nouveau compteur atterrit hors champ si on était sur l'onglet
     // Archivés, sans indice visible pour l'utilisateur.
     setArchiveView('active')
+    setAutoEditId(newCounter.id)
   }
 
   // Action rapide depuis un raccourci de l'app installée (?action=new|sync),
@@ -406,6 +417,7 @@ export default function App() {
                 counter={counter}
                 fill={filteredCounters.length <= 2}
                 draggable={searchQuery.trim() === '' && filteredCounters.length === counters.length}
+                autoEdit={counter.id === autoEditId}
                 colors={COLORS}
                 onChange={(delta) => updateCount(counter.id, delta)}
                 onSetCount={(count) => setCount(counter.id, count)}

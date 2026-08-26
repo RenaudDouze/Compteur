@@ -36,6 +36,10 @@ interface CounterCardProps {
   // Reorder.Group ne couvrirait alors plus tous les compteurs, et réordonner
   // remplacerait silencieusement la liste complète par ce sous-ensemble.
   draggable?: boolean
+  // Ouvre directement le champ de nom en édition : pour le compteur qui
+  // vient d'être créé, dont le nom par défaut ("Compteur N") n'est sinon pas
+  // évident à renommer sans découvrir qu'on peut toucher le titre.
+  autoEdit?: boolean
   colors: string[]
   onChange: (delta: number) => void
   onSetCount: (count: number) => void
@@ -57,6 +61,7 @@ export function CounterCard({
   counter,
   fill = false,
   draggable = true,
+  autoEdit = false,
   colors,
   onChange,
   onSetCount,
@@ -73,7 +78,7 @@ export function CounterCard({
   onTogglePin,
   onDelete,
 }: CounterCardProps) {
-  const [editing, setEditing] = useState(false)
+  const [editing, setEditing] = useState(autoEdit)
   const [draftName, setDraftName] = useState(counter.name)
   // 4 modales distinctes : la personnalisation de l'apparence (couleur,
   // style, image de fond), le comportement du compteur (pas d'incrément,
@@ -448,6 +453,7 @@ export function CounterCard({
           value={draftName}
           onClick={(e) => e.stopPropagation()}
           onPointerDown={(e) => e.stopPropagation()}
+          onFocus={(e) => e.currentTarget.select()}
           onChange={(e) => setDraftName(e.target.value)}
           onBlur={commitName}
           onKeyDown={(e) => {

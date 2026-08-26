@@ -40,14 +40,14 @@ describe('App', () => {
   it('crée un premier compteur depuis l\'état vide', () => {
     render(<App />)
     fireEvent.click(screen.getByRole('button', { name: 'Créer mon premier compteur' }))
-    expect(screen.getByText('Compteur 1')).toBeInTheDocument()
+    expect(screen.getByDisplayValue('Compteur 1')).toBeInTheDocument()
     expect(screen.queryByText("Aucun compteur pour l'instant.")).not.toBeInTheDocument()
   })
 
   it('ajoute un compteur depuis le bouton d\'en-tête', () => {
     render(<App />)
     fireEvent.click(screen.getByRole('button', { name: '+ Nouveau compteur' }))
-    expect(screen.getByText('Compteur 1')).toBeInTheDocument()
+    expect(screen.getByDisplayValue('Compteur 1')).toBeInTheDocument()
   })
 
   it('numérote les compteurs successifs', () => {
@@ -55,8 +55,10 @@ describe('App', () => {
     const addBtn = screen.getByRole('button', { name: '+ Nouveau compteur' })
     fireEvent.click(addBtn)
     fireEvent.click(addBtn)
+    // Le focus du champ de nom du 2ᵈ compteur (autoFocus) fait perdre le
+    // focus à celui du 1er, ce qui le valide et referme son édition.
     expect(screen.getByText('Compteur 1')).toBeInTheDocument()
-    expect(screen.getByText('Compteur 2')).toBeInTheDocument()
+    expect(screen.getByDisplayValue('Compteur 2')).toBeInTheDocument()
   })
 
   it('utilise la classe --solo pour un seul compteur', () => {
@@ -102,11 +104,24 @@ describe('App', () => {
   it('renomme un compteur', () => {
     render(<App />)
     fireEvent.click(screen.getByRole('button', { name: '+ Nouveau compteur' }))
+    // Le champ de nom s'ouvre déjà en édition à la création (voir plus bas) :
+    // on le referme d'abord pour tester le renommage ultérieur au clic sur
+    // le titre, l'autre façon d'y accéder.
+    fireEvent.keyDown(screen.getByDisplayValue('Compteur 1'), { key: 'Escape' })
     fireEvent.click(screen.getByText('Compteur 1'))
     const input = screen.getByDisplayValue('Compteur 1')
     fireEvent.change(input, { target: { value: 'Renommé' } })
     fireEvent.keyDown(input, { key: 'Enter' })
     expect(screen.getByText('Renommé')).toBeInTheDocument()
+  })
+
+  it('ouvre directement le champ de nom en édition à la création', () => {
+    render(<App />)
+    fireEvent.click(screen.getByRole('button', { name: '+ Nouveau compteur' }))
+    const input = screen.getByDisplayValue('Compteur 1')
+    fireEvent.change(input, { target: { value: 'Immédiat' } })
+    fireEvent.keyDown(input, { key: 'Enter' })
+    expect(screen.getByText('Immédiat')).toBeInTheDocument()
   })
 
   it('définit une probabilité', () => {
@@ -211,7 +226,7 @@ describe('App', () => {
     fireEvent.click(screen.getByRole('button', { name: 'Actions' }))
     fireEvent.click(screen.getByRole('button', { name: '⧉ Dupliquer ce compteur' }))
 
-    expect(screen.getByText('Compteur 1')).toBeInTheDocument()
+    expect(screen.getByDisplayValue('Compteur 1')).toBeInTheDocument()
     expect(screen.getByText('Compteur 1 (copie)')).toBeInTheDocument()
     expect(document.querySelectorAll('.counter-value--flap')).toHaveLength(2)
     expect(document.querySelectorAll('.counter-value')[1]).toHaveTextContent('0')
@@ -234,7 +249,6 @@ describe('App', () => {
     it("propose d'annuler après une suppression et restaure le compteur", () => {
       render(<App />)
       fireEvent.click(screen.getByRole('button', { name: '+ Nouveau compteur' }))
-      fireEvent.click(screen.getByText('Compteur 1'))
       fireEvent.change(screen.getByDisplayValue('Compteur 1'), { target: { value: 'À restaurer' } })
       fireEvent.keyDown(screen.getByDisplayValue('À restaurer'), { key: 'Enter' })
 
@@ -615,7 +629,7 @@ describe('App', () => {
     it('?action=new crée un compteur et retire le paramètre de l\'URL', () => {
       window.history.pushState({}, '', '/?action=new')
       render(<App />)
-      expect(screen.getByText('Compteur 1')).toBeInTheDocument()
+      expect(screen.getByDisplayValue('Compteur 1')).toBeInTheDocument()
       expect(window.location.search).toBe('')
     })
 
@@ -833,7 +847,7 @@ describe('App', () => {
       fireEvent.click(screen.getByRole('tab', { name: 'Archivés (1)' }))
       fireEvent.click(screen.getByRole('button', { name: '+ Nouveau compteur' }))
       expect(screen.getByRole('tab', { name: 'Actifs' })).toHaveAttribute('aria-selected', 'true')
-      expect(screen.getByText('Compteur 2')).toBeInTheDocument()
+      expect(screen.getByDisplayValue('Compteur 2')).toBeInTheDocument()
     })
 
     it('désactive le glisser-déposer tant que des compteurs sont archivés (pour ne pas perdre les masqués)', async () => {
