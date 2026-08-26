@@ -1,7 +1,7 @@
 /** Identifie l'une des 4 modales de personnalisation d'un compteur. */
 export type PanelKind = 'personnalisation' | 'comportement' | 'historique' | 'actions'
 
-const PANEL_ORDER: PanelKind[] = ['personnalisation', 'comportement', 'historique', 'actions']
+const PANEL_ORDER: PanelKind[] = ['comportement', 'personnalisation', 'historique', 'actions']
 
 const PANEL_LABELS: Record<PanelKind, string> = {
   personnalisation: 'Personnalisation',
