@@ -81,6 +81,24 @@ test.describe('Parcours de base', () => {
     await expect(page.getByText('Mon compteur', { exact: true })).toBeVisible()
   })
 
+  test('renomme un compteur depuis la modale Personnalisation', async ({ page }) => {
+    await addCounter(page)
+    await page.getByRole('button', { name: 'Personnaliser le compteur' }).click()
+    const input = page.locator('.modal-panel input').first()
+    await expect(input).toHaveValue('Compteur 1')
+    await input.fill('Depuis la modale')
+    await input.press('Enter')
+    await page.getByRole('button', { name: 'Fermer' }).click()
+    await expect(page.getByText('Depuis la modale', { exact: true })).toBeVisible()
+  })
+
+  test("affiche le bouton Comportement avant Personnalisation dans la rangée d'icônes", async ({ page }) => {
+    await addCounter(page)
+    const icons = page.locator('.counter-options-row button:not(.counter-drag-handle)')
+    await expect(icons.nth(0)).toHaveAttribute('aria-label', 'Régler le comportement du compteur')
+    await expect(icons.nth(1)).toHaveAttribute('aria-label', 'Personnaliser le compteur')
+  })
+
   test('supprime un compteur après double confirmation', async ({ page }) => {
     await addCounter(page)
     await page.getByRole('button', { name: 'Actions du compteur' }).click()

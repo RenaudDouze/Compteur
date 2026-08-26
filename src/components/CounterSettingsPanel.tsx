@@ -11,6 +11,7 @@ interface CounterSettingsPanelProps {
   counter: Counter
   colors: string[]
   onClose: () => void
+  onRename: (name: string) => void
   onSetBackgroundImage: (url: string | undefined) => void
   onSetColor: (color: string) => void
   onSetDisplayStyle: (style: DisplayStyle | undefined) => void
@@ -21,13 +22,21 @@ export function CounterSettingsPanel({
   counter,
   colors,
   onClose,
+  onRename,
   onSetBackgroundImage,
   onSetColor,
   onSetDisplayStyle,
   onNavigate,
 }: CounterSettingsPanelProps) {
+  const [draftName, setDraftName] = useState(counter.name)
   const [draftBackground, setDraftBackground] = useState(counter.backgroundImageUrl ?? '')
   const [backgroundError, setBackgroundError] = useState<string | null>(null)
+
+  const commitName = () => {
+    const trimmed = draftName.trim() || 'Sans nom'
+    setDraftName(trimmed)
+    onRename(trimmed)
+  }
 
   const commitBackground = () => {
     const trimmed = draftBackground.trim()
@@ -58,6 +67,22 @@ export function CounterSettingsPanel({
           🔒 Compteur archivé : lecture seule. Désarchive-le pour le modifier.
         </p>
       )}
+
+      <section className="modal-section">
+        <h3>Nom</h3>
+        <input
+          type="text"
+          className="modal-input"
+          disabled={locked}
+          value={draftName}
+          maxLength={40}
+          onChange={(e) => setDraftName(e.target.value)}
+          onBlur={commitName}
+          onKeyDown={(e) => {
+            if (e.key === 'Enter') commitName()
+          }}
+        />
+      </section>
 
       <section className="modal-section">
         <h3>Couleur</h3>

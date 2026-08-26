@@ -24,6 +24,7 @@ function renderPanel(
   const handlers = {
     colors: TEST_COLORS,
     onClose: vi.fn(),
+    onRename: vi.fn(),
     onSetBackgroundImage: vi.fn(),
     onSetColor: vi.fn(),
     onSetDisplayStyle: vi.fn(),
@@ -62,6 +63,46 @@ describe('CounterSettingsPanel', () => {
     const { onNavigate } = renderPanel()
     fireEvent.click(screen.getByRole('button', { name: 'Actions' }))
     expect(onNavigate).toHaveBeenCalledWith('actions')
+  })
+
+  describe('nom', () => {
+    it('affiche le nom actuel dans le champ', () => {
+      renderPanel({ name: 'Mon compteur' })
+      expect(screen.getByDisplayValue('Mon compteur')).toBeInTheDocument()
+    })
+
+    it('renomme au blur', () => {
+      const { onRename } = renderPanel({ name: 'Ancien' })
+      const input = screen.getByDisplayValue('Ancien')
+      fireEvent.change(input, { target: { value: 'Nouveau' } })
+      fireEvent.blur(input)
+      expect(onRename).toHaveBeenCalledWith('Nouveau')
+    })
+
+    it('renomme sur Entrée', () => {
+      const { onRename } = renderPanel({ name: 'Ancien' })
+      const input = screen.getByDisplayValue('Ancien')
+      fireEvent.change(input, { target: { value: 'Nouveau' } })
+      fireEvent.keyDown(input, { key: 'Enter' })
+      expect(onRename).toHaveBeenCalledWith('Nouveau')
+    })
+
+    it('ignore une autre touche que Entrée', () => {
+      const { onRename } = renderPanel({ name: 'Ancien' })
+      const input = screen.getByDisplayValue('Ancien')
+      fireEvent.change(input, { target: { value: 'Nouveau' } })
+      fireEvent.keyDown(input, { key: 'a' })
+      expect(onRename).not.toHaveBeenCalled()
+    })
+
+    it('remplace un nom vide (ou uniquement des espaces) par "Sans nom"', () => {
+      const { onRename } = renderPanel({ name: 'Ancien' })
+      const input = screen.getByDisplayValue('Ancien')
+      fireEvent.change(input, { target: { value: '   ' } })
+      fireEvent.blur(input)
+      expect(onRename).toHaveBeenCalledWith('Sans nom')
+      expect(screen.getByDisplayValue('Sans nom')).toBeInTheDocument()
+    })
   })
 
   describe('couleur', () => {
@@ -238,6 +279,11 @@ describe('CounterSettingsPanel', () => {
     it("n'affiche pas le bandeau pour un compteur actif", () => {
       renderPanel({ archived: false })
       expect(screen.queryByText(/Compteur archivé : lecture seule/)).not.toBeInTheDocument()
+    })
+
+    it('désactive le champ de nom', () => {
+      renderPanel({ archived: true, name: 'Figé' })
+      expect(screen.getByDisplayValue('Figé')).toBeDisabled()
     })
 
     it('désactive les options de couleur', () => {

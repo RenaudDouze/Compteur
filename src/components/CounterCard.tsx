@@ -389,19 +389,6 @@ export function CounterCard({
         )}
 
         <button
-          className="counter-settings-btn"
-          onClick={(e) => {
-            e.stopPropagation()
-            setOpenPanel('personnalisation')
-          }}
-          onPointerDown={(e) => e.stopPropagation()}
-          aria-label="Personnaliser le compteur"
-          title="Couleur, style d'affichage, image de fond"
-        >
-          ⚙
-        </button>
-
-        <button
           className="counter-behavior-btn"
           onClick={(e) => {
             e.stopPropagation()
@@ -412,6 +399,19 @@ export function CounterCard({
           title="Pas d'incrément, objectif, probabilité, date de début, partage, duplication"
         >
           ±
+        </button>
+
+        <button
+          className="counter-settings-btn"
+          onClick={(e) => {
+            e.stopPropagation()
+            setOpenPanel('personnalisation')
+          }}
+          onPointerDown={(e) => e.stopPropagation()}
+          aria-label="Personnaliser le compteur"
+          title="Nom, couleur, style d'affichage, image de fond"
+        >
+          ⚙
         </button>
 
         <button
@@ -612,6 +612,7 @@ export function CounterCard({
           counter={counter}
           colors={colors}
           onClose={() => setOpenPanel(null)}
+          onRename={onRename}
           onSetBackgroundImage={onSetBackgroundImage}
           onSetColor={onSetColor}
           onSetDisplayStyle={onSetDisplayStyle}
