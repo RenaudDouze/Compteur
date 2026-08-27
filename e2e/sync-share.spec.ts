@@ -34,7 +34,7 @@ test.describe('Synchronisation et partage', () => {
     const downloadPromise = page.waitForEvent('download')
     await page.getByRole('button', { name: 'Exporter' }).click()
     const download = await downloadPromise
-    expect(download.suggestedFilename()).toMatch(/^compteur-sauvegarde-\d{4}-\d{2}-\d{2}\.json$/)
+    expect(download.suggestedFilename()).toMatch(/^\+1-sauvegarde-\d{4}-\d{2}-\d{2}\.json$/)
 
     const path = await download.path()
     const fs = await import('fs')
