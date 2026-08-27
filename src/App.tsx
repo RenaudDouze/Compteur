@@ -1,15 +1,18 @@
-import { useEffect, useMemo, useRef, useState } from 'react'
+import { lazy, Suspense, useEffect, useMemo, useRef, useState } from 'react'
 import { AnimatePresence, Reorder } from 'framer-motion'
 import { useLocalStorage } from './hooks/useLocalStorage'
 import { useSystemDarkMode } from './hooks/useSystemDarkMode'
 import { CounterCard } from './components/CounterCard'
-import { SyncPanel } from './components/SyncPanel'
 import { decodeCountersFromParam } from './sync'
 import { appendHistoryPoint } from './history'
 import { makeId } from './id'
 import { COLORS, pickColor } from './colors'
 import type { Counter, DisplayStyle } from './types'
 import './App.css'
+
+// Chargé à la demande : n'entre dans le bundle initial que si le panneau de
+// synchronisation est effectivement ouvert (embarque la dépendance QRCode).
+const SyncPanel = lazy(() => import('./components/SyncPanel').then((m) => ({ default: m.SyncPanel })))
 
 const UNDO_TIMEOUT_MS = 5000
 
@@ -432,7 +435,9 @@ export default function App() {
       )}
 
       {syncOpen && (
-        <SyncPanel counters={counters} onClose={() => setSyncOpen(false)} onImport={handleImport} />
+        <Suspense fallback={null}>
+          <SyncPanel counters={counters} onClose={() => setSyncOpen(false)} onImport={handleImport} />
+        </Suspense>
       )}
 
       {undo && (

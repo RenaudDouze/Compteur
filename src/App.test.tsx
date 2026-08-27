@@ -532,7 +532,9 @@ describe('App', () => {
     it("s'ouvre et se ferme", async () => {
       render(<App />)
       fireEvent.click(screen.getByRole('button', { name: 'Synchroniser' }))
-      expect(screen.getByText('Synchroniser mes compteurs')).toBeInTheDocument()
+      // Le panneau est chargé à la demande (React.lazy) : son apparition est
+      // donc asynchrone, contrairement au reste de l'interface.
+      expect(await screen.findByText('Synchroniser mes compteurs')).toBeInTheDocument()
       fireEvent.click(screen.getByRole('button', { name: 'Fermer' }))
       expect(screen.queryByText('Synchroniser mes compteurs')).not.toBeInTheDocument()
     })
@@ -540,6 +542,7 @@ describe('App', () => {
     it('importe des compteurs partagés (remplacement quand la liste est vide)', async () => {
       render(<App />)
       fireEvent.click(screen.getByRole('button', { name: 'Synchroniser' }))
+      await screen.findByText('Synchroniser mes compteurs')
       const input = document.querySelector('input[type="file"]') as HTMLInputElement
       const file = new File([JSON.stringify([{ name: 'Depuis fichier', count: 4 }])], 'backup.json', {
         type: 'application/json',
@@ -555,6 +558,7 @@ describe('App', () => {
       render(<App />)
       vi.spyOn(window, 'confirm').mockReturnValue(false)
       fireEvent.click(screen.getByRole('button', { name: 'Synchroniser' }))
+      await screen.findByText('Synchroniser mes compteurs')
       const input = document.querySelector('input[type="file"]') as HTMLInputElement
       const file = new File([JSON.stringify([{ name: 'Ajouté', count: 2 }])], 'backup.json', {
         type: 'application/json',
@@ -633,10 +637,10 @@ describe('App', () => {
       expect(window.location.search).toBe('')
     })
 
-    it('?action=sync ouvre le panneau de synchronisation et retire le paramètre de l\'URL', () => {
+    it('?action=sync ouvre le panneau de synchronisation et retire le paramètre de l\'URL', async () => {
       window.history.pushState({}, '', '/?action=sync')
       render(<App />)
-      expect(screen.getByText('Synchroniser mes compteurs')).toBeInTheDocument()
+      expect(await screen.findByText('Synchroniser mes compteurs')).toBeInTheDocument()
       expect(window.location.search).toBe('')
     })
 
