@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from 'react'
+import { useEffect, useMemo, useRef, useState } from 'react'
 import { AnimatePresence, Reorder } from 'framer-motion'
 import { useLocalStorage } from './hooks/useLocalStorage'
 import { useSystemDarkMode } from './hooks/useSystemDarkMode'
@@ -73,14 +73,19 @@ export default function App() {
   // Bascule l'ensemble de la liste (archivés masqués par défaut) ; la
   // recherche filtre ensuite par nom à l'intérieur de la vue active.
   const [archiveView, setArchiveView] = useState<'active' | 'archived'>('active')
-  const archivedCount = counters.filter((c) => c.archived).length
-  const filteredCounters = counters.filter(
-    (c) => (archiveView === 'archived' ? !!c.archived : !c.archived) && matchesSearch(c)
+  const archivedCount = useMemo(() => counters.filter((c) => c.archived).length, [counters])
+  const filteredCounters = useMemo(
+    () => counters.filter((c) => (archiveView === 'archived' ? !!c.archived : !c.archived) && matchesSearch(c)),
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    [counters, archiveView, searchQuery]
   )
   // Fait remonter les compteurs épinglés en tête d'affichage, sans toucher à
   // leur ordre de tri manuel entre eux (tri stable) : une alternative rapide
   // au glisser-déposer pour les compteurs qu'on veut garder à portée de main.
-  const sortedCounters = [...filteredCounters].sort((a, b) => Number(!!b.pinned) - Number(!!a.pinned))
+  const sortedCounters = useMemo(
+    () => [...filteredCounters].sort((a, b) => Number(!!b.pinned) - Number(!!a.pinned)),
+    [filteredCounters]
+  )
 
   const [themePreference, setThemePreference] = useLocalStorage<ThemePreference>('+1.theme.v1', 'system')
   const systemDark = useSystemDarkMode()
@@ -203,6 +208,15 @@ export default function App() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [])
 
+  // Applique un patch de champs à un seul compteur, identifié par son id.
+  // Point d'entrée commun à tous les réglages simples (nom, couleur, pas,
+  // objectif...) qui remplacent juste un ou plusieurs champs sans logique
+  // additionnelle (contrairement à updateCount/setCount, qui tiennent aussi
+  // l'historique et l'undo à jour).
+  const updateCounter = (id: string, patch: Partial<Counter>) => {
+    setCounters((prev) => prev.map((c) => (c.id === id ? { ...c, ...patch } : c)))
+  }
+
   const updateCount = (id: string, delta: number) => {
     setCounters((prev) =>
       prev.map((c) =>
@@ -219,37 +233,15 @@ export default function App() {
     )
   }
 
-  const renameCounter = (id: string, name: string) => {
-    setCounters((prev) => prev.map((c) => (c.id === id ? { ...c, name } : c)))
-  }
-
-  const setOdds = (id: string, oddsDenominator: number | undefined) => {
-    setCounters((prev) => prev.map((c) => (c.id === id ? { ...c, oddsDenominator } : c)))
-  }
-
-  const setTarget = (id: string, target: number | undefined) => {
-    setCounters((prev) => prev.map((c) => (c.id === id ? { ...c, target } : c)))
-  }
-
-  const setStartDate = (id: string, startDate: string | undefined) => {
-    setCounters((prev) => prev.map((c) => (c.id === id ? { ...c, startDate } : c)))
-  }
-
-  const setBackgroundImage = (id: string, backgroundImageUrl: string | undefined) => {
-    setCounters((prev) => prev.map((c) => (c.id === id ? { ...c, backgroundImageUrl } : c)))
-  }
-
-  const setColor = (id: string, color: string) => {
-    setCounters((prev) => prev.map((c) => (c.id === id ? { ...c, color } : c)))
-  }
-
-  const setStep = (id: string, step: number | undefined) => {
-    setCounters((prev) => prev.map((c) => (c.id === id ? { ...c, step } : c)))
-  }
-
-  const setDisplayStyle = (id: string, displayStyle: DisplayStyle | undefined) => {
-    setCounters((prev) => prev.map((c) => (c.id === id ? { ...c, displayStyle } : c)))
-  }
+  const renameCounter = (id: string, name: string) => updateCounter(id, { name })
+  const setOdds = (id: string, oddsDenominator: number | undefined) => updateCounter(id, { oddsDenominator })
+  const setTarget = (id: string, target: number | undefined) => updateCounter(id, { target })
+  const setStartDate = (id: string, startDate: string | undefined) => updateCounter(id, { startDate })
+  const setBackgroundImage = (id: string, backgroundImageUrl: string | undefined) =>
+    updateCounter(id, { backgroundImageUrl })
+  const setColor = (id: string, color: string) => updateCounter(id, { color })
+  const setStep = (id: string, step: number | undefined) => updateCounter(id, { step })
+  const setDisplayStyle = (id: string, displayStyle: DisplayStyle | undefined) => updateCounter(id, { displayStyle })
 
   const deleteCounter = (id: string) => {
     const target = counters.find((c) => c.id === id)!
