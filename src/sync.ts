@@ -17,7 +17,7 @@ function triggerDownload(blob: Blob, filename: string) {
 export function downloadBackup(counters: Counter[]) {
   const blob = new Blob([JSON.stringify(counters, null, 2)], { type: 'application/json' })
   const date = new Date().toISOString().slice(0, 10)
-  triggerDownload(blob, `compteur-sauvegarde-${date}.json`)
+  triggerDownload(blob, `+1-sauvegarde-${date}.json`)
 }
 
 /** Formate l'historique d'un compteur en CSV (horodatage ISO, valeur), pour
@@ -32,7 +32,7 @@ export function downloadHistoryCsv(counter: Counter) {
   const blob = new Blob([buildHistoryCsv(counter)], { type: 'text/csv' })
   const date = new Date().toISOString().slice(0, 10)
   const safeName = counter.name.replace(/[^a-zA-Z0-9-_]+/g, '-') || 'compteur'
-  triggerDownload(blob, `compteur-historique-${safeName}-${date}.csv`)
+  triggerDownload(blob, `+1-historique-${safeName}-${date}.csv`)
 }
 
 function isValidCounter(value: unknown): value is Partial<Counter> {
