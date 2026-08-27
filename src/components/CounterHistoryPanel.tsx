@@ -15,11 +15,11 @@ export function CounterHistoryPanel({ counter, onClose, onNavigate }: CounterHis
   const hasHistory = !!counter.history && counter.history.length > 0
 
   return (
-    <Modal title={`Historique « ${counter.name} »`} onClose={onClose} accentColor={counter.color}>
+    <Modal title={`Historique « ${counter.name} »`} onClose={onClose} accentColor={counter.appearance.color}>
       <section className="modal-section">
         {counter.history && counter.history.length >= 2 ? (
           <>
-            <Sparkline points={counter.history} color={counter.color} />
+            <Sparkline points={counter.history} color={counter.appearance.color} />
             <p className="modal-hint">
               Min : {Math.min(...counter.history.map((p) => p.v))} · Max :{' '}
               {Math.max(...counter.history.map((p) => p.v))}

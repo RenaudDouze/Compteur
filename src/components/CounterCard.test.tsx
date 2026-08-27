@@ -3,7 +3,7 @@ import { Reorder } from 'framer-motion'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import { CounterCard } from './CounterCard'
 import { playIncrementSound } from '../sound'
-import type { Counter } from '../types'
+import type { Counter, CounterAppearance, CounterBehavior } from '../types'
 
 vi.mock('../sound', () => ({
   playIncrementSound: vi.fn(),
@@ -11,18 +11,24 @@ vi.mock('../sound', () => ({
 
 const TEST_COLORS = ['#2563eb', '#7c3aed', '#0d9488']
 
-function makeCounter(overrides: Partial<Counter> = {}): Counter {
+type CounterOverrides = Partial<Omit<Counter, 'behavior' | 'appearance'>> &
+  Partial<CounterBehavior> &
+  Partial<CounterAppearance>
+
+function makeCounter(overrides: CounterOverrides = {}): Counter {
+  const { oddsDenominator, startDate, step, target, color, displayStyle, backgroundImageUrl, ...rest } = overrides
   return {
     id: 'counter-1',
     name: 'Compteur 1',
     count: 0,
-    color: '#2563eb',
     createdAt: new Date(2026, 7, 1).getTime(),
-    ...overrides,
+    ...rest,
+    behavior: { oddsDenominator, startDate, step, target },
+    appearance: { color: color ?? '#2563eb', displayStyle, backgroundImageUrl },
   }
 }
 
-function renderCard(counterOverrides: Partial<Counter> = {}, props: Partial<Parameters<typeof CounterCard>[0]> = {}) {
+function renderCard(counterOverrides: CounterOverrides = {}, props: Partial<Parameters<typeof CounterCard>[0]> = {}) {
   const counter = makeCounter(counterOverrides)
   const handlers = {
     colors: TEST_COLORS,

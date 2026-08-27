@@ -15,8 +15,9 @@ function makeCounter(overrides: Partial<Counter> = {}): Counter {
     id: 'id-1',
     name: 'Compteur 1',
     count: 3,
-    color: '#2563eb',
     createdAt: Date.now(),
+    behavior: {},
+    appearance: { color: '#2563eb' },
     ...overrides,
   }
 }

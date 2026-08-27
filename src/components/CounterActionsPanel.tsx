@@ -75,7 +75,7 @@ export function CounterActionsPanel({
   }
 
   return (
-    <Modal title={`Actions « ${counter.name} »`} onClose={onClose} accentColor={counter.color}>
+    <Modal title={`Actions « ${counter.name} »`} onClose={onClose} accentColor={counter.appearance.color}>
       <section className="modal-section">
         <button className="modal-btn" onClick={handleShare}>
           {shared ? 'Copié ✓' : '⇪ Partager ce compteur'}
