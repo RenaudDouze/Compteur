@@ -83,7 +83,7 @@ describe('downloadBackup', () => {
 
   it('nomme le fichier avec la date du jour', () => {
     downloadBackup([makeCounter()])
-    expect(lastAnchor?.download).toBe('compteur-sauvegarde-2026-08-22.json')
+    expect(lastAnchor?.download).toBe('+1-sauvegarde-2026-08-22.json')
   })
 
   it('révoque l\'URL objet après le téléchargement', () => {
@@ -178,17 +178,17 @@ describe('downloadHistoryCsv', () => {
 
   it('nomme le fichier avec le nom du compteur et la date du jour', () => {
     downloadHistoryCsv(makeCounter({ name: 'Pompes' }))
-    expect(lastAnchor?.download).toBe('compteur-historique-Pompes-2026-08-22.csv')
+    expect(lastAnchor?.download).toBe('+1-historique-Pompes-2026-08-22.csv')
   })
 
   it('remplace les caractères non alphanumériques du nom par des tirets', () => {
     downloadHistoryCsv(makeCounter({ name: 'Écrémé 🎲 / café' }))
-    expect(lastAnchor?.download).toBe('compteur-historique--cr-m-caf--2026-08-22.csv')
+    expect(lastAnchor?.download).toBe('+1-historique--cr-m-caf--2026-08-22.csv')
   })
 
   it("utilise 'compteur' comme nom de secours si le nom est vide", () => {
     downloadHistoryCsv(makeCounter({ name: '' }))
-    expect(lastAnchor?.download).toBe('compteur-historique-compteur-2026-08-22.csv')
+    expect(lastAnchor?.download).toBe('+1-historique-compteur-2026-08-22.csv')
   })
 
   it("révoque l'URL objet après le téléchargement", () => {
