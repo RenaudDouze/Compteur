@@ -203,6 +203,15 @@ export default function App() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [])
 
+  // Applique un patch de champs à un seul compteur, identifié par son id.
+  // Point d'entrée commun à tous les réglages simples (nom, couleur, pas,
+  // objectif...) qui remplacent juste un ou plusieurs champs sans logique
+  // additionnelle (contrairement à updateCount/setCount, qui tiennent aussi
+  // l'historique et l'undo à jour).
+  const updateCounter = (id: string, patch: Partial<Counter>) => {
+    setCounters((prev) => prev.map((c) => (c.id === id ? { ...c, ...patch } : c)))
+  }
+
   const updateCount = (id: string, delta: number) => {
     setCounters((prev) =>
       prev.map((c) =>
@@ -219,37 +228,15 @@ export default function App() {
     )
   }
 
-  const renameCounter = (id: string, name: string) => {
-    setCounters((prev) => prev.map((c) => (c.id === id ? { ...c, name } : c)))
-  }
-
-  const setOdds = (id: string, oddsDenominator: number | undefined) => {
-    setCounters((prev) => prev.map((c) => (c.id === id ? { ...c, oddsDenominator } : c)))
-  }
-
-  const setTarget = (id: string, target: number | undefined) => {
-    setCounters((prev) => prev.map((c) => (c.id === id ? { ...c, target } : c)))
-  }
-
-  const setStartDate = (id: string, startDate: string | undefined) => {
-    setCounters((prev) => prev.map((c) => (c.id === id ? { ...c, startDate } : c)))
-  }
-
-  const setBackgroundImage = (id: string, backgroundImageUrl: string | undefined) => {
-    setCounters((prev) => prev.map((c) => (c.id === id ? { ...c, backgroundImageUrl } : c)))
-  }
-
-  const setColor = (id: string, color: string) => {
-    setCounters((prev) => prev.map((c) => (c.id === id ? { ...c, color } : c)))
-  }
-
-  const setStep = (id: string, step: number | undefined) => {
-    setCounters((prev) => prev.map((c) => (c.id === id ? { ...c, step } : c)))
-  }
-
-  const setDisplayStyle = (id: string, displayStyle: DisplayStyle | undefined) => {
-    setCounters((prev) => prev.map((c) => (c.id === id ? { ...c, displayStyle } : c)))
-  }
+  const renameCounter = (id: string, name: string) => updateCounter(id, { name })
+  const setOdds = (id: string, oddsDenominator: number | undefined) => updateCounter(id, { oddsDenominator })
+  const setTarget = (id: string, target: number | undefined) => updateCounter(id, { target })
+  const setStartDate = (id: string, startDate: string | undefined) => updateCounter(id, { startDate })
+  const setBackgroundImage = (id: string, backgroundImageUrl: string | undefined) =>
+    updateCounter(id, { backgroundImageUrl })
+  const setColor = (id: string, color: string) => updateCounter(id, { color })
+  const setStep = (id: string, step: number | undefined) => updateCounter(id, { step })
+  const setDisplayStyle = (id: string, displayStyle: DisplayStyle | undefined) => updateCounter(id, { displayStyle })
 
   const deleteCounter = (id: string) => {
     const target = counters.find((c) => c.id === id)!
