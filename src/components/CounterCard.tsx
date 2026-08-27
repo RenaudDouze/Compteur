@@ -6,22 +6,15 @@ import { CounterBehaviorSettingsPanel } from './CounterBehaviorSettingsPanel'
 import { CounterHistoryPanel } from './CounterHistoryPanel'
 import { CounterActionsPanel } from './CounterActionsPanel'
 import type { PanelKind } from './PanelNav'
+import { useHoldToRepeat } from '../hooks/useHoldToRepeat'
+import { useTapGesture } from '../hooks/useTapGesture'
+import { useFillFontSize } from '../hooks/useFillFontSize'
+import { useCelebration } from '../hooks/useCelebration'
 import { cumulativeOdds, formatOdds, progressRatio } from '../odds'
 import { daysBetween, formatAveragePerDay, formatDuration, toIsoDate } from '../date'
 import { playIncrementSound } from '../sound'
 import type { Counter } from '../types'
 
-// Délai avant qu'un appui maintenu sur +/- déclenche la répétition, puis
-// intervalle entre chaque répétition (comptage en rafale).
-const HOLD_DELAY_MS = 350
-const HOLD_REPEAT_MS = 100
-
-// Distance de tolérance (px) entre l'appui et le relâchement pour qu'un
-// geste sur la carte compte comme un tap plutôt qu'un glissement/scroll.
-const TAP_MOVE_THRESHOLD_PX = 10
-
-// Durée d'affichage du confetti à l'atteinte de l'objectif.
-const CELEBRATION_DURATION_MS = 1100
 // Angles (en degrés) des particules du confetti, réparties en éventail sur
 // un demi-cercle plutôt qu'un cercle complet : le bas de la carte contient
 // souvent les boutons +/-, un confetti y retomberait dessus sans y être vu.
@@ -110,19 +103,9 @@ export function CounterCard({
   const [draftCount, setDraftCount] = useState(counter.count.toString())
   const [countError, setCountError] = useState<string | null>(null)
   const [direction, setDirection] = useState<1 | -1>(1)
-  const valueRef = useRef<HTMLDivElement>(null)
-  const [fillFontSize, setFillFontSize] = useState<number | null>(null)
   const pulseControls = useAnimationControls()
   const isFirstCount = useRef(true)
-  const [celebrating, setCelebrating] = useState(false)
-  const celebrateTimer = useRef<ReturnType<typeof setTimeout> | undefined>(undefined)
-  const prevCountForTarget = useRef(counter.count)
   const dragControls = useDragControls()
-  const holdTimer = useRef<ReturnType<typeof setTimeout> | undefined>(undefined)
-  const holdInterval = useRef<ReturnType<typeof setInterval> | undefined>(undefined)
-  const longPressFired = useRef(false)
-  const tapStart = useRef<{ x: number; y: number } | null>(null)
-  const tapHandledByPointer = useRef(false)
 
   // Un compteur archivé est en lecture seule : le comptage, le renommage et
   // le glisser-déposer sont bloqués (seuls désarchiver, dupliquer et
@@ -143,64 +126,13 @@ export function CounterCard({
     onChange(sign * (counter.step ?? 1))
   }
 
-  const stopHold = () => {
-    clearTimeout(holdTimer.current)
-    clearInterval(holdInterval.current)
-  }
-
-  // Un appui bref reste un simple tap (géré par le onClick du bouton, qui
-  // continue de fonctionner normalement au clavier et au clic/tap
-  // classique). Passé le délai, on bascule en répétition continue et on
-  // marque `longPressFired` pour que le onClick qui suivra le relâchement
-  // (toujours émis par le navigateur) n'applique pas un incrément en trop.
-  const startHold = (sign: 1 | -1) => {
-    stopHold()
-    longPressFired.current = false
-    holdTimer.current = setTimeout(() => {
-      longPressFired.current = true
-      bump(sign)
-      holdInterval.current = setInterval(() => bump(sign), HOLD_REPEAT_MS)
-    }, HOLD_DELAY_MS)
-  }
-
-  // Sur mobile, le clic natif émis par le navigateur après un touchend peut
-  // occasionnellement ne pas se déclencher (ambiguïté tap/scroll, ou bug de
-  // synthèse du clic pendant qu'un transform Framer Motion est encore
-  // appliqué à la carte) : le compteur reste alors bloqué sans aucune
-  // réaction. On suit donc nous-mêmes le tap via les évènements pointer
-  // (fiables même quand le clic de compatibilité échoue), en secours du
-  // onClick natif qui reste la voie principale pour la souris et le clavier.
-  const handleCardPointerDown = (e: React.PointerEvent) => {
-    // Ignore le clic droit/bouton secondaire (button !== 0) : seul un tap ou
-    // un clic principal doit compter comme une intention d'incrémenter.
-    if (e.button !== 0) return
-    tapStart.current = { x: e.clientX, y: e.clientY }
-  }
-
-  const handleCardPointerUp = (e: React.PointerEvent) => {
-    const start = tapStart.current
-    tapStart.current = null
-    if (!start) return
-    const moved = Math.hypot(e.clientX - start.x, e.clientY - start.y)
-    if (moved <= TAP_MOVE_THRESHOLD_PX) {
-      tapHandledByPointer.current = true
-      bump(1)
-    }
-  }
-
-  const handleCardPointerCancel = () => {
-    tapStart.current = null
-  }
-
-  const handleCardClick = () => {
-    // Le tap a déjà été compté via pointerup : ignore le clic natif qui
-    // suit pour ne pas incrémenter deux fois.
-    if (tapHandledByPointer.current) {
-      tapHandledByPointer.current = false
-      return
-    }
-    bump(1)
-  }
+  const { startHold, stopHold, longPressFired } = useHoldToRepeat(bump)
+  const {
+    onPointerDown: handleCardPointerDown,
+    onPointerUp: handleCardPointerUp,
+    onPointerCancel: handleCardPointerCancel,
+    onClick: handleCardClick,
+  } = useTapGesture(bump)
 
   const commitName = () => {
     const trimmed = draftName.trim()
@@ -230,32 +162,7 @@ export function CounterCard({
   // styles s'appuient plutôt sur les tailles CSS par mode de grille (elles
   // s'expriment en `em`, donc elles suivent quand même l'espace disponible).
   const isDefaultStyle = !counter.displayStyle || counter.displayStyle === 'default'
-  useEffect(() => {
-    const el = valueRef.current
-    if (!fill || !el || !isDefaultStyle) {
-      setFillFontSize(null)
-      return
-    }
-
-    const digits = Math.max(counter.count.toString().length, 1)
-
-    const compute = () => {
-      // offsetWidth/offsetHeight ignorent les transforms CSS (contrairement à
-      // getBoundingClientRect), ce qui évite de mesurer une taille faussée
-      // pendant les animations de réagencement de Framer Motion.
-      const width = el.offsetWidth
-      const height = el.offsetHeight
-      if (width === 0 || height === 0) return
-      const byHeight = height * 0.85
-      const byWidth = width / (digits * 0.62)
-      setFillFontSize(Math.max(48, Math.min(byHeight, byWidth)))
-    }
-
-    compute()
-    const ro = new ResizeObserver(compute)
-    ro.observe(el)
-    return () => ro.disconnect()
-  }, [fill, counter.count, isDefaultStyle])
+  const { ref: valueRef, fontSize: fillFontSize } = useFillFontSize(fill && isDefaultStyle, counter.count)
 
   // Petit rebond élastique à chaque incrément/décrément, en plus du
   // défilement des chiffres. N'anime que `scale` (accéléré par le
@@ -286,22 +193,7 @@ export function CounterCard({
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [counter.count, pulseControls])
 
-  // Célèbre le franchissement de l'objectif (d'en dessous vers au moins sa
-  // valeur), pas juste le fait de s'y trouver : sinon toucher l'objectif au
-  // montage (ex: après rechargement de la page) déclencherait la
-  // célébration à chaque fois. Un pas d'incrément personnalisé peut sauter
-  // par-dessus l'objectif sans tomber pile dessus (ex: pas de 3, objectif à
-  // 10 : 9 → 12) : on compare donc à un dépassement, pas à une égalité.
-  useEffect(() => {
-    const previous = prevCountForTarget.current
-    prevCountForTarget.current = counter.count
-    if (counter.target === undefined) return
-    if (previous < counter.target && counter.count >= counter.target) {
-      setCelebrating(true)
-      clearTimeout(celebrateTimer.current)
-      celebrateTimer.current = setTimeout(() => setCelebrating(false), CELEBRATION_DURATION_MS)
-    }
-  }, [counter.count, counter.target])
+  const celebrating = useCelebration(counter.count, counter.target)
 
   const odds = counter.oddsDenominator ? cumulativeOdds(counter.oddsDenominator, counter.count) : null
   // Durée figée et moyenne d'incrément par jour entre le début du comptage
