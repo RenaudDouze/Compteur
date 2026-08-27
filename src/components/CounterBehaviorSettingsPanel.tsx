@@ -10,27 +10,21 @@ import type { Counter } from '../types'
 interface CounterBehaviorSettingsPanelProps {
   counter: Counter
   onClose: () => void
-  onSetOdds: (denominator: number | undefined) => void
-  onSetTarget: (target: number | undefined) => void
-  onSetStartDate: (isoDate: string | undefined) => void
-  onSetStep: (step: number | undefined) => void
+  onUpdate: (patch: Partial<Counter>) => void
   onNavigate: (panel: PanelKind) => void
 }
 
 export function CounterBehaviorSettingsPanel({
   counter,
   onClose,
-  onSetOdds,
-  onSetTarget,
-  onSetStartDate,
-  onSetStep,
+  onUpdate,
   onNavigate,
 }: CounterBehaviorSettingsPanelProps) {
   const startDate = counter.startDate ?? toIsoDate(counter.createdAt)
 
-  const stepField = usePositiveIntField(counter.step, onSetStep)
-  const targetField = usePositiveIntField(counter.target, onSetTarget)
-  const oddsField = usePositiveIntField(counter.oddsDenominator, onSetOdds)
+  const stepField = usePositiveIntField(counter.step, (step) => onUpdate({ step }))
+  const targetField = usePositiveIntField(counter.target, (target) => onUpdate({ target }))
+  const oddsField = usePositiveIntField(counter.oddsDenominator, (oddsDenominator) => onUpdate({ oddsDenominator }))
   const [draftStartDate, setDraftStartDate] = useState(startDate)
   const [startDateError, setStartDateError] = useState<string | null>(null)
 
@@ -38,14 +32,14 @@ export function CounterBehaviorSettingsPanel({
     setDraftStartDate(value)
     if (value === '') {
       setStartDateError(null)
-      onSetStartDate(undefined)
+      onUpdate({ startDate: undefined })
     } else if (value > todayIsoDate()) {
       // Bloqué en pratique par `max` sur le sélecteur natif, mais gardé en
       // filet de sécurité (saisie clavier manuelle selon le navigateur).
       setStartDateError('La date ne peut pas être dans le futur.')
     } else {
       setStartDateError(null)
-      onSetStartDate(value)
+      onUpdate({ startDate: value })
     }
   }
 

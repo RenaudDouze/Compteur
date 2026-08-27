@@ -21,10 +21,7 @@ function renderPanel(
   const counter = makeCounter(counterOverrides)
   const handlers = {
     onClose: vi.fn(),
-    onSetOdds: vi.fn(),
-    onSetStartDate: vi.fn(),
-    onSetStep: vi.fn(),
-    onSetTarget: vi.fn(),
+    onUpdate: vi.fn(),
     onNavigate: vi.fn(),
     ...props,
   }
@@ -65,44 +62,44 @@ describe('CounterBehaviorSettingsPanel', () => {
     })
 
     it('définit un pas personnalisé (Entrée)', () => {
-      const { onSetStep } = renderPanel()
+      const { onUpdate } = renderPanel()
       const input = screen.getByPlaceholderText('1')
       fireEvent.change(input, { target: { value: '5' } })
       fireEvent.keyDown(input, { key: 'Enter' })
-      expect(onSetStep).toHaveBeenCalledWith(5)
+      expect(onUpdate).toHaveBeenCalledWith({ step: 5 })
     })
 
     it('valide aussi au blur', () => {
-      const { onSetStep } = renderPanel()
+      const { onUpdate } = renderPanel()
       const input = screen.getByPlaceholderText('1')
       fireEvent.change(input, { target: { value: '10' } })
       fireEvent.blur(input)
-      expect(onSetStep).toHaveBeenCalledWith(10)
+      expect(onUpdate).toHaveBeenCalledWith({ step: 10 })
     })
 
     it('rejette une saisie contenant des lettres plutôt que de garder seulement les chiffres', () => {
-      const { onSetStep } = renderPanel()
+      const { onUpdate } = renderPanel()
       const input = screen.getByPlaceholderText('1')
       fireEvent.change(input, { target: { value: '1a0b' } })
       fireEvent.keyDown(input, { key: 'Enter' })
-      expect(onSetStep).not.toHaveBeenCalled()
+      expect(onUpdate).not.toHaveBeenCalled()
       expect(screen.getByText('Nombre entier positif requis.')).toBeInTheDocument()
     })
 
     it('revient au pas par défaut si la saisie est vide', () => {
-      const { onSetStep } = renderPanel({ step: 5 })
+      const { onUpdate } = renderPanel({ step: 5 })
       const input = screen.getByDisplayValue('5')
       fireEvent.change(input, { target: { value: '' } })
       fireEvent.keyDown(input, { key: 'Enter' })
-      expect(onSetStep).toHaveBeenCalledWith(undefined)
+      expect(onUpdate).toHaveBeenCalledWith({ step: undefined })
     })
 
     it('affiche une erreur et garde la saisie invalide affichée si la saisie est 0', () => {
-      const { onSetStep } = renderPanel({ step: 5 })
+      const { onUpdate } = renderPanel({ step: 5 })
       const input = screen.getByDisplayValue('5')
       fireEvent.change(input, { target: { value: '0' } })
       fireEvent.keyDown(input, { key: 'Enter' })
-      expect(onSetStep).not.toHaveBeenCalled()
+      expect(onUpdate).not.toHaveBeenCalled()
       expect(screen.getByText('Nombre entier positif requis.')).toBeInTheDocument()
       expect(screen.getByDisplayValue('0')).toBeInTheDocument()
     })
@@ -130,11 +127,11 @@ describe('CounterBehaviorSettingsPanel', () => {
     })
 
     it("ne commite pas sur une touche autre qu'Entrée", () => {
-      const { onSetStep } = renderPanel()
+      const { onUpdate } = renderPanel()
       const input = screen.getByPlaceholderText('1')
       fireEvent.change(input, { target: { value: '5' } })
       fireEvent.keyDown(input, { key: 'a' })
-      expect(onSetStep).not.toHaveBeenCalled()
+      expect(onUpdate).not.toHaveBeenCalled()
     })
 
     it('affiche un rappel du pas effectif (défaut 1)', () => {
@@ -155,44 +152,44 @@ describe('CounterBehaviorSettingsPanel', () => {
     })
 
     it('définit un objectif (Entrée)', () => {
-      const { onSetTarget } = renderPanel()
+      const { onUpdate } = renderPanel()
       const input = screen.getByPlaceholderText('ex : 50')
       fireEvent.change(input, { target: { value: '50' } })
       fireEvent.keyDown(input, { key: 'Enter' })
-      expect(onSetTarget).toHaveBeenCalledWith(50)
+      expect(onUpdate).toHaveBeenCalledWith({ target: 50 })
     })
 
     it('valide aussi au blur', () => {
-      const { onSetTarget } = renderPanel()
+      const { onUpdate } = renderPanel()
       const input = screen.getByPlaceholderText('ex : 50')
       fireEvent.change(input, { target: { value: '20' } })
       fireEvent.blur(input)
-      expect(onSetTarget).toHaveBeenCalledWith(20)
+      expect(onUpdate).toHaveBeenCalledWith({ target: 20 })
     })
 
     it('rejette une saisie contenant des lettres plutôt que de garder seulement les chiffres', () => {
-      const { onSetTarget } = renderPanel()
+      const { onUpdate } = renderPanel()
       const input = screen.getByPlaceholderText('ex : 50')
       fireEvent.change(input, { target: { value: '5a0b' } })
       fireEvent.keyDown(input, { key: 'Enter' })
-      expect(onSetTarget).not.toHaveBeenCalled()
+      expect(onUpdate).not.toHaveBeenCalled()
       expect(screen.getByText('Nombre entier positif requis.')).toBeInTheDocument()
     })
 
     it("efface l'objectif si la saisie est vide", () => {
-      const { onSetTarget } = renderPanel({ target: 10 })
+      const { onUpdate } = renderPanel({ target: 10 })
       const input = screen.getByDisplayValue('10')
       fireEvent.change(input, { target: { value: '' } })
       fireEvent.keyDown(input, { key: 'Enter' })
-      expect(onSetTarget).toHaveBeenCalledWith(undefined)
+      expect(onUpdate).toHaveBeenCalledWith({ target: undefined })
     })
 
     it('affiche une erreur et garde la saisie invalide affichée si la saisie est 0', () => {
-      const { onSetTarget } = renderPanel({ target: 10 })
+      const { onUpdate } = renderPanel({ target: 10 })
       const input = screen.getByDisplayValue('10')
       fireEvent.change(input, { target: { value: '0' } })
       fireEvent.keyDown(input, { key: 'Enter' })
-      expect(onSetTarget).not.toHaveBeenCalled()
+      expect(onUpdate).not.toHaveBeenCalled()
       expect(screen.getByText('Nombre entier positif requis.')).toBeInTheDocument()
       expect(screen.getByDisplayValue('0')).toBeInTheDocument()
     })
@@ -208,11 +205,11 @@ describe('CounterBehaviorSettingsPanel', () => {
     })
 
     it("ne commite pas sur une touche autre qu'Entrée", () => {
-      const { onSetTarget } = renderPanel()
+      const { onUpdate } = renderPanel()
       const input = screen.getByPlaceholderText('ex : 50')
       fireEvent.change(input, { target: { value: '20' } })
       fireEvent.keyDown(input, { key: 'a' })
-      expect(onSetTarget).not.toHaveBeenCalled()
+      expect(onUpdate).not.toHaveBeenCalled()
     })
 
     it("n'affiche pas la progression sans objectif défini", () => {
@@ -248,44 +245,44 @@ describe('CounterBehaviorSettingsPanel', () => {
     })
 
     it('définit une probabilité (Entrée)', () => {
-      const { onSetOdds } = renderPanel({ count: 500 })
+      const { onUpdate } = renderPanel({ count: 500 })
       const input = screen.getByPlaceholderText('4096')
       fireEvent.change(input, { target: { value: '4096' } })
       fireEvent.keyDown(input, { key: 'Enter' })
-      expect(onSetOdds).toHaveBeenCalledWith(4096)
+      expect(onUpdate).toHaveBeenCalledWith({ oddsDenominator: 4096 })
     })
 
     it('valide aussi au blur', () => {
-      const { onSetOdds } = renderPanel()
+      const { onUpdate } = renderPanel()
       const input = screen.getByPlaceholderText('4096')
       fireEvent.change(input, { target: { value: '20' } })
       fireEvent.blur(input)
-      expect(onSetOdds).toHaveBeenCalledWith(20)
+      expect(onUpdate).toHaveBeenCalledWith({ oddsDenominator: 20 })
     })
 
     it('rejette une saisie contenant des lettres plutôt que de garder seulement les chiffres', () => {
-      const { onSetOdds } = renderPanel()
+      const { onUpdate } = renderPanel()
       const input = screen.getByPlaceholderText('4096')
       fireEvent.change(input, { target: { value: '4a0b9c6' } })
       fireEvent.keyDown(input, { key: 'Enter' })
-      expect(onSetOdds).not.toHaveBeenCalled()
+      expect(onUpdate).not.toHaveBeenCalled()
       expect(screen.getByText('Nombre entier positif requis.')).toBeInTheDocument()
     })
 
     it('efface la probabilité si la saisie est vide', () => {
-      const { onSetOdds } = renderPanel({ oddsDenominator: 10 })
+      const { onUpdate } = renderPanel({ oddsDenominator: 10 })
       const input = screen.getByDisplayValue('10')
       fireEvent.change(input, { target: { value: '' } })
       fireEvent.keyDown(input, { key: 'Enter' })
-      expect(onSetOdds).toHaveBeenCalledWith(undefined)
+      expect(onUpdate).toHaveBeenCalledWith({ oddsDenominator: undefined })
     })
 
     it('affiche une erreur et garde la saisie invalide affichée si la saisie est 0', () => {
-      const { onSetOdds } = renderPanel({ oddsDenominator: 10 })
+      const { onUpdate } = renderPanel({ oddsDenominator: 10 })
       const input = screen.getByDisplayValue('10')
       fireEvent.change(input, { target: { value: '0' } })
       fireEvent.keyDown(input, { key: 'Enter' })
-      expect(onSetOdds).not.toHaveBeenCalled()
+      expect(onUpdate).not.toHaveBeenCalled()
       expect(screen.getByText('Nombre entier positif requis.')).toBeInTheDocument()
       expect(screen.getByDisplayValue('0')).toBeInTheDocument()
     })
@@ -301,11 +298,11 @@ describe('CounterBehaviorSettingsPanel', () => {
     })
 
     it("ne commite pas sur une touche autre qu'Entrée", () => {
-      const { onSetOdds } = renderPanel()
+      const { onUpdate } = renderPanel()
       const input = screen.getByPlaceholderText('4096')
       fireEvent.change(input, { target: { value: '20' } })
       fireEvent.keyDown(input, { key: 'a' })
-      expect(onSetOdds).not.toHaveBeenCalled()
+      expect(onUpdate).not.toHaveBeenCalled()
     })
 
     it('affiche le taux de réussite cumulé quand une probabilité est définie', () => {
@@ -399,17 +396,17 @@ describe('CounterBehaviorSettingsPanel', () => {
     })
 
     it('change la date de début', () => {
-      const { onSetStartDate } = renderPanel()
+      const { onUpdate } = renderPanel()
       const input = document.querySelector('input[type="date"]') as HTMLInputElement
       fireEvent.change(input, { target: { value: '2026-07-15' } })
-      expect(onSetStartDate).toHaveBeenCalledWith('2026-07-15')
+      expect(onUpdate).toHaveBeenCalledWith({ startDate: '2026-07-15' })
     })
 
     it('efface la date de début si le champ est vidé', () => {
-      const { onSetStartDate } = renderPanel()
+      const { onUpdate } = renderPanel()
       const input = document.querySelector('input[type="date"]') as HTMLInputElement
       fireEvent.change(input, { target: { value: '' } })
-      expect(onSetStartDate).toHaveBeenCalledWith(undefined)
+      expect(onUpdate).toHaveBeenCalledWith({ startDate: undefined })
     })
 
     it('affiche un rappel textuel de la date de début', () => {
@@ -418,22 +415,22 @@ describe('CounterBehaviorSettingsPanel', () => {
     })
 
     it("affiche une erreur et ne commite pas pour une date dans le futur (filet de sécurité au-delà du sélecteur natif)", () => {
-      const { onSetStartDate } = renderPanel({ startDate: '2026-01-01' })
+      const { onUpdate } = renderPanel({ startDate: '2026-01-01' })
       const input = document.querySelector('input[type="date"]') as HTMLInputElement
       fireEvent.change(input, { target: { value: '9999-12-31' } })
-      expect(onSetStartDate).not.toHaveBeenCalled()
+      expect(onUpdate).not.toHaveBeenCalled()
       expect(screen.getByText('La date ne peut pas être dans le futur.')).toBeInTheDocument()
       expect(input).toHaveValue('9999-12-31')
     })
 
     it("efface l'erreur de date une fois une date valide saisie", () => {
-      const { onSetStartDate } = renderPanel({ startDate: '2026-01-01' })
+      const { onUpdate } = renderPanel({ startDate: '2026-01-01' })
       const input = document.querySelector('input[type="date"]') as HTMLInputElement
       fireEvent.change(input, { target: { value: '9999-12-31' } })
       expect(screen.getByText('La date ne peut pas être dans le futur.')).toBeInTheDocument()
       fireEvent.change(input, { target: { value: '2026-02-01' } })
       expect(screen.queryByText('La date ne peut pas être dans le futur.')).not.toBeInTheDocument()
-      expect(onSetStartDate).toHaveBeenCalledWith('2026-02-01')
+      expect(onUpdate).toHaveBeenCalledWith({ startDate: '2026-02-01' })
     })
   })
 

@@ -28,14 +28,7 @@ function renderCard(counterOverrides: Partial<Counter> = {}, props: Partial<Para
     colors: TEST_COLORS,
     onChange: vi.fn(),
     onSetCount: vi.fn(),
-    onRename: vi.fn(),
-    onSetOdds: vi.fn(),
-    onSetStartDate: vi.fn(),
-    onSetBackgroundImage: vi.fn(),
-    onSetColor: vi.fn(),
-    onSetStep: vi.fn(),
-    onSetDisplayStyle: vi.fn(),
-    onSetTarget: vi.fn(),
+    onUpdate: vi.fn(),
     onDuplicate: vi.fn(),
     onToggleArchive: vi.fn(),
     onTogglePin: vi.fn(),
@@ -394,49 +387,49 @@ describe('CounterCard', () => {
     })
 
     it('valide le nouveau nom avec Entrée', () => {
-      const { onRename } = renderCard({ name: 'Avant' })
+      const { onUpdate } = renderCard({ name: 'Avant' })
       fireEvent.click(screen.getByText('Avant'))
       const input = screen.getByDisplayValue('Avant')
       fireEvent.change(input, { target: { value: 'Après' } })
       fireEvent.keyDown(input, { key: 'Enter' })
-      expect(onRename).toHaveBeenCalledWith('Après')
+      expect(onUpdate).toHaveBeenCalledWith({ name: 'Après' })
     })
 
     it('supprime les espaces superflus', () => {
-      const { onRename } = renderCard({ name: 'Avant' })
+      const { onUpdate } = renderCard({ name: 'Avant' })
       fireEvent.click(screen.getByText('Avant'))
       const input = screen.getByDisplayValue('Avant')
       fireEvent.change(input, { target: { value: '   Espacé   ' } })
       fireEvent.keyDown(input, { key: 'Enter' })
-      expect(onRename).toHaveBeenCalledWith('Espacé')
+      expect(onUpdate).toHaveBeenCalledWith({ name: 'Espacé' })
     })
 
     it('retombe sur "Sans nom" si le champ est vide', () => {
-      const { onRename } = renderCard({ name: 'Avant' })
+      const { onUpdate } = renderCard({ name: 'Avant' })
       fireEvent.click(screen.getByText('Avant'))
       const input = screen.getByDisplayValue('Avant')
       fireEvent.change(input, { target: { value: '   ' } })
       fireEvent.keyDown(input, { key: 'Enter' })
-      expect(onRename).toHaveBeenCalledWith('Sans nom')
+      expect(onUpdate).toHaveBeenCalledWith({ name: 'Sans nom' })
     })
 
-    it('annule avec Échap sans appeler onRename', () => {
-      const { onRename } = renderCard({ name: 'Avant' })
+    it('annule avec Échap sans appeler onUpdate', () => {
+      const { onUpdate } = renderCard({ name: 'Avant' })
       fireEvent.click(screen.getByText('Avant'))
       const input = screen.getByDisplayValue('Avant')
       fireEvent.change(input, { target: { value: 'Modifié' } })
       fireEvent.keyDown(input, { key: 'Escape' })
-      expect(onRename).not.toHaveBeenCalled()
+      expect(onUpdate).not.toHaveBeenCalled()
       expect(screen.getByText('Avant')).toBeInTheDocument()
     })
 
     it('valide aussi au blur', () => {
-      const { onRename } = renderCard({ name: 'Avant' })
+      const { onUpdate } = renderCard({ name: 'Avant' })
       fireEvent.click(screen.getByText('Avant'))
       const input = screen.getByDisplayValue('Avant')
       fireEvent.change(input, { target: { value: 'ParBlur' } })
       fireEvent.blur(input)
-      expect(onRename).toHaveBeenCalledWith('ParBlur')
+      expect(onUpdate).toHaveBeenCalledWith({ name: 'ParBlur' })
     })
 
     it("le clic pour renommer n'incrémente pas le compteur", () => {
@@ -773,15 +766,8 @@ describe('CounterCard', () => {
             fill
             onChange={vi.fn()}
             onSetCount={vi.fn()}
-            onRename={vi.fn()}
-            onSetOdds={vi.fn()}
-            onSetStartDate={vi.fn()}
+            onUpdate={vi.fn()}
             colors={['#2563eb', '#7c3aed']}
-            onSetBackgroundImage={vi.fn()}
-            onSetColor={vi.fn()}
-            onSetStep={vi.fn()}
-            onSetDisplayStyle={vi.fn()}
-            onSetTarget={vi.fn()}
             onDuplicate={vi.fn()}
             onToggleArchive={vi.fn()}
             onTogglePin={vi.fn()}
@@ -798,15 +784,8 @@ describe('CounterCard', () => {
             fill
             onChange={vi.fn()}
             onSetCount={vi.fn()}
-            onRename={vi.fn()}
-            onSetOdds={vi.fn()}
-            onSetStartDate={vi.fn()}
+            onUpdate={vi.fn()}
             colors={['#2563eb', '#7c3aed']}
-            onSetBackgroundImage={vi.fn()}
-            onSetColor={vi.fn()}
-            onSetStep={vi.fn()}
-            onSetDisplayStyle={vi.fn()}
-            onSetTarget={vi.fn()}
             onDuplicate={vi.fn()}
             onToggleArchive={vi.fn()}
             onTogglePin={vi.fn()}
@@ -833,15 +812,8 @@ describe('CounterCard', () => {
             counter={counter}
             onChange={vi.fn()}
             onSetCount={vi.fn()}
-            onRename={vi.fn()}
-            onSetOdds={vi.fn()}
-            onSetStartDate={vi.fn()}
+            onUpdate={vi.fn()}
             colors={['#2563eb', '#7c3aed']}
-            onSetBackgroundImage={vi.fn()}
-            onSetColor={vi.fn()}
-            onSetStep={vi.fn()}
-            onSetDisplayStyle={vi.fn()}
-            onSetTarget={vi.fn()}
             onDuplicate={vi.fn()}
             onToggleArchive={vi.fn()}
             onTogglePin={vi.fn()}
@@ -856,15 +828,8 @@ describe('CounterCard', () => {
             counter={updated}
             onChange={vi.fn()}
             onSetCount={vi.fn()}
-            onRename={vi.fn()}
-            onSetOdds={vi.fn()}
-            onSetStartDate={vi.fn()}
+            onUpdate={vi.fn()}
             colors={['#2563eb', '#7c3aed']}
-            onSetBackgroundImage={vi.fn()}
-            onSetColor={vi.fn()}
-            onSetStep={vi.fn()}
-            onSetDisplayStyle={vi.fn()}
-            onSetTarget={vi.fn()}
             onDuplicate={vi.fn()}
             onToggleArchive={vi.fn()}
             onTogglePin={vi.fn()}
@@ -894,15 +859,8 @@ describe('CounterCard', () => {
             counter={counter}
             onChange={vi.fn()}
             onSetCount={vi.fn()}
-            onRename={vi.fn()}
-            onSetOdds={vi.fn()}
-            onSetStartDate={vi.fn()}
+            onUpdate={vi.fn()}
             colors={['#2563eb', '#7c3aed']}
-            onSetBackgroundImage={vi.fn()}
-            onSetColor={vi.fn()}
-            onSetStep={vi.fn()}
-            onSetDisplayStyle={vi.fn()}
-            onSetTarget={vi.fn()}
             onDuplicate={vi.fn()}
             onToggleArchive={vi.fn()}
             onTogglePin={vi.fn()}
@@ -922,15 +880,8 @@ describe('CounterCard', () => {
             counter={updated}
             onChange={vi.fn()}
             onSetCount={vi.fn()}
-            onRename={vi.fn()}
-            onSetOdds={vi.fn()}
-            onSetStartDate={vi.fn()}
+            onUpdate={vi.fn()}
             colors={['#2563eb', '#7c3aed']}
-            onSetBackgroundImage={vi.fn()}
-            onSetColor={vi.fn()}
-            onSetStep={vi.fn()}
-            onSetDisplayStyle={vi.fn()}
-            onSetTarget={vi.fn()}
             onDuplicate={vi.fn()}
             onToggleArchive={vi.fn()}
             onTogglePin={vi.fn()}
@@ -949,15 +900,8 @@ describe('CounterCard', () => {
             counter={counter}
             onChange={vi.fn()}
             onSetCount={vi.fn()}
-            onRename={vi.fn()}
-            onSetOdds={vi.fn()}
-            onSetStartDate={vi.fn()}
+            onUpdate={vi.fn()}
             colors={['#2563eb', '#7c3aed']}
-            onSetBackgroundImage={vi.fn()}
-            onSetColor={vi.fn()}
-            onSetStep={vi.fn()}
-            onSetDisplayStyle={vi.fn()}
-            onSetTarget={vi.fn()}
             onDuplicate={vi.fn()}
             onToggleArchive={vi.fn()}
             onTogglePin={vi.fn()}
@@ -973,15 +917,8 @@ describe('CounterCard', () => {
             counter={updated}
             onChange={vi.fn()}
             onSetCount={vi.fn()}
-            onRename={vi.fn()}
-            onSetOdds={vi.fn()}
-            onSetStartDate={vi.fn()}
+            onUpdate={vi.fn()}
             colors={['#2563eb', '#7c3aed']}
-            onSetBackgroundImage={vi.fn()}
-            onSetColor={vi.fn()}
-            onSetStep={vi.fn()}
-            onSetDisplayStyle={vi.fn()}
-            onSetTarget={vi.fn()}
             onDuplicate={vi.fn()}
             onToggleArchive={vi.fn()}
             onTogglePin={vi.fn()}
@@ -1000,15 +937,8 @@ describe('CounterCard', () => {
             counter={counter}
             onChange={vi.fn()}
             onSetCount={vi.fn()}
-            onRename={vi.fn()}
-            onSetOdds={vi.fn()}
-            onSetStartDate={vi.fn()}
+            onUpdate={vi.fn()}
             colors={['#2563eb', '#7c3aed']}
-            onSetBackgroundImage={vi.fn()}
-            onSetColor={vi.fn()}
-            onSetStep={vi.fn()}
-            onSetDisplayStyle={vi.fn()}
-            onSetTarget={vi.fn()}
             onDuplicate={vi.fn()}
             onToggleArchive={vi.fn()}
             onTogglePin={vi.fn()}
@@ -1024,15 +954,8 @@ describe('CounterCard', () => {
             counter={updated}
             onChange={vi.fn()}
             onSetCount={vi.fn()}
-            onRename={vi.fn()}
-            onSetOdds={vi.fn()}
-            onSetStartDate={vi.fn()}
+            onUpdate={vi.fn()}
             colors={['#2563eb', '#7c3aed']}
-            onSetBackgroundImage={vi.fn()}
-            onSetColor={vi.fn()}
-            onSetStep={vi.fn()}
-            onSetDisplayStyle={vi.fn()}
-            onSetTarget={vi.fn()}
             onDuplicate={vi.fn()}
             onToggleArchive={vi.fn()}
             onTogglePin={vi.fn()}

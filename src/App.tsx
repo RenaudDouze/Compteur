@@ -7,7 +7,7 @@ import { decodeCountersFromParam } from './sync'
 import { appendHistoryPoint } from './history'
 import { makeId } from './id'
 import { COLORS, pickColor } from './colors'
-import type { Counter, DisplayStyle } from './types'
+import type { Counter } from './types'
 import './App.css'
 
 // Chargé à la demande : n'entre dans le bundle initial que si le panneau de
@@ -236,16 +236,6 @@ export default function App() {
     )
   }
 
-  const renameCounter = (id: string, name: string) => updateCounter(id, { name })
-  const setOdds = (id: string, oddsDenominator: number | undefined) => updateCounter(id, { oddsDenominator })
-  const setTarget = (id: string, target: number | undefined) => updateCounter(id, { target })
-  const setStartDate = (id: string, startDate: string | undefined) => updateCounter(id, { startDate })
-  const setBackgroundImage = (id: string, backgroundImageUrl: string | undefined) =>
-    updateCounter(id, { backgroundImageUrl })
-  const setColor = (id: string, color: string) => updateCounter(id, { color })
-  const setStep = (id: string, step: number | undefined) => updateCounter(id, { step })
-  const setDisplayStyle = (id: string, displayStyle: DisplayStyle | undefined) => updateCounter(id, { displayStyle })
-
   const deleteCounter = (id: string) => {
     const target = counters.find((c) => c.id === id)!
     pushUndo(`Compteur « ${target.name} » supprimé`)
@@ -416,14 +406,7 @@ export default function App() {
                 colors={COLORS}
                 onChange={(delta) => updateCount(counter.id, delta)}
                 onSetCount={(count) => setCount(counter.id, count)}
-                onRename={(name) => renameCounter(counter.id, name)}
-                onSetOdds={(denominator) => setOdds(counter.id, denominator)}
-                onSetTarget={(target) => setTarget(counter.id, target)}
-                onSetStartDate={(date) => setStartDate(counter.id, date)}
-                onSetBackgroundImage={(url) => setBackgroundImage(counter.id, url)}
-                onSetColor={(color) => setColor(counter.id, color)}
-                onSetStep={(step) => setStep(counter.id, step)}
-                onSetDisplayStyle={(style) => setDisplayStyle(counter.id, style)}
+                onUpdate={(patch) => updateCounter(counter.id, patch)}
                 onDuplicate={() => duplicateCounter(counter.id)}
                 onToggleArchive={() => toggleArchive(counter.id)}
                 onTogglePin={() => togglePin(counter.id)}

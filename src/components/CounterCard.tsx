@@ -9,7 +9,7 @@ import type { PanelKind } from './PanelNav'
 import { cumulativeOdds, formatOdds, progressRatio } from '../odds'
 import { daysBetween, formatAveragePerDay, formatDuration, toIsoDate } from '../date'
 import { playIncrementSound } from '../sound'
-import type { Counter, DisplayStyle } from '../types'
+import type { Counter } from '../types'
 
 // Délai avant qu'un appui maintenu sur +/- déclenche la répétition, puis
 // intervalle entre chaque répétition (comptage en rafale).
@@ -75,14 +75,10 @@ interface CounterCardProps {
   colors: string[]
   onChange: (delta: number) => void
   onSetCount: (count: number) => void
-  onRename: (name: string) => void
-  onSetOdds: (denominator: number | undefined) => void
-  onSetTarget: (target: number | undefined) => void
-  onSetStartDate: (isoDate: string | undefined) => void
-  onSetBackgroundImage: (url: string | undefined) => void
-  onSetColor: (color: string) => void
-  onSetStep: (step: number | undefined) => void
-  onSetDisplayStyle: (style: DisplayStyle | undefined) => void
+  // Point d'entrée commun à tous les réglages simples qui ne font que
+  // remplacer un ou plusieurs champs (nom, couleur, pas, objectif...),
+  // relayé tel quel aux panneaux de réglages qui en ont besoin.
+  onUpdate: (patch: Partial<Counter>) => void
   onDuplicate: () => void
   onToggleArchive: () => void
   onTogglePin: () => void
@@ -97,14 +93,7 @@ export function CounterCard({
   colors,
   onChange,
   onSetCount,
-  onRename,
-  onSetOdds,
-  onSetTarget,
-  onSetStartDate,
-  onSetBackgroundImage,
-  onSetColor,
-  onSetStep,
-  onSetDisplayStyle,
+  onUpdate,
   onDuplicate,
   onToggleArchive,
   onTogglePin,
@@ -215,7 +204,7 @@ export function CounterCard({
 
   const commitName = () => {
     const trimmed = draftName.trim()
-    onRename(trimmed || 'Sans nom')
+    onUpdate({ name: trimmed || 'Sans nom' })
     setEditing(false)
   }
 
@@ -614,10 +603,7 @@ export function CounterCard({
           counter={counter}
           colors={colors}
           onClose={() => setOpenPanel(null)}
-          onRename={onRename}
-          onSetBackgroundImage={onSetBackgroundImage}
-          onSetColor={onSetColor}
-          onSetDisplayStyle={onSetDisplayStyle}
+          onUpdate={onUpdate}
           onNavigate={setOpenPanel}
         />
       )}
@@ -626,10 +612,7 @@ export function CounterCard({
         <CounterBehaviorSettingsPanel
           counter={counter}
           onClose={() => setOpenPanel(null)}
-          onSetOdds={onSetOdds}
-          onSetTarget={onSetTarget}
-          onSetStartDate={onSetStartDate}
-          onSetStep={onSetStep}
+          onUpdate={onUpdate}
           onNavigate={setOpenPanel}
         />
       )}
