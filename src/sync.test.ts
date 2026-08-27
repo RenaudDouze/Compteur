@@ -8,7 +8,7 @@ import {
   encodeCountersToParam,
   parseBackupJson,
 } from './sync'
-import type { Counter } from './types'
+import type { Counter, CounterAppearance, CounterBehavior } from './types'
 
 /** Générateur déterministe (même seed = même résultat) à forte entropie. */
 function pseudoRandomString(seed: number, length: number): string {
@@ -21,14 +21,20 @@ function pseudoRandomString(seed: number, length: number): string {
   return s
 }
 
-function makeCounter(overrides: Partial<Counter> = {}): Counter {
+type CounterOverrides = Partial<Omit<Counter, 'behavior' | 'appearance'>> &
+  Partial<CounterBehavior> &
+  Partial<CounterAppearance>
+
+function makeCounter(overrides: CounterOverrides = {}): Counter {
+  const { oddsDenominator, startDate, step, target, color, displayStyle, backgroundImageUrl, ...rest } = overrides
   return {
     id: 'fixed-id',
     name: 'Compteur test',
     count: 5,
-    color: '#2563eb',
     createdAt: 1_700_000_000_000,
-    ...overrides,
+    ...rest,
+    behavior: { oddsDenominator, startDate, step, target },
+    appearance: { color: color ?? '#2563eb', displayStyle, backgroundImageUrl },
   }
 }
 
@@ -273,12 +279,12 @@ describe('parseBackupJson', () => {
 
   it('applique une couleur par défaut si absente', () => {
     const result = parseBackupJson(JSON.stringify([{ name: 'A', count: 1 }]))
-    expect(result?.[0].color).toBe('#2563eb')
+    expect(result?.[0].appearance.color).toBe('#2563eb')
   })
 
   it('conserve la couleur fournie', () => {
     const result = parseBackupJson(JSON.stringify([{ name: 'A', count: 1, color: '#16a34a' }]))
-    expect(result?.[0].color).toBe('#16a34a')
+    expect(result?.[0].appearance.color).toBe('#16a34a')
   })
 
   it('applique createdAt = maintenant si absent ou invalide', () => {
@@ -298,48 +304,53 @@ describe('parseBackupJson', () => {
     const result = parseBackupJson(
       JSON.stringify([{ name: 'A', count: 1, oddsDenominator: 4096, startDate: '2026-08-01' }])
     )
-    expect(result?.[0].oddsDenominator).toBe(4096)
-    expect(result?.[0].startDate).toBe('2026-08-01')
+    expect(result?.[0].behavior.oddsDenominator).toBe(4096)
+    expect(result?.[0].behavior.startDate).toBe('2026-08-01')
   })
 
   it('laisse oddsDenominator et startDate indéfinis si absents', () => {
     const result = parseBackupJson(JSON.stringify([{ name: 'A', count: 1 }]))
-    expect(result?.[0].oddsDenominator).toBeUndefined()
-    expect(result?.[0].startDate).toBeUndefined()
+    expect(result?.[0].behavior.oddsDenominator).toBeUndefined()
+    expect(result?.[0].behavior.startDate).toBeUndefined()
   })
 
   it('conserve backgroundImageUrl optionnel', () => {
     const result = parseBackupJson(
       JSON.stringify([{ name: 'A', count: 1, backgroundImageUrl: 'https://exemple.com/x.jpg' }])
     )
-    expect(result?.[0].backgroundImageUrl).toBe('https://exemple.com/x.jpg')
+    expect(result?.[0].appearance.backgroundImageUrl).toBe('https://exemple.com/x.jpg')
   })
 
   it('laisse backgroundImageUrl indéfini si absent', () => {
     const result = parseBackupJson(JSON.stringify([{ name: 'A', count: 1 }]))
-    expect(result?.[0].backgroundImageUrl).toBeUndefined()
+    expect(result?.[0].appearance.backgroundImageUrl).toBeUndefined()
   })
 
   it('conserve step optionnel', () => {
     const result = parseBackupJson(JSON.stringify([{ name: 'A', count: 1, step: 5 }]))
-    expect(result?.[0].step).toBe(5)
+    expect(result?.[0].behavior.step).toBe(5)
   })
 
   it('laisse step indéfini si absent', () => {
     const result = parseBackupJson(JSON.stringify([{ name: 'A', count: 1 }]))
-    expect(result?.[0].step).toBeUndefined()
+    expect(result?.[0].behavior.step).toBeUndefined()
   })
 
   it('conserve displayStyle et target optionnels', () => {
     const result = parseBackupJson(JSON.stringify([{ name: 'A', count: 1, displayStyle: 'segment7', target: 50 }]))
-    expect(result?.[0].displayStyle).toBe('segment7')
-    expect(result?.[0].target).toBe(50)
+    expect(result?.[0].appearance.displayStyle).toBe('segment7')
+    expect(result?.[0].behavior.target).toBe(50)
   })
 
   it('laisse displayStyle et target indéfinis si absents', () => {
     const result = parseBackupJson(JSON.stringify([{ name: 'A', count: 1 }]))
-    expect(result?.[0].displayStyle).toBeUndefined()
-    expect(result?.[0].target).toBeUndefined()
+    expect(result?.[0].appearance.displayStyle).toBeUndefined()
+    expect(result?.[0].behavior.target).toBeUndefined()
+  })
+
+  it("laisse displayStyle indéfini s'il n'est pas une chaîne (payload corrompu)", () => {
+    const result = parseBackupJson(JSON.stringify([{ name: 'A', count: 1, displayStyle: 42 }]))
+    expect(result?.[0].appearance.displayStyle).toBeUndefined()
   })
 
   it('conserve history optionnel', () => {
@@ -428,14 +439,18 @@ describe('encodeCountersToParam / decodeCountersFromParam', () => {
     expect(decoded?.[0]).toMatchObject({
       name: 'Complet',
       count: 42,
-      color: counters[0].color,
       createdAt: counters[0].createdAt,
-      oddsDenominator: 4096,
-      startDate: '2026-08-01',
-      backgroundImageUrl: 'https://exemple.com/fond.jpg',
-      step: 5,
-      displayStyle: 'segment7',
-      target: 100,
+      behavior: {
+        oddsDenominator: 4096,
+        startDate: '2026-08-01',
+        step: 5,
+        target: 100,
+      },
+      appearance: {
+        color: counters[0].appearance.color,
+        backgroundImageUrl: 'https://exemple.com/fond.jpg',
+        displayStyle: 'segment7',
+      },
       archived: true,
       pinned: true,
       archivedAt: 1_700_100_000_000,
@@ -458,12 +473,12 @@ describe('encodeCountersToParam / decodeCountersFromParam', () => {
     ]
     const encoded = encodeCountersToParam(counters)
     const decoded = decodeCountersFromParam(encoded)
-    expect(decoded?.[0].oddsDenominator).toBeUndefined()
-    expect(decoded?.[0].startDate).toBeUndefined()
-    expect(decoded?.[0].backgroundImageUrl).toBeUndefined()
-    expect(decoded?.[0].step).toBeUndefined()
-    expect(decoded?.[0].displayStyle).toBeUndefined()
-    expect(decoded?.[0].target).toBeUndefined()
+    expect(decoded?.[0].behavior.oddsDenominator).toBeUndefined()
+    expect(decoded?.[0].behavior.startDate).toBeUndefined()
+    expect(decoded?.[0].appearance.backgroundImageUrl).toBeUndefined()
+    expect(decoded?.[0].behavior.step).toBeUndefined()
+    expect(decoded?.[0].appearance.displayStyle).toBeUndefined()
+    expect(decoded?.[0].behavior.target).toBeUndefined()
     expect(decoded?.[0].archived).toBeUndefined()
     expect(decoded?.[0].pinned).toBeUndefined()
     expect(decoded?.[0].archivedAt).toBeUndefined()

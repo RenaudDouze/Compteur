@@ -20,11 +20,17 @@ export function CounterBehaviorSettingsPanel({
   onUpdate,
   onNavigate,
 }: CounterBehaviorSettingsPanelProps) {
-  const startDate = counter.startDate ?? toIsoDate(counter.createdAt)
+  const startDate = counter.behavior.startDate ?? toIsoDate(counter.createdAt)
 
-  const stepField = usePositiveIntField(counter.step, (step) => onUpdate({ step }))
-  const targetField = usePositiveIntField(counter.target, (target) => onUpdate({ target }))
-  const oddsField = usePositiveIntField(counter.oddsDenominator, (oddsDenominator) => onUpdate({ oddsDenominator }))
+  const stepField = usePositiveIntField(counter.behavior.step, (step) =>
+    onUpdate({ behavior: { ...counter.behavior, step } })
+  )
+  const targetField = usePositiveIntField(counter.behavior.target, (target) =>
+    onUpdate({ behavior: { ...counter.behavior, target } })
+  )
+  const oddsField = usePositiveIntField(counter.behavior.oddsDenominator, (oddsDenominator) =>
+    onUpdate({ behavior: { ...counter.behavior, oddsDenominator } })
+  )
   const [draftStartDate, setDraftStartDate] = useState(startDate)
   const [startDateError, setStartDateError] = useState<string | null>(null)
 
@@ -32,26 +38,26 @@ export function CounterBehaviorSettingsPanel({
     setDraftStartDate(value)
     if (value === '') {
       setStartDateError(null)
-      onUpdate({ startDate: undefined })
+      onUpdate({ behavior: { ...counter.behavior, startDate: undefined } })
     } else if (value > todayIsoDate()) {
       // Bloqué en pratique par `max` sur le sélecteur natif, mais gardé en
       // filet de sécurité (saisie clavier manuelle selon le navigateur).
       setStartDateError('La date ne peut pas être dans le futur.')
     } else {
       setStartDateError(null)
-      onUpdate({ startDate: value })
+      onUpdate({ behavior: { ...counter.behavior, startDate: value } })
     }
   }
 
-  const denominator = counter.oddsDenominator
+  const denominator = counter.behavior.oddsDenominator
   const odds = denominator ? cumulativeOdds(denominator, counter.count) : null
-  const target = counter.target
+  const target = counter.behavior.target
   const targetProgress = progressRatio(counter.count, target)
   const oddsProgress = progressRatio(counter.count, denominator)
   const locked = !!counter.archived
 
   return (
-    <Modal title={`Comportement « ${counter.name} »`} onClose={onClose} accentColor={counter.color}>
+    <Modal title={`Comportement « ${counter.name} »`} onClose={onClose} accentColor={counter.appearance.color}>
       {locked && (
         <p className="modal-hint modal-hint--locked">
           🔒 Compteur archivé : lecture seule. Désarchive-le pour le modifier.
@@ -74,7 +80,7 @@ export function CounterBehaviorSettingsPanel({
         />
         {stepField.error && <p className="modal-error">{stepField.error}</p>}
         <p className="modal-hint">
-          +{counter.step ?? 1} / −{counter.step ?? 1} à chaque appui
+          +{counter.behavior.step ?? 1} / −{counter.behavior.step ?? 1} à chaque appui
         </p>
       </section>
 

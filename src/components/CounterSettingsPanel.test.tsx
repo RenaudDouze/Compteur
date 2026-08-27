@@ -1,23 +1,27 @@
 import { fireEvent, render, screen } from '@testing-library/react'
 import { describe, expect, it, vi } from 'vitest'
 import { CounterSettingsPanel } from './CounterSettingsPanel'
-import type { Counter } from '../types'
+import type { Counter, CounterAppearance } from '../types'
 
 const TEST_COLORS = ['#2563eb', '#7c3aed', '#0d9488']
 
-function makeCounter(overrides: Partial<Counter> = {}): Counter {
+type CounterOverrides = Partial<Omit<Counter, 'appearance'>> & Partial<CounterAppearance>
+
+function makeCounter(overrides: CounterOverrides = {}): Counter {
+  const { color, displayStyle, backgroundImageUrl, ...rest } = overrides
   return {
     id: 'counter-1',
     name: 'Compteur 1',
     count: 0,
-    color: '#2563eb',
     createdAt: new Date(2026, 7, 1).getTime(),
-    ...overrides,
+    behavior: {},
+    ...rest,
+    appearance: { color: color ?? '#2563eb', displayStyle, backgroundImageUrl },
   }
 }
 
 function renderPanel(
-  counterOverrides: Partial<Counter> = {},
+  counterOverrides: CounterOverrides = {},
   props: Partial<Parameters<typeof CounterSettingsPanel>[0]> = {}
 ) {
   const counter = makeCounter(counterOverrides)
@@ -121,7 +125,7 @@ describe('CounterSettingsPanel', () => {
     it('choisit une couleur de la palette', () => {
       const { onUpdate } = renderPanel({ color: TEST_COLORS[0] })
       fireEvent.click(screen.getByRole('button', { name: `Choisir la couleur ${TEST_COLORS[1]}` }))
-      expect(onUpdate).toHaveBeenCalledWith({ color: TEST_COLORS[1] })
+      expect(onUpdate).toHaveBeenCalledWith({ appearance: expect.objectContaining({ color: TEST_COLORS[1] }) })
     })
 
     it('reste ouvert après avoir choisi une couleur', () => {
@@ -154,13 +158,13 @@ describe('CounterSettingsPanel', () => {
     it('choisit un style personnalisé', () => {
       const { onUpdate } = renderPanel()
       fireEvent.click(screen.getByRole('button', { name: 'Choisir le style 7 segments' }))
-      expect(onUpdate).toHaveBeenCalledWith({ displayStyle: 'segment7' })
+      expect(onUpdate).toHaveBeenCalledWith({ appearance: expect.objectContaining({ displayStyle: 'segment7' }) })
     })
 
     it("repasse à 'undefined' (style par défaut) en choisissant Odomètre", () => {
       const { onUpdate } = renderPanel({ displayStyle: 'badge' })
       fireEvent.click(screen.getByRole('button', { name: 'Choisir le style Odomètre' }))
-      expect(onUpdate).toHaveBeenCalledWith({ displayStyle: undefined })
+      expect(onUpdate).toHaveBeenCalledWith({ appearance: expect.objectContaining({ displayStyle: undefined }) })
     })
 
     it('reste ouvert après avoir choisi un style', () => {
@@ -187,7 +191,9 @@ describe('CounterSettingsPanel', () => {
       const input = screen.getByPlaceholderText('https://exemple.com/image.jpg')
       fireEvent.change(input, { target: { value: 'https://exemple.com/photo.png' } })
       fireEvent.keyDown(input, { key: 'Enter' })
-      expect(onUpdate).toHaveBeenCalledWith({ backgroundImageUrl: 'https://exemple.com/photo.png' })
+      expect(onUpdate).toHaveBeenCalledWith({
+        appearance: expect.objectContaining({ backgroundImageUrl: 'https://exemple.com/photo.png' }),
+      })
     })
 
     it('valide aussi au blur', () => {
@@ -195,7 +201,9 @@ describe('CounterSettingsPanel', () => {
       const input = screen.getByPlaceholderText('https://exemple.com/image.jpg')
       fireEvent.change(input, { target: { value: 'https://exemple.com/blur.jpg' } })
       fireEvent.blur(input)
-      expect(onUpdate).toHaveBeenCalledWith({ backgroundImageUrl: 'https://exemple.com/blur.jpg' })
+      expect(onUpdate).toHaveBeenCalledWith({
+        appearance: expect.objectContaining({ backgroundImageUrl: 'https://exemple.com/blur.jpg' }),
+      })
     })
 
     it('ignore une URL invalide, affiche une erreur et garde la saisie affichée', () => {
@@ -223,7 +231,7 @@ describe('CounterSettingsPanel', () => {
       const input = screen.getByDisplayValue('https://exemple.com/ancien.jpg')
       fireEvent.change(input, { target: { value: '' } })
       fireEvent.keyDown(input, { key: 'Enter' })
-      expect(onUpdate).toHaveBeenCalledWith({ backgroundImageUrl: undefined })
+      expect(onUpdate).toHaveBeenCalledWith({ appearance: expect.objectContaining({ backgroundImageUrl: undefined }) })
     })
 
     it("ignore une URL invalide en repartant d'aucune image définie", () => {
@@ -256,7 +264,7 @@ describe('CounterSettingsPanel', () => {
     it('vide le champ et efface l\'image de fond au clic sur le bouton', () => {
       const { onUpdate } = renderPanel({ backgroundImageUrl: 'https://exemple.com/actuel.jpg' })
       fireEvent.click(screen.getByRole('button', { name: "Vider l'image de fond" }))
-      expect(onUpdate).toHaveBeenCalledWith({ backgroundImageUrl: undefined })
+      expect(onUpdate).toHaveBeenCalledWith({ appearance: expect.objectContaining({ backgroundImageUrl: undefined }) })
       expect((screen.getByPlaceholderText('https://exemple.com/image.jpg') as HTMLInputElement).value).toBe('')
     })
 

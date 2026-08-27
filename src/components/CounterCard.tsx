@@ -123,7 +123,7 @@ export function CounterCard({
     // l'appel optionnel évite une erreur silencieuse, le retour haptique
     // est un bonus, pas un pré-requis.
     navigator.vibrate?.(15)
-    onChange(sign * (counter.step ?? 1))
+    onChange(sign * (counter.behavior.step ?? 1))
   }
 
   const { startHold, stopHold, longPressFired } = useHoldToRepeat(bump)
@@ -161,7 +161,7 @@ export function CounterCard({
   // Réglé spécifiquement pour les proportions de l'odomètre : les autres
   // styles s'appuient plutôt sur les tailles CSS par mode de grille (elles
   // s'expriment en `em`, donc elles suivent quand même l'espace disponible).
-  const isDefaultStyle = !counter.displayStyle || counter.displayStyle === 'default'
+  const isDefaultStyle = !counter.appearance.displayStyle || counter.appearance.displayStyle === 'default'
   const { ref: valueRef, fontSize: fillFontSize } = useFillFontSize(fill && isDefaultStyle, counter.count)
 
   // Petit rebond élastique à chaque incrément/décrément, en plus du
@@ -193,13 +193,13 @@ export function CounterCard({
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [counter.count, pulseControls])
 
-  const celebrating = useCelebration(counter.count, counter.target)
+  const celebrating = useCelebration(counter.count, counter.behavior.target)
 
-  const odds = counter.oddsDenominator ? cumulativeOdds(counter.oddsDenominator, counter.count) : null
+  const odds = counter.behavior.oddsDenominator ? cumulativeOdds(counter.behavior.oddsDenominator, counter.count) : null
   // Durée figée et moyenne d'incrément par jour entre le début du comptage
   // et l'archivage. `archivedAt` absent (compteur archivé avant l'ajout de
   // ce champ) : pas de stats affichées plutôt que des valeurs devinées.
-  const archivedStartIso = counter.startDate ?? toIsoDate(counter.createdAt)
+  const archivedStartIso = counter.behavior.startDate ?? toIsoDate(counter.createdAt)
   const archivedEndIso = counter.archivedAt !== undefined ? toIsoDate(counter.archivedAt) : null
   const archivedDuration =
     counter.archived && archivedEndIso !== null ? formatDuration(archivedStartIso, archivedEndIso) : null
@@ -210,8 +210,8 @@ export function CounterCard({
   // Progression pour le style "anneau" : vers l'objectif libre s'il est
   // défini (le plus explicite), sinon vers le nombre moyen de tentatives —
   // mêmes formules que les barres de progression du panneau de réglages.
-  const targetProgress = progressRatio(counter.count, counter.target)
-  const oddsProgress = progressRatio(counter.count, counter.oddsDenominator)
+  const targetProgress = progressRatio(counter.count, counter.behavior.target)
+  const oddsProgress = progressRatio(counter.count, counter.behavior.oddsDenominator)
   const progress = targetProgress ?? oddsProgress
 
   return (
@@ -229,7 +229,7 @@ export function CounterCard({
       whileDrag={{ scale: 1.03, boxShadow: '0 12px 32px rgba(15, 23, 42, 0.25)', zIndex: 10 }}
       transition={{ type: 'spring', stiffness: 300, damping: 26 }}
       className="counter-card"
-      style={{ '--accent': counter.color } as React.CSSProperties}
+      style={{ '--accent': counter.appearance.color } as React.CSSProperties}
       onClick={handleCardClick}
       onPointerDown={handleCardPointerDown}
       onPointerUp={handleCardPointerUp}
@@ -252,10 +252,10 @@ export function CounterCard({
         }
       }}
     >
-      {counter.backgroundImageUrl && (
+      {counter.appearance.backgroundImageUrl && (
         <div
           className="counter-bg"
-          style={{ backgroundImage: `url("${counter.backgroundImageUrl}")` }}
+          style={{ backgroundImage: `url("${counter.appearance.backgroundImageUrl}")` }}
           aria-hidden="true"
         />
       )}
@@ -392,7 +392,7 @@ export function CounterCard({
         </>
       ) : (
         <motion.div
-          className={`counter-value${counter.displayStyle ? ` counter-value--${counter.displayStyle}` : ''}`}
+          className={`counter-value${counter.appearance.displayStyle ? ` counter-value--${counter.appearance.displayStyle}` : ''}`}
           ref={valueRef}
           style={fillFontSize ? { fontSize: `${fillFontSize}px` } : undefined}
           animate={pulseControls}
@@ -401,7 +401,7 @@ export function CounterCard({
           <CounterValueDisplay
             value={counter.count}
             direction={direction}
-            style={counter.displayStyle}
+            style={counter.appearance.displayStyle}
             progress={progress}
           />
         </motion.div>
@@ -464,7 +464,7 @@ export function CounterCard({
           onPointerCancel={stopHold}
           aria-label="Décrémenter"
         >
-          −{counter.step ?? 1}
+          −{counter.behavior.step ?? 1}
         </button>
         <button
           className="counter-btn plus"
@@ -486,7 +486,7 @@ export function CounterCard({
           onPointerCancel={stopHold}
           aria-label="Incrémenter"
         >
-          +{counter.step ?? 1}
+          +{counter.behavior.step ?? 1}
         </button>
       </div>
 

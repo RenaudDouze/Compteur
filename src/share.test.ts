@@ -2,16 +2,20 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import { buildShareText } from './share'
 import { formatOdds, cumulativeOdds } from './odds'
 import { formatStartDate, toIsoDate } from './date'
-import type { Counter } from './types'
+import type { Counter, CounterBehavior } from './types'
 
-function makeCounter(overrides: Partial<Counter> = {}): Counter {
+type CounterOverrides = Partial<Omit<Counter, 'behavior'>> & Partial<CounterBehavior>
+
+function makeCounter(overrides: CounterOverrides = {}): Counter {
+  const { oddsDenominator, startDate, step, target, ...rest } = overrides
   return {
     id: 'id-1',
     name: 'Compteur test',
     count: 5,
-    color: '#2563eb',
     createdAt: new Date(2026, 7, 1).getTime(),
-    ...overrides,
+    appearance: { color: '#2563eb' },
+    ...rest,
+    behavior: { oddsDenominator, startDate, step, target },
   }
 }
 

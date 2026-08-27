@@ -17,7 +17,7 @@ interface CounterSettingsPanelProps {
 
 export function CounterSettingsPanel({ counter, colors, onClose, onUpdate, onNavigate }: CounterSettingsPanelProps) {
   const [draftName, setDraftName] = useState(counter.name)
-  const [draftBackground, setDraftBackground] = useState(counter.backgroundImageUrl ?? '')
+  const [draftBackground, setDraftBackground] = useState(counter.appearance.backgroundImageUrl ?? '')
   const [backgroundError, setBackgroundError] = useState<string | null>(null)
 
   const commitName = () => {
@@ -30,10 +30,10 @@ export function CounterSettingsPanel({ counter, colors, onClose, onUpdate, onNav
     const trimmed = draftBackground.trim()
     if (!trimmed) {
       setBackgroundError(null)
-      onUpdate({ backgroundImageUrl: undefined })
+      onUpdate({ appearance: { ...counter.appearance, backgroundImageUrl: undefined } })
     } else if (isValidImageUrl(trimmed)) {
       setBackgroundError(null)
-      onUpdate({ backgroundImageUrl: trimmed })
+      onUpdate({ appearance: { ...counter.appearance, backgroundImageUrl: trimmed } })
     } else {
       setBackgroundError('URL http(s) invalide.')
     }
@@ -42,14 +42,14 @@ export function CounterSettingsPanel({ counter, colors, onClose, onUpdate, onNav
   const clearBackground = () => {
     setDraftBackground('')
     setBackgroundError(null)
-    onUpdate({ backgroundImageUrl: undefined })
+    onUpdate({ appearance: { ...counter.appearance, backgroundImageUrl: undefined } })
   }
 
-  const activeStyle: DisplayStyle = counter.displayStyle ?? 'default'
+  const activeStyle: DisplayStyle = counter.appearance.displayStyle ?? 'default'
   const locked = !!counter.archived
 
   return (
-    <Modal title={`Personnaliser « ${counter.name} »`} onClose={onClose} accentColor={counter.color}>
+    <Modal title={`Personnaliser « ${counter.name} »`} onClose={onClose} accentColor={counter.appearance.color}>
       {locked && (
         <p className="modal-hint modal-hint--locked">
           🔒 Compteur archivé : lecture seule. Désarchive-le pour le modifier.
@@ -80,10 +80,10 @@ export function CounterSettingsPanel({ counter, colors, onClose, onUpdate, onNav
               key={c}
               type="button"
               disabled={locked}
-              className={`counter-color-option${c === counter.color ? ' selected' : ''}`}
+              className={`counter-color-option${c === counter.appearance.color ? ' selected' : ''}`}
               style={{ background: c }}
               aria-label={`Choisir la couleur ${c}`}
-              onClick={() => onUpdate({ color: c })}
+              onClick={() => onUpdate({ appearance: { ...counter.appearance, color: c } })}
             />
           ))}
         </div>
@@ -99,7 +99,9 @@ export function CounterSettingsPanel({ counter, colors, onClose, onUpdate, onNav
               disabled={locked}
               className={`display-style-option${opt.id === activeStyle ? ' selected' : ''}`}
               aria-label={`Choisir le style ${opt.label}`}
-              onClick={() => onUpdate({ displayStyle: opt.id === 'default' ? undefined : opt.id })}
+              onClick={() =>
+                onUpdate({ appearance: { ...counter.appearance, displayStyle: opt.id === 'default' ? undefined : opt.id } })
+              }
             >
               <span className="display-style-preview">
                 <CounterValueDisplay value={8} direction={1} style={opt.id} progress={opt.id === 'ring' ? 0.6 : null} />

@@ -16,8 +16,9 @@ function makeCounter(overrides: Partial<Counter> = {}): Counter {
     id: 'existing-1',
     name: 'Existant',
     count: 1,
-    color: '#2563eb',
     createdAt: Date.now(),
+    behavior: {},
+    appearance: { color: '#2563eb' },
     ...overrides,
   }
 }
@@ -419,6 +420,23 @@ describe('App', () => {
       })
       expect(() => render(<App />)).not.toThrow()
       getItemSpy.mockRestore()
+    })
+  })
+
+  describe('migration du modèle de compteur (regroupement behavior/appearance)', () => {
+    it('migre un compteur enregistré au format à plat (avant le regroupement)', () => {
+      window.localStorage.setItem(
+        '+1.counters.v1',
+        JSON.stringify([
+          { id: 'a', name: 'À plat', count: 3, color: '#16a34a', createdAt: Date.now(), step: 5 },
+        ])
+      )
+      render(<App />)
+      expect(screen.getByText('À plat')).toBeInTheDocument()
+      expect(screen.getByRole('button', { name: 'Incrémenter' })).toHaveTextContent('+5')
+      const stored = JSON.parse(window.localStorage.getItem('+1.counters.v1') ?? '[]')
+      expect(stored[0].behavior).toEqual({ step: 5 })
+      expect(stored[0].appearance.color).toBe('#16a34a')
     })
   })
 

@@ -1,21 +1,25 @@
 import { fireEvent, render, screen } from '@testing-library/react'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import { CounterBehaviorSettingsPanel } from './CounterBehaviorSettingsPanel'
-import type { Counter } from '../types'
+import type { Counter, CounterBehavior } from '../types'
 
-function makeCounter(overrides: Partial<Counter> = {}): Counter {
+type CounterOverrides = Partial<Omit<Counter, 'behavior'>> & Partial<CounterBehavior>
+
+function makeCounter(overrides: CounterOverrides = {}): Counter {
+  const { oddsDenominator, startDate, step, target, ...rest } = overrides
   return {
     id: 'counter-1',
     name: 'Compteur 1',
     count: 0,
-    color: '#2563eb',
     createdAt: new Date(2026, 7, 1).getTime(),
-    ...overrides,
+    appearance: { color: '#2563eb' },
+    ...rest,
+    behavior: { oddsDenominator, startDate, step, target },
   }
 }
 
 function renderPanel(
-  counterOverrides: Partial<Counter> = {},
+  counterOverrides: CounterOverrides = {},
   props: Partial<Parameters<typeof CounterBehaviorSettingsPanel>[0]> = {}
 ) {
   const counter = makeCounter(counterOverrides)
@@ -66,7 +70,7 @@ describe('CounterBehaviorSettingsPanel', () => {
       const input = screen.getByPlaceholderText('1')
       fireEvent.change(input, { target: { value: '5' } })
       fireEvent.keyDown(input, { key: 'Enter' })
-      expect(onUpdate).toHaveBeenCalledWith({ step: 5 })
+      expect(onUpdate).toHaveBeenCalledWith({ behavior: expect.objectContaining({ step: 5 }) })
     })
 
     it('valide aussi au blur', () => {
@@ -74,7 +78,7 @@ describe('CounterBehaviorSettingsPanel', () => {
       const input = screen.getByPlaceholderText('1')
       fireEvent.change(input, { target: { value: '10' } })
       fireEvent.blur(input)
-      expect(onUpdate).toHaveBeenCalledWith({ step: 10 })
+      expect(onUpdate).toHaveBeenCalledWith({ behavior: expect.objectContaining({ step: 10 }) })
     })
 
     it('rejette une saisie contenant des lettres plutôt que de garder seulement les chiffres', () => {
@@ -91,7 +95,7 @@ describe('CounterBehaviorSettingsPanel', () => {
       const input = screen.getByDisplayValue('5')
       fireEvent.change(input, { target: { value: '' } })
       fireEvent.keyDown(input, { key: 'Enter' })
-      expect(onUpdate).toHaveBeenCalledWith({ step: undefined })
+      expect(onUpdate).toHaveBeenCalledWith({ behavior: expect.objectContaining({ step: undefined }) })
     })
 
     it('affiche une erreur et garde la saisie invalide affichée si la saisie est 0', () => {
@@ -156,7 +160,7 @@ describe('CounterBehaviorSettingsPanel', () => {
       const input = screen.getByPlaceholderText('ex : 50')
       fireEvent.change(input, { target: { value: '50' } })
       fireEvent.keyDown(input, { key: 'Enter' })
-      expect(onUpdate).toHaveBeenCalledWith({ target: 50 })
+      expect(onUpdate).toHaveBeenCalledWith({ behavior: expect.objectContaining({ target: 50 }) })
     })
 
     it('valide aussi au blur', () => {
@@ -164,7 +168,7 @@ describe('CounterBehaviorSettingsPanel', () => {
       const input = screen.getByPlaceholderText('ex : 50')
       fireEvent.change(input, { target: { value: '20' } })
       fireEvent.blur(input)
-      expect(onUpdate).toHaveBeenCalledWith({ target: 20 })
+      expect(onUpdate).toHaveBeenCalledWith({ behavior: expect.objectContaining({ target: 20 }) })
     })
 
     it('rejette une saisie contenant des lettres plutôt que de garder seulement les chiffres', () => {
@@ -181,7 +185,7 @@ describe('CounterBehaviorSettingsPanel', () => {
       const input = screen.getByDisplayValue('10')
       fireEvent.change(input, { target: { value: '' } })
       fireEvent.keyDown(input, { key: 'Enter' })
-      expect(onUpdate).toHaveBeenCalledWith({ target: undefined })
+      expect(onUpdate).toHaveBeenCalledWith({ behavior: expect.objectContaining({ target: undefined }) })
     })
 
     it('affiche une erreur et garde la saisie invalide affichée si la saisie est 0', () => {
@@ -249,7 +253,7 @@ describe('CounterBehaviorSettingsPanel', () => {
       const input = screen.getByPlaceholderText('4096')
       fireEvent.change(input, { target: { value: '4096' } })
       fireEvent.keyDown(input, { key: 'Enter' })
-      expect(onUpdate).toHaveBeenCalledWith({ oddsDenominator: 4096 })
+      expect(onUpdate).toHaveBeenCalledWith({ behavior: expect.objectContaining({ oddsDenominator: 4096 }) })
     })
 
     it('valide aussi au blur', () => {
@@ -257,7 +261,7 @@ describe('CounterBehaviorSettingsPanel', () => {
       const input = screen.getByPlaceholderText('4096')
       fireEvent.change(input, { target: { value: '20' } })
       fireEvent.blur(input)
-      expect(onUpdate).toHaveBeenCalledWith({ oddsDenominator: 20 })
+      expect(onUpdate).toHaveBeenCalledWith({ behavior: expect.objectContaining({ oddsDenominator: 20 }) })
     })
 
     it('rejette une saisie contenant des lettres plutôt que de garder seulement les chiffres', () => {
@@ -274,7 +278,7 @@ describe('CounterBehaviorSettingsPanel', () => {
       const input = screen.getByDisplayValue('10')
       fireEvent.change(input, { target: { value: '' } })
       fireEvent.keyDown(input, { key: 'Enter' })
-      expect(onUpdate).toHaveBeenCalledWith({ oddsDenominator: undefined })
+      expect(onUpdate).toHaveBeenCalledWith({ behavior: expect.objectContaining({ oddsDenominator: undefined }) })
     })
 
     it('affiche une erreur et garde la saisie invalide affichée si la saisie est 0', () => {
@@ -399,14 +403,14 @@ describe('CounterBehaviorSettingsPanel', () => {
       const { onUpdate } = renderPanel()
       const input = document.querySelector('input[type="date"]') as HTMLInputElement
       fireEvent.change(input, { target: { value: '2026-07-15' } })
-      expect(onUpdate).toHaveBeenCalledWith({ startDate: '2026-07-15' })
+      expect(onUpdate).toHaveBeenCalledWith({ behavior: expect.objectContaining({ startDate: '2026-07-15' }) })
     })
 
     it('efface la date de début si le champ est vidé', () => {
       const { onUpdate } = renderPanel()
       const input = document.querySelector('input[type="date"]') as HTMLInputElement
       fireEvent.change(input, { target: { value: '' } })
-      expect(onUpdate).toHaveBeenCalledWith({ startDate: undefined })
+      expect(onUpdate).toHaveBeenCalledWith({ behavior: expect.objectContaining({ startDate: undefined }) })
     })
 
     it('affiche un rappel textuel de la date de début', () => {
@@ -430,7 +434,7 @@ describe('CounterBehaviorSettingsPanel', () => {
       expect(screen.getByText('La date ne peut pas être dans le futur.')).toBeInTheDocument()
       fireEvent.change(input, { target: { value: '2026-02-01' } })
       expect(screen.queryByText('La date ne peut pas être dans le futur.')).not.toBeInTheDocument()
-      expect(onUpdate).toHaveBeenCalledWith({ startDate: '2026-02-01' })
+      expect(onUpdate).toHaveBeenCalledWith({ behavior: expect.objectContaining({ startDate: '2026-02-01' }) })
     })
   })
 

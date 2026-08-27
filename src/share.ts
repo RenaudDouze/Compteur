@@ -6,14 +6,14 @@ import type { Counter } from './types'
 export function buildShareText(counter: Counter): string {
   const lines = [`${counter.name} : ${counter.count}`]
 
-  if (counter.oddsDenominator) {
-    const odds = cumulativeOdds(counter.oddsDenominator, counter.count)
+  if (counter.behavior.oddsDenominator) {
+    const odds = cumulativeOdds(counter.behavior.oddsDenominator, counter.count)
     lines.push(
-      `1 chance sur ${counter.oddsDenominator.toLocaleString('fr-FR')} · ${formatOdds(odds)} de chances de l'avoir obtenu avant ce stade`
+      `1 chance sur ${counter.behavior.oddsDenominator.toLocaleString('fr-FR')} · ${formatOdds(odds)} de chances de l'avoir obtenu avant ce stade`
     )
   }
 
-  const startDate = counter.startDate ?? toIsoDate(counter.createdAt)
+  const startDate = counter.behavior.startDate ?? toIsoDate(counter.createdAt)
   lines.push(formatStartDate(startDate))
 
   return lines.join('\n')

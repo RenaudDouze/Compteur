@@ -3,7 +3,7 @@ import { AnimatePresence, Reorder } from 'framer-motion'
 import { useLocalStorage } from './hooks/useLocalStorage'
 import { useSystemDarkMode } from './hooks/useSystemDarkMode'
 import { CounterCard } from './components/CounterCard'
-import { decodeCountersFromParam } from './sync'
+import { decodeCountersFromParam, migrateStoredCounter } from './sync'
 import { appendHistoryPoint } from './history'
 import { makeId } from './id'
 import { COLORS, pickColor } from './colors'
@@ -43,9 +43,30 @@ function migrateLegacyStorageKey(oldKey: string, newKey: string) {
   }
 }
 
+// Migre les compteurs stockés au format à plat (avant le regroupement des
+// réglages en `behavior`/`appearance`) vers le nouveau format imbriqué.
+// Idempotente (un compteur déjà migré ressort inchangé) : peut donc être
+// appelée à chaque montage sans vérification préalable, comme
+// `migrateLegacyStorageKey` ci-dessus, et pour la même raison — s'exécuter
+// avant que `useLocalStorage` ne lise la clé.
+function migrateCounterShape(key: string) {
+  try {
+    const stored = window.localStorage.getItem(key)
+    if (stored === null) return
+    const parsed = JSON.parse(stored)
+    // Pas de vérification explicite Array.isArray : un `parsed` qui n'est pas
+    // un tableau fait échouer `.map` juste en dessous, intercepté par le
+    // catch (rien à migrer dans ce cas non plus).
+    window.localStorage.setItem(key, JSON.stringify(parsed.map(migrateStoredCounter)))
+  } catch {
+    // stockage indisponible ou contenu invalide : rien à migrer
+  }
+}
+
 export default function App() {
   migrateLegacyStorageKey('compteur.counters.v1', '+1.counters.v1')
   migrateLegacyStorageKey('compteur.theme.v1', '+1.theme.v1')
+  migrateCounterShape('+1.counters.v1')
 
   const [counters, setCounters] = useLocalStorage<Counter[]>('+1.counters.v1', [])
   // Id du compteur qui vient d'être créé, pour ouvrir directement son champ
@@ -184,9 +205,10 @@ export default function App() {
       id: makeId(),
       name: `Compteur ${counters.length + 1}`,
       count: 0,
-      color: pickColor(counters.length),
       createdAt: Date.now(),
       history: appendHistoryPoint(undefined, 0),
+      behavior: {},
+      appearance: { color: pickColor(counters.length) },
     }
     setCounters((prev) => [...prev, newCounter])
     // Sinon le nouveau compteur atterrit hors champ si on était sur l'onglet
@@ -254,10 +276,10 @@ export default function App() {
       name: `${source.name} (copie)`,
       count: 0,
       createdAt: Date.now(),
-      startDate: undefined,
       history: appendHistoryPoint(undefined, 0),
       archived: undefined,
       archivedAt: undefined,
+      behavior: { ...source.behavior, startDate: undefined },
     }
     setCounters((prev) => [...prev, copy])
   }
