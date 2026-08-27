@@ -28,6 +28,38 @@ const CELEBRATION_DURATION_MS = 1100
 const CONFETTI_ANGLES = [-90, -65, -40, -15, 15, 40, 65, 90, -110, 110]
 const CONFETTI_COLORS = ['#f43f5e', '#f59e0b', '#10b981', '#3b82f6', '#8b5cf6', '#ec4899']
 
+// Icônes d'accès direct aux 4 modales, dans leur ordre d'affichage.
+const PANEL_BUTTONS: { panel: PanelKind; className: string; label: string; title: string; icon: string }[] = [
+  {
+    panel: 'comportement',
+    className: 'counter-behavior-btn',
+    label: 'Régler le comportement du compteur',
+    title: "Pas d'incrément, objectif, probabilité, date de début, partage, duplication",
+    icon: '±',
+  },
+  {
+    panel: 'personnalisation',
+    className: 'counter-settings-btn',
+    label: 'Personnaliser le compteur',
+    title: "Nom, couleur, style d'affichage, image de fond",
+    icon: '⚙',
+  },
+  {
+    panel: 'historique',
+    className: 'counter-history-btn',
+    label: "Voir l'historique du compteur",
+    title: 'Historique des valeurs',
+    icon: '↗',
+  },
+  {
+    panel: 'actions',
+    className: 'counter-actions-btn',
+    label: 'Actions du compteur',
+    title: 'Partager, dupliquer, supprimer',
+    icon: '⋯',
+  },
+]
+
 interface CounterCardProps {
   counter: Counter
   fill?: boolean
@@ -393,57 +425,21 @@ export function CounterCard({
           </button>
         )}
 
-        <button
-          className="counter-behavior-btn"
-          onClick={(e) => {
-            e.stopPropagation()
-            setOpenPanel('comportement')
-          }}
-          onPointerDown={(e) => e.stopPropagation()}
-          aria-label="Régler le comportement du compteur"
-          title="Pas d'incrément, objectif, probabilité, date de début, partage, duplication"
-        >
-          ±
-        </button>
-
-        <button
-          className="counter-settings-btn"
-          onClick={(e) => {
-            e.stopPropagation()
-            setOpenPanel('personnalisation')
-          }}
-          onPointerDown={(e) => e.stopPropagation()}
-          aria-label="Personnaliser le compteur"
-          title="Nom, couleur, style d'affichage, image de fond"
-        >
-          ⚙
-        </button>
-
-        <button
-          className="counter-history-btn"
-          onClick={(e) => {
-            e.stopPropagation()
-            setOpenPanel('historique')
-          }}
-          onPointerDown={(e) => e.stopPropagation()}
-          aria-label="Voir l'historique du compteur"
-          title="Historique des valeurs"
-        >
-          ↗
-        </button>
-
-        <button
-          className="counter-actions-btn"
-          onClick={(e) => {
-            e.stopPropagation()
-            setOpenPanel('actions')
-          }}
-          onPointerDown={(e) => e.stopPropagation()}
-          aria-label="Actions du compteur"
-          title="Partager, dupliquer, supprimer"
-        >
-          ⋯
-        </button>
+        {PANEL_BUTTONS.map(({ panel, className, label, title, icon }) => (
+          <button
+            key={panel}
+            className={className}
+            onClick={(e) => {
+              e.stopPropagation()
+              setOpenPanel(panel)
+            }}
+            onPointerDown={(e) => e.stopPropagation()}
+            aria-label={label}
+            title={title}
+          >
+            {icon}
+          </button>
+        ))}
       </div>
 
       {editing ? (
