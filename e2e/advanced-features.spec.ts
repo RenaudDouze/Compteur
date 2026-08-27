@@ -131,7 +131,7 @@ test.describe('Fonctionnalités avancées', () => {
     const downloadPromise = page.waitForEvent('download')
     await page.getByRole('button', { name: /Exporter en CSV/ }).click()
     const download = await downloadPromise
-    expect(download.suggestedFilename()).toMatch(/^compteur-historique-Compteur-1-\d{4}-\d{2}-\d{2}\.csv$/)
+    expect(download.suggestedFilename()).toMatch(/^\+1-historique-Compteur-1-\d{4}-\d{2}-\d{2}\.csv$/)
 
     const path = await download.path()
     const fs = await import('fs')

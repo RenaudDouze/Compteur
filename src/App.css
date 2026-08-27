@@ -425,6 +425,15 @@
   }
 }
 
+/* Garde un repère visuel statique (sans le vol des particules) plutôt que de
+   supprimer complètement le retour visuel de la célébration. */
+@media (prefers-reduced-motion: reduce) {
+  .counter-confetti {
+    animation: none;
+    opacity: 1;
+  }
+}
+
 .counter-color-option {
   width: 26px;
   height: 26px;
