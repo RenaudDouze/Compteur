@@ -11,23 +11,11 @@ interface CounterSettingsPanelProps {
   counter: Counter
   colors: string[]
   onClose: () => void
-  onRename: (name: string) => void
-  onSetBackgroundImage: (url: string | undefined) => void
-  onSetColor: (color: string) => void
-  onSetDisplayStyle: (style: DisplayStyle | undefined) => void
+  onUpdate: (patch: Partial<Counter>) => void
   onNavigate: (panel: PanelKind) => void
 }
 
-export function CounterSettingsPanel({
-  counter,
-  colors,
-  onClose,
-  onRename,
-  onSetBackgroundImage,
-  onSetColor,
-  onSetDisplayStyle,
-  onNavigate,
-}: CounterSettingsPanelProps) {
+export function CounterSettingsPanel({ counter, colors, onClose, onUpdate, onNavigate }: CounterSettingsPanelProps) {
   const [draftName, setDraftName] = useState(counter.name)
   const [draftBackground, setDraftBackground] = useState(counter.backgroundImageUrl ?? '')
   const [backgroundError, setBackgroundError] = useState<string | null>(null)
@@ -35,17 +23,17 @@ export function CounterSettingsPanel({
   const commitName = () => {
     const trimmed = draftName.trim() || 'Sans nom'
     setDraftName(trimmed)
-    onRename(trimmed)
+    onUpdate({ name: trimmed })
   }
 
   const commitBackground = () => {
     const trimmed = draftBackground.trim()
     if (!trimmed) {
       setBackgroundError(null)
-      onSetBackgroundImage(undefined)
+      onUpdate({ backgroundImageUrl: undefined })
     } else if (isValidImageUrl(trimmed)) {
       setBackgroundError(null)
-      onSetBackgroundImage(trimmed)
+      onUpdate({ backgroundImageUrl: trimmed })
     } else {
       setBackgroundError('URL http(s) invalide.')
     }
@@ -54,7 +42,7 @@ export function CounterSettingsPanel({
   const clearBackground = () => {
     setDraftBackground('')
     setBackgroundError(null)
-    onSetBackgroundImage(undefined)
+    onUpdate({ backgroundImageUrl: undefined })
   }
 
   const activeStyle: DisplayStyle = counter.displayStyle ?? 'default'
@@ -95,7 +83,7 @@ export function CounterSettingsPanel({
               className={`counter-color-option${c === counter.color ? ' selected' : ''}`}
               style={{ background: c }}
               aria-label={`Choisir la couleur ${c}`}
-              onClick={() => onSetColor(c)}
+              onClick={() => onUpdate({ color: c })}
             />
           ))}
         </div>
@@ -111,7 +99,7 @@ export function CounterSettingsPanel({
               disabled={locked}
               className={`display-style-option${opt.id === activeStyle ? ' selected' : ''}`}
               aria-label={`Choisir le style ${opt.label}`}
-              onClick={() => onSetDisplayStyle(opt.id === 'default' ? undefined : opt.id)}
+              onClick={() => onUpdate({ displayStyle: opt.id === 'default' ? undefined : opt.id })}
             >
               <span className="display-style-preview">
                 <CounterValueDisplay value={8} direction={1} style={opt.id} progress={opt.id === 'ring' ? 0.6 : null} />

@@ -24,10 +24,7 @@ function renderPanel(
   const handlers = {
     colors: TEST_COLORS,
     onClose: vi.fn(),
-    onRename: vi.fn(),
-    onSetBackgroundImage: vi.fn(),
-    onSetColor: vi.fn(),
-    onSetDisplayStyle: vi.fn(),
+    onUpdate: vi.fn(),
     onNavigate: vi.fn(),
     ...props,
   }
@@ -72,35 +69,35 @@ describe('CounterSettingsPanel', () => {
     })
 
     it('renomme au blur', () => {
-      const { onRename } = renderPanel({ name: 'Ancien' })
+      const { onUpdate } = renderPanel({ name: 'Ancien' })
       const input = screen.getByDisplayValue('Ancien')
       fireEvent.change(input, { target: { value: 'Nouveau' } })
       fireEvent.blur(input)
-      expect(onRename).toHaveBeenCalledWith('Nouveau')
+      expect(onUpdate).toHaveBeenCalledWith({ name: 'Nouveau' })
     })
 
     it('renomme sur Entrée', () => {
-      const { onRename } = renderPanel({ name: 'Ancien' })
+      const { onUpdate } = renderPanel({ name: 'Ancien' })
       const input = screen.getByDisplayValue('Ancien')
       fireEvent.change(input, { target: { value: 'Nouveau' } })
       fireEvent.keyDown(input, { key: 'Enter' })
-      expect(onRename).toHaveBeenCalledWith('Nouveau')
+      expect(onUpdate).toHaveBeenCalledWith({ name: 'Nouveau' })
     })
 
     it('ignore une autre touche que Entrée', () => {
-      const { onRename } = renderPanel({ name: 'Ancien' })
+      const { onUpdate } = renderPanel({ name: 'Ancien' })
       const input = screen.getByDisplayValue('Ancien')
       fireEvent.change(input, { target: { value: 'Nouveau' } })
       fireEvent.keyDown(input, { key: 'a' })
-      expect(onRename).not.toHaveBeenCalled()
+      expect(onUpdate).not.toHaveBeenCalled()
     })
 
     it('remplace un nom vide (ou uniquement des espaces) par "Sans nom"', () => {
-      const { onRename } = renderPanel({ name: 'Ancien' })
+      const { onUpdate } = renderPanel({ name: 'Ancien' })
       const input = screen.getByDisplayValue('Ancien')
       fireEvent.change(input, { target: { value: '   ' } })
       fireEvent.blur(input)
-      expect(onRename).toHaveBeenCalledWith('Sans nom')
+      expect(onUpdate).toHaveBeenCalledWith({ name: 'Sans nom' })
       expect(screen.getByDisplayValue('Sans nom')).toBeInTheDocument()
     })
   })
@@ -122,9 +119,9 @@ describe('CounterSettingsPanel', () => {
     })
 
     it('choisit une couleur de la palette', () => {
-      const { onSetColor } = renderPanel({ color: TEST_COLORS[0] })
+      const { onUpdate } = renderPanel({ color: TEST_COLORS[0] })
       fireEvent.click(screen.getByRole('button', { name: `Choisir la couleur ${TEST_COLORS[1]}` }))
-      expect(onSetColor).toHaveBeenCalledWith(TEST_COLORS[1])
+      expect(onUpdate).toHaveBeenCalledWith({ color: TEST_COLORS[1] })
     })
 
     it('reste ouvert après avoir choisi une couleur', () => {
@@ -155,15 +152,15 @@ describe('CounterSettingsPanel', () => {
     })
 
     it('choisit un style personnalisé', () => {
-      const { onSetDisplayStyle } = renderPanel()
+      const { onUpdate } = renderPanel()
       fireEvent.click(screen.getByRole('button', { name: 'Choisir le style 7 segments' }))
-      expect(onSetDisplayStyle).toHaveBeenCalledWith('segment7')
+      expect(onUpdate).toHaveBeenCalledWith({ displayStyle: 'segment7' })
     })
 
     it("repasse à 'undefined' (style par défaut) en choisissant Odomètre", () => {
-      const { onSetDisplayStyle } = renderPanel({ displayStyle: 'badge' })
+      const { onUpdate } = renderPanel({ displayStyle: 'badge' })
       fireEvent.click(screen.getByRole('button', { name: 'Choisir le style Odomètre' }))
-      expect(onSetDisplayStyle).toHaveBeenCalledWith(undefined)
+      expect(onUpdate).toHaveBeenCalledWith({ displayStyle: undefined })
     })
 
     it('reste ouvert après avoir choisi un style', () => {
@@ -186,27 +183,27 @@ describe('CounterSettingsPanel', () => {
     })
 
     it('définit une image de fond avec une URL http(s) valide (Entrée)', () => {
-      const { onSetBackgroundImage } = renderPanel()
+      const { onUpdate } = renderPanel()
       const input = screen.getByPlaceholderText('https://exemple.com/image.jpg')
       fireEvent.change(input, { target: { value: 'https://exemple.com/photo.png' } })
       fireEvent.keyDown(input, { key: 'Enter' })
-      expect(onSetBackgroundImage).toHaveBeenCalledWith('https://exemple.com/photo.png')
+      expect(onUpdate).toHaveBeenCalledWith({ backgroundImageUrl: 'https://exemple.com/photo.png' })
     })
 
     it('valide aussi au blur', () => {
-      const { onSetBackgroundImage } = renderPanel()
+      const { onUpdate } = renderPanel()
       const input = screen.getByPlaceholderText('https://exemple.com/image.jpg')
       fireEvent.change(input, { target: { value: 'https://exemple.com/blur.jpg' } })
       fireEvent.blur(input)
-      expect(onSetBackgroundImage).toHaveBeenCalledWith('https://exemple.com/blur.jpg')
+      expect(onUpdate).toHaveBeenCalledWith({ backgroundImageUrl: 'https://exemple.com/blur.jpg' })
     })
 
     it('ignore une URL invalide, affiche une erreur et garde la saisie affichée', () => {
-      const { onSetBackgroundImage } = renderPanel({ backgroundImageUrl: 'https://exemple.com/ancien.jpg' })
+      const { onUpdate } = renderPanel({ backgroundImageUrl: 'https://exemple.com/ancien.jpg' })
       const input = screen.getByDisplayValue('https://exemple.com/ancien.jpg')
       fireEvent.change(input, { target: { value: 'pas-une-url' } })
       fireEvent.keyDown(input, { key: 'Enter' })
-      expect(onSetBackgroundImage).not.toHaveBeenCalled()
+      expect(onUpdate).not.toHaveBeenCalled()
       expect(screen.getByText('URL http(s) invalide.')).toBeInTheDocument()
       expect(screen.getByDisplayValue('pas-une-url')).toBeInTheDocument()
     })
@@ -222,28 +219,28 @@ describe('CounterSettingsPanel', () => {
     })
 
     it('efface l\'image de fond si la saisie est vidée', () => {
-      const { onSetBackgroundImage } = renderPanel({ backgroundImageUrl: 'https://exemple.com/ancien.jpg' })
+      const { onUpdate } = renderPanel({ backgroundImageUrl: 'https://exemple.com/ancien.jpg' })
       const input = screen.getByDisplayValue('https://exemple.com/ancien.jpg')
       fireEvent.change(input, { target: { value: '' } })
       fireEvent.keyDown(input, { key: 'Enter' })
-      expect(onSetBackgroundImage).toHaveBeenCalledWith(undefined)
+      expect(onUpdate).toHaveBeenCalledWith({ backgroundImageUrl: undefined })
     })
 
     it("ignore une URL invalide en repartant d'aucune image définie", () => {
-      const { onSetBackgroundImage } = renderPanel()
+      const { onUpdate } = renderPanel()
       const input = screen.getByPlaceholderText('https://exemple.com/image.jpg')
       fireEvent.change(input, { target: { value: 'pas-une-url' } })
       fireEvent.keyDown(input, { key: 'Enter' })
-      expect(onSetBackgroundImage).not.toHaveBeenCalled()
+      expect(onUpdate).not.toHaveBeenCalled()
       expect((input as HTMLInputElement).value).toBe('pas-une-url')
     })
 
     it("ne commite pas sur une touche autre qu'Entrée", () => {
-      const { onSetBackgroundImage } = renderPanel()
+      const { onUpdate } = renderPanel()
       const input = screen.getByPlaceholderText('https://exemple.com/image.jpg')
       fireEvent.change(input, { target: { value: 'https://exemple.com/photo.png' } })
       fireEvent.keyDown(input, { key: 'a' })
-      expect(onSetBackgroundImage).not.toHaveBeenCalled()
+      expect(onUpdate).not.toHaveBeenCalled()
     })
 
     it("n'affiche pas de bouton pour vider le champ quand il est vide", () => {
@@ -257,9 +254,9 @@ describe('CounterSettingsPanel', () => {
     })
 
     it('vide le champ et efface l\'image de fond au clic sur le bouton', () => {
-      const { onSetBackgroundImage } = renderPanel({ backgroundImageUrl: 'https://exemple.com/actuel.jpg' })
+      const { onUpdate } = renderPanel({ backgroundImageUrl: 'https://exemple.com/actuel.jpg' })
       fireEvent.click(screen.getByRole('button', { name: "Vider l'image de fond" }))
-      expect(onSetBackgroundImage).toHaveBeenCalledWith(undefined)
+      expect(onUpdate).toHaveBeenCalledWith({ backgroundImageUrl: undefined })
       expect((screen.getByPlaceholderText('https://exemple.com/image.jpg') as HTMLInputElement).value).toBe('')
     })
 
@@ -303,9 +300,9 @@ describe('CounterSettingsPanel', () => {
     })
 
     it('ignore un clic sur une couleur désactivée', () => {
-      const { onSetColor } = renderPanel({ archived: true, color: TEST_COLORS[0] })
+      const { onUpdate } = renderPanel({ archived: true, color: TEST_COLORS[0] })
       fireEvent.click(screen.getByRole('button', { name: `Choisir la couleur ${TEST_COLORS[1]}` }))
-      expect(onSetColor).not.toHaveBeenCalled()
+      expect(onUpdate).not.toHaveBeenCalled()
     })
   })
 })
