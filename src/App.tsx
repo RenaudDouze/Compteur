@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from 'react'
+import { useEffect, useMemo, useRef, useState } from 'react'
 import { AnimatePresence, Reorder } from 'framer-motion'
 import { useLocalStorage } from './hooks/useLocalStorage'
 import { useSystemDarkMode } from './hooks/useSystemDarkMode'
@@ -73,14 +73,19 @@ export default function App() {
   // Bascule l'ensemble de la liste (archivés masqués par défaut) ; la
   // recherche filtre ensuite par nom à l'intérieur de la vue active.
   const [archiveView, setArchiveView] = useState<'active' | 'archived'>('active')
-  const archivedCount = counters.filter((c) => c.archived).length
-  const filteredCounters = counters.filter(
-    (c) => (archiveView === 'archived' ? !!c.archived : !c.archived) && matchesSearch(c)
+  const archivedCount = useMemo(() => counters.filter((c) => c.archived).length, [counters])
+  const filteredCounters = useMemo(
+    () => counters.filter((c) => (archiveView === 'archived' ? !!c.archived : !c.archived) && matchesSearch(c)),
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    [counters, archiveView, searchQuery]
   )
   // Fait remonter les compteurs épinglés en tête d'affichage, sans toucher à
   // leur ordre de tri manuel entre eux (tri stable) : une alternative rapide
   // au glisser-déposer pour les compteurs qu'on veut garder à portée de main.
-  const sortedCounters = [...filteredCounters].sort((a, b) => Number(!!b.pinned) - Number(!!a.pinned))
+  const sortedCounters = useMemo(
+    () => [...filteredCounters].sort((a, b) => Number(!!b.pinned) - Number(!!a.pinned)),
+    [filteredCounters]
+  )
 
   const [themePreference, setThemePreference] = useLocalStorage<ThemePreference>('+1.theme.v1', 'system')
   const systemDark = useSystemDarkMode()
