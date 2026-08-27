@@ -1,21 +1,11 @@
 import { useState } from 'react'
 import { cumulativeOdds, formatOdds, formatRemainingAttempts, formatConstantChanceReminder, progressRatio } from '../odds'
 import { daysBetween, formatAveragePerDay, formatDuration, formatStartDate, toIsoDate, todayIsoDate } from '../date'
+import { usePositiveIntField } from '../hooks/usePositiveIntField'
 import { Modal } from './Modal'
 import { PanelNav } from './PanelNav'
 import type { PanelKind } from './PanelNav'
 import type { Counter } from '../types'
-
-const POSITIVE_INT_ERROR = 'Nombre entier positif requis.'
-
-// N'accepte que des chiffres (contrairement à un simple filtrage des
-// caractères non numériques) : une saisie comme "abd7" doit être rejetée,
-// pas silencieusement réduite à "7".
-function parsePositiveInt(trimmed: string): number | undefined {
-  if (!/^\d+$/.test(trimmed)) return undefined
-  const value = parseInt(trimmed, 10)
-  return value > 0 ? value : undefined
-}
 
 interface CounterBehaviorSettingsPanelProps {
   counter: Counter
@@ -38,66 +28,11 @@ export function CounterBehaviorSettingsPanel({
 }: CounterBehaviorSettingsPanelProps) {
   const startDate = counter.startDate ?? toIsoDate(counter.createdAt)
 
-  const [draftOdds, setDraftOdds] = useState(counter.oddsDenominator?.toString() ?? '')
-  const [oddsError, setOddsError] = useState<string | null>(null)
-  const [draftTarget, setDraftTarget] = useState(counter.target?.toString() ?? '')
-  const [targetError, setTargetError] = useState<string | null>(null)
-  const [draftStep, setDraftStep] = useState(counter.step?.toString() ?? '')
-  const [stepError, setStepError] = useState<string | null>(null)
+  const stepField = usePositiveIntField(counter.step, onSetStep)
+  const targetField = usePositiveIntField(counter.target, onSetTarget)
+  const oddsField = usePositiveIntField(counter.oddsDenominator, onSetOdds)
   const [draftStartDate, setDraftStartDate] = useState(startDate)
   const [startDateError, setStartDateError] = useState<string | null>(null)
-
-  const commitOdds = () => {
-    const trimmed = draftOdds.trim()
-    if (trimmed === '') {
-      setOddsError(null)
-      onSetOdds(undefined)
-      return
-    }
-    const parsed = parsePositiveInt(trimmed)
-    if (parsed !== undefined) {
-      setOddsError(null)
-      onSetOdds(parsed)
-    } else {
-      // Laisse la saisie invalide affichée (plutôt que de revenir à la
-      // valeur précédente) : sinon un blur qui reperd le focus sur ce champ
-      // (ex: en cliquant ailleurs) recommetterait un brouillon déjà vidé, et
-      // ferait silencieusement disparaître le message d'erreur.
-      setOddsError(POSITIVE_INT_ERROR)
-    }
-  }
-
-  const commitTarget = () => {
-    const trimmed = draftTarget.trim()
-    if (trimmed === '') {
-      setTargetError(null)
-      onSetTarget(undefined)
-      return
-    }
-    const parsed = parsePositiveInt(trimmed)
-    if (parsed !== undefined) {
-      setTargetError(null)
-      onSetTarget(parsed)
-    } else {
-      setTargetError(POSITIVE_INT_ERROR)
-    }
-  }
-
-  const commitStep = () => {
-    const trimmed = draftStep.trim()
-    if (trimmed === '') {
-      setStepError(null)
-      onSetStep(undefined)
-      return
-    }
-    const parsed = parsePositiveInt(trimmed)
-    if (parsed !== undefined) {
-      setStepError(null)
-      onSetStep(parsed)
-    } else {
-      setStepError(POSITIVE_INT_ERROR)
-    }
-  }
 
   const handleStartDateChange = (value: string) => {
     setDraftStartDate(value)
@@ -136,19 +71,14 @@ export function CounterBehaviorSettingsPanel({
           inputMode="numeric"
           pattern="[0-9]*"
           disabled={locked}
-          aria-invalid={stepError !== null}
-          value={draftStep}
+          aria-invalid={stepField.error !== null}
+          value={stepField.value}
           placeholder="1"
-          onChange={(e) => {
-            setDraftStep(e.target.value)
-            setStepError(null)
-          }}
-          onBlur={commitStep}
-          onKeyDown={(e) => {
-            if (e.key === 'Enter') commitStep()
-          }}
+          onChange={stepField.onChange}
+          onBlur={stepField.onBlur}
+          onKeyDown={stepField.onKeyDown}
         />
-        {stepError && <p className="modal-error">{stepError}</p>}
+        {stepField.error && <p className="modal-error">{stepField.error}</p>}
         <p className="modal-hint">
           +{counter.step ?? 1} / −{counter.step ?? 1} à chaque appui
         </p>
@@ -161,19 +91,14 @@ export function CounterBehaviorSettingsPanel({
           inputMode="numeric"
           pattern="[0-9]*"
           disabled={locked}
-          aria-invalid={targetError !== null}
-          value={draftTarget}
+          aria-invalid={targetField.error !== null}
+          value={targetField.value}
           placeholder="ex : 50"
-          onChange={(e) => {
-            setDraftTarget(e.target.value)
-            setTargetError(null)
-          }}
-          onBlur={commitTarget}
-          onKeyDown={(e) => {
-            if (e.key === 'Enter') commitTarget()
-          }}
+          onChange={targetField.onChange}
+          onBlur={targetField.onBlur}
+          onKeyDown={targetField.onKeyDown}
         />
-        {targetError && <p className="modal-error">{targetError}</p>}
+        {targetField.error && <p className="modal-error">{targetField.error}</p>}
         {target !== undefined && (
           <>
             <div
@@ -203,20 +128,15 @@ export function CounterBehaviorSettingsPanel({
             inputMode="numeric"
             pattern="[0-9]*"
             disabled={locked}
-            aria-invalid={oddsError !== null}
-            value={draftOdds}
+            aria-invalid={oddsField.error !== null}
+            value={oddsField.value}
             placeholder="4096"
-            onChange={(e) => {
-              setDraftOdds(e.target.value)
-              setOddsError(null)
-            }}
-            onBlur={commitOdds}
-            onKeyDown={(e) => {
-              if (e.key === 'Enter') commitOdds()
-            }}
+            onChange={oddsField.onChange}
+            onBlur={oddsField.onBlur}
+            onKeyDown={oddsField.onKeyDown}
           />
         </div>
-        {oddsError && <p className="modal-error">{oddsError}</p>}
+        {oddsField.error && <p className="modal-error">{oddsField.error}</p>}
         {denominator !== undefined && (
           <>
             <p className="modal-hint">{formatOdds(odds!)} de chances de l'avoir obtenu avant ce stade</p>
