@@ -302,6 +302,51 @@ test.describe('Fonctionnalités avancées', () => {
     await expect(page.locator('.counter-name')).toHaveText(['B', 'C', 'A'])
   })
 
+  test('réordonne par glisser-déposer avec une recherche active, sans déplacer les compteurs masqués', async ({
+    page,
+  }) => {
+    await addCounter(page)
+    await addCounter(page)
+    await addCounter(page)
+
+    // Ordre de création : Pomme1, Autre, Pomme2, Pomme3 (« Autre » intercalé,
+    // pas en bord de liste, pour vérifier qu'il garde sa place même entouré
+    // de compteurs déplacés).
+    const names = ['Pomme1', 'Autre', 'Pomme2', 'Pomme3']
+    const cards = page.locator('.counter-card')
+    for (let i = 0; i < 4; i++) {
+      await cards.nth(i).locator('.counter-name').click()
+      await cards.nth(i).locator('.counter-name-input').fill(names[i])
+      await cards.nth(i).locator('.counter-name-input').press('Enter')
+    }
+
+    await page.getByRole('button', { name: 'Rechercher' }).click()
+    await page.getByPlaceholder('Rechercher un compteur…').fill('Pomme')
+    await expect(page.locator('.counter-name')).toHaveText(['Pomme1', 'Pomme2', 'Pomme3'])
+
+    const handleFirst = cards.nth(0).locator('.counter-drag-handle')
+    const boxFirst = await handleFirst.boundingBox()
+    const boxLast = await cards.nth(2).boundingBox()
+    if (!boxFirst || !boxLast) throw new Error('bounding box manquante')
+
+    await page.mouse.move(boxFirst.x + boxFirst.width / 2, boxFirst.y + boxFirst.height / 2)
+    await page.mouse.down()
+    const steps = 10
+    for (let i = 1; i <= steps; i++) {
+      const y = boxFirst.y + (boxLast.y + boxLast.height - boxFirst.y) * (i / steps)
+      await page.mouse.move(boxFirst.x + boxFirst.width / 2, y)
+      await page.waitForTimeout(20)
+    }
+    await page.mouse.up()
+
+    await expect(page.locator('.counter-name')).toHaveText(['Pomme2', 'Pomme3', 'Pomme1'])
+
+    await page.getByRole('button', { name: 'Fermer la recherche' }).click()
+    // « Autre » retrouve exactement sa place d'origine (2ᵈ position), les 3
+    // compteurs visibles pendant le glisser gardent leur nouvel ordre relatif.
+    await expect(page.locator('.counter-name')).toHaveText(['Pomme2', 'Autre', 'Pomme3', 'Pomme1'])
+  })
+
   test("le clic sur la poignée de glisser n'incrémente pas", async ({ page }) => {
     await page.locator('.counter-drag-handle').click()
     await expect(page.locator('.counter-value')).toHaveText('0')
