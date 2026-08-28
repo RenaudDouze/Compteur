@@ -20,7 +20,8 @@
     "src/url.ts",
     "src/colors.ts",
     "src/history.ts",
-    "src/sound.ts"
+    "src/sound.ts",
+    "src/reorder.ts"
   ],
   "thresholds": {
     "high": 100,

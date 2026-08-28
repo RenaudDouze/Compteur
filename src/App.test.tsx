@@ -872,15 +872,15 @@ describe('App', () => {
       expect(screen.getByDisplayValue('Compteur 2')).toBeInTheDocument()
     })
 
-    it('désactive le glisser-déposer tant que des compteurs sont archivés (pour ne pas perdre les masqués)', async () => {
+    it('garde le glisser-déposer actif même avec des compteurs archivés (ils gardent leur place hors vue)', async () => {
       window.localStorage.setItem(
         '+1.counters.v1',
         JSON.stringify([makeCounter({ id: 'a', name: 'Un' }), makeCounter({ id: 'b', name: 'Deux' })])
       )
       render(<App />)
-      expect(document.querySelector('.counter-drag-handle')).toBeInTheDocument()
       archiveCounter('Un')
-      await waitFor(() => expect(document.querySelector('.counter-drag-handle')).not.toBeInTheDocument())
+      await waitFor(() => expect(screen.queryByText('Un')).not.toBeInTheDocument())
+      expect(document.querySelector('.counter-drag-handle')).toBeInTheDocument()
     })
 
     describe('archivedAt (durée figée)', () => {

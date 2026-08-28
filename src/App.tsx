@@ -4,6 +4,7 @@ import { useLocalStorage } from './hooks/useLocalStorage'
 import { useSystemDarkMode } from './hooks/useSystemDarkMode'
 import { CounterCard } from './components/CounterCard'
 import { decodeCountersFromParam, migrateStoredCounter } from './sync'
+import { mergeVisibleOrder } from './reorder'
 import { appendHistoryPoint } from './history'
 import { makeId } from './id'
 import { COLORS, pickColor } from './colors'
@@ -301,6 +302,19 @@ export default function App() {
     setCounters((prev) => (mode === 'replace' ? imported : [...prev, ...imported]))
   }
 
+  // Le glisser-déposer peut porter sur un sous-ensemble filtré (recherche,
+  // vue Actifs/Archivés) : fusionne le nouvel ordre dans la liste complète en
+  // gardant les compteurs masqués à leur position. La logique de fusion
+  // elle-même est testée unitairement dans reorder.test.ts ; ce point de
+  // branchement ne s'exécute qu'au relâchement d'un vrai glisser-déposer
+  // (Reorder.Group de framer-motion), qui ne se déclenche pas dans jsdom
+  // (mesures de layout absentes) — vérifié par un test dédié dans
+  // advanced-features.spec.ts (e2e, navigateur réel).
+  /* v8 ignore next 3 */
+  const reorderVisible = (newOrder: Counter[]) => {
+    setCounters((prev) => mergeVisibleOrder(prev, newOrder))
+  }
+
   return (
     <div className="app">
       {focusMode && (
@@ -408,7 +422,7 @@ export default function App() {
           as="div"
           axis="y"
           values={sortedCounters}
-          onReorder={setCounters}
+          onReorder={reorderVisible}
           className={`counter-grid ${
             filteredCounters.length === 1
               ? 'counter-grid--solo'
@@ -423,7 +437,6 @@ export default function App() {
                 key={counter.id}
                 counter={counter}
                 fill={filteredCounters.length <= 2}
-                draggable={searchQuery.trim() === '' && filteredCounters.length === counters.length}
                 autoEdit={counter.id === autoEditId}
                 colors={COLORS}
                 onChange={(delta) => updateCount(counter.id, delta)}

@@ -56,11 +56,6 @@ const PANEL_BUTTONS: { panel: PanelKind; className: string; label: string; title
 interface CounterCardProps {
   counter: Counter
   fill?: boolean
-  // Masque la poignée de glisser dès que la liste affichée ne porte que sur
-  // un sous-ensemble filtré (recherche, vue archivés) : `values` du
-  // Reorder.Group ne couvrirait alors plus tous les compteurs, et réordonner
-  // remplacerait silencieusement la liste complète par ce sous-ensemble.
-  draggable?: boolean
   // Ouvre directement le champ de nom en édition : pour le compteur qui
   // vient d'être créé, dont le nom par défaut ("Compteur N") n'est sinon pas
   // évident à renommer sans découvrir qu'on peut toucher le titre.
@@ -81,7 +76,6 @@ interface CounterCardProps {
 export function CounterCard({
   counter,
   fill = false,
-  draggable = true,
   autoEdit = false,
   colors,
   onChange,
@@ -291,7 +285,7 @@ export function CounterCard({
       )}
 
       <div className="counter-options-row">
-        {draggable && !locked && (
+        {!locked && (
           <button
             className="counter-drag-handle"
             onPointerDown={(e) => {
