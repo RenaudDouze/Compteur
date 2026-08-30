@@ -397,6 +397,7 @@ export function CounterCard({
           onPointerLeave={stopHold}
           onPointerCancel={stopHold}
           aria-label="Décrémenter"
+          title="Maintenir pour décrémenter en rafale"
         >
           −{counter.behavior.step ?? 1}
         </button>
@@ -419,6 +420,7 @@ export function CounterCard({
           onPointerLeave={stopHold}
           onPointerCancel={stopHold}
           aria-label="Incrémenter"
+          title="Maintenir pour incrémenter en rafale"
         >
           +{counter.behavior.step ?? 1}
         </button>

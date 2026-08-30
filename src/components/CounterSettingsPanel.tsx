@@ -83,6 +83,7 @@ export function CounterSettingsPanel({ counter, colors, onClose, onUpdate, onNav
               className={`counter-color-option${c === counter.appearance.color ? ' selected' : ''}`}
               style={{ background: c }}
               aria-label={`Choisir la couleur ${c}`}
+              title={`Choisir la couleur ${c}`}
               onClick={() => onUpdate({ appearance: { ...counter.appearance, color: c } })}
             />
           ))}
@@ -138,6 +139,7 @@ export function CounterSettingsPanel({ counter, colors, onClose, onUpdate, onNav
               disabled={locked}
               onClick={clearBackground}
               aria-label="Vider l'image de fond"
+              title="Vider l'image de fond"
             >
               ✕
             </button>
