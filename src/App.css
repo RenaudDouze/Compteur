@@ -853,8 +853,13 @@
 
 .modal-panel-header {
   display: flex;
-  align-items: center;
+  /* flex-start plutôt que center : certains titres (compteur au nom long,
+     "Valeur & réglages « ... »") passent sur deux lignes selon la largeur —
+     la croix de fermeture doit rester ancrée en haut plutôt que recentrée
+     verticalement sur les deux lignes. */
+  align-items: flex-start;
   justify-content: space-between;
+  gap: 12px;
   margin-bottom: 16px;
 }
 

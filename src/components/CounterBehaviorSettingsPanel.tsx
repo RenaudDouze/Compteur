@@ -74,7 +74,7 @@ export function CounterBehaviorSettingsPanel({
   const locked = !!counter.archived
 
   return (
-    <Modal title={`Comportement « ${counter.name} »`} onClose={onClose} accentColor={counter.appearance.color}>
+    <Modal title={`Valeur & réglages « ${counter.name} »`} onClose={onClose} accentColor={counter.appearance.color}>
       {locked && (
         <p className="modal-hint modal-hint--locked">
           🔒 Compteur archivé : lecture seule. Désarchive-le pour le modifier.

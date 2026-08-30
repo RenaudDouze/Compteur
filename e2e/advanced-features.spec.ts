@@ -11,7 +11,7 @@ test.describe('Fonctionnalités avancées', () => {
     page,
   }) => {
     await page.getByRole('button', { name: 'Personnaliser le compteur' }).click()
-    await page.getByRole('button', { name: 'Comportement', exact: true }).click()
+    await page.getByRole('button', { name: 'Valeur & réglages', exact: true }).click()
     const input = page.getByPlaceholder('4096')
     await input.fill('4')
     await input.press('Enter')
@@ -31,7 +31,7 @@ test.describe('Fonctionnalités avancées', () => {
     // sa complémentaire, l'enchaînement d'échecs), avec en plus une barre de
     // progression visuelle.
     await page.getByRole('button', { name: 'Personnaliser le compteur' }).click()
-    await page.getByRole('button', { name: 'Comportement', exact: true }).click()
+    await page.getByRole('button', { name: 'Valeur & réglages', exact: true }).click()
     const panel = page.locator('.modal-panel')
     await expect(panel.getByText(/de l'avoir obtenu avant ce stade/)).toHaveText(/25,0\s?%/)
     await expect(panel.getByText(/d'échecs d'affilée/)).toHaveText(/75,0\s?%/)
@@ -61,7 +61,7 @@ test.describe('Fonctionnalités avancées', () => {
 
   test('définit un objectif libre et affiche sa progression', async ({ page }) => {
     await page.getByRole('button', { name: 'Personnaliser le compteur' }).click()
-    await page.getByRole('button', { name: 'Comportement', exact: true }).click()
+    await page.getByRole('button', { name: 'Valeur & réglages', exact: true }).click()
     const input = page.getByPlaceholder('ex : 50')
     await input.fill('20')
     await input.press('Enter')
@@ -77,7 +77,7 @@ test.describe('Fonctionnalités avancées', () => {
     // l'anneau (choisi ici pour vérifier que l'objectif pilote bien
     // l'anneau plutôt qu'une probabilité, qui n'est pas définie ici).
     await page.getByRole('button', { name: 'Personnaliser le compteur' }).click()
-    await page.getByRole('button', { name: 'Comportement', exact: true }).click()
+    await page.getByRole('button', { name: 'Valeur & réglages', exact: true }).click()
     await expect(page.locator('.odds-progress')).toHaveAttribute('aria-valuenow', '25')
     await expect(page.getByText('5 / 20 (25 %)')).toBeVisible()
     await page.getByRole('button', { name: 'Fermer' }).click()
@@ -142,7 +142,7 @@ test.describe('Fonctionnalités avancées', () => {
 
   test("définit un pas d'incrément personnalisé et l'applique aux boutons +/-", async ({ page }) => {
     await page.getByRole('button', { name: 'Personnaliser le compteur' }).click()
-    await page.getByRole('button', { name: 'Comportement', exact: true }).click()
+    await page.getByRole('button', { name: 'Valeur & réglages', exact: true }).click()
     const input = page.getByPlaceholder('1')
     await input.fill('5')
     await input.press('Enter')
@@ -162,7 +162,7 @@ test.describe('Fonctionnalités avancées', () => {
     page,
   }) => {
     await page.getByRole('button', { name: 'Personnaliser le compteur' }).click()
-    await page.getByRole('button', { name: 'Comportement', exact: true }).click()
+    await page.getByRole('button', { name: 'Valeur & réglages', exact: true }).click()
     const input = page.getByPlaceholder('1')
     await input.fill('0')
     await input.press('Enter')
@@ -181,7 +181,7 @@ test.describe('Fonctionnalités avancées', () => {
 
   test('modifie la date de début et affiche un rappel textuel', async ({ page }) => {
     await page.getByRole('button', { name: 'Personnaliser le compteur' }).click()
-    await page.getByRole('button', { name: 'Comportement', exact: true }).click()
+    await page.getByRole('button', { name: 'Valeur & réglages', exact: true }).click()
     const hint = page.locator('.modal-section:has(input[type="date"]) .modal-hint')
     const before = await hint.textContent()
     const input = page.locator('input[type="date"]')
@@ -241,7 +241,7 @@ test.describe('Fonctionnalités avancées', () => {
     expect(after).not.toBe(before)
   })
 
-  test('définit directement une valeur depuis la modale Comportement', async ({ page }) => {
+  test('définit directement une valeur depuis la modale Valeur & réglages', async ({ page }) => {
     await page.getByRole('button', { name: 'Régler le comportement du compteur' }).click()
     const input = page.locator('.modal-section:has-text("Valeur actuelle") input')
     await input.fill('250')
@@ -382,7 +382,7 @@ test.describe('Fonctionnalités avancées', () => {
 
   test("affiche un confetti à l'atteinte de l'objectif", async ({ page }) => {
     await page.getByRole('button', { name: 'Personnaliser le compteur' }).click()
-    await page.getByRole('button', { name: 'Comportement', exact: true }).click()
+    await page.getByRole('button', { name: 'Valeur & réglages', exact: true }).click()
     await page.getByPlaceholder('ex : 50').fill('2')
     await page.getByPlaceholder('ex : 50').press('Enter')
     await page.getByRole('button', { name: 'Fermer' }).click()
