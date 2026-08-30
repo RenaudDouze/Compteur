@@ -77,11 +77,13 @@ describe('SyncPanel', () => {
     expect(img.src).toBe('data:image/png;base64,fake')
   })
 
-  it('affiche le message de repli si la génération du QR code échoue', async () => {
-    toDataURLMock.mockRejectedValue(new Error('échec canvas'))
+  it('affiche un message explicite si la génération du QR code échoue (trop de données)', async () => {
+    toDataURLMock.mockRejectedValue(new Error('code length overflow'))
     render(<SyncPanel counters={[makeCounter()]} onClose={vi.fn()} onImport={vi.fn()} remoteSync={makeRemoteSync()} />)
     await waitFor(() => {
-      expect(screen.getByText('Ajoute au moins un compteur pour générer un QR code.')).toBeInTheDocument()
+      expect(
+        screen.getByText('Trop de compteurs pour un QR code : utilise le code de synchro ou le fichier de sauvegarde.')
+      ).toBeInTheDocument()
     })
   })
 
