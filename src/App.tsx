@@ -23,6 +23,14 @@ const THEME_ICON: Record<ThemePreference, string> = { system: '🌓', light: '�
 const THEME_LABEL: Record<ThemePreference, string> = { system: 'Auto', light: 'Clair', dark: 'Sombre' }
 const NEXT_THEME: Record<ThemePreference, ThemePreference> = { system: 'light', light: 'dark', dark: 'system' }
 
+type ArchiveView = 'active' | 'archived'
+
+// Même logique d'icône cyclique que le thème : un seul bouton dont
+// l'icône/le libellé reflètent la vue courante, plutôt qu'une paire d'onglets
+// affichés simultanément.
+const ARCHIVE_VIEW_ICON: Record<ArchiveView, string> = { active: '📋', archived: '📦' }
+const NEXT_ARCHIVE_VIEW: Record<ArchiveView, ArchiveView> = { active: 'archived', archived: 'active' }
+
 // Migration depuis les clés "compteur.*" (nom du projet avant son renommage
 // en « +1 ») : copie puis nettoie, pour ne pas perdre les compteurs déjà
 // enregistrés chez les utilisateurs existants. Appelée en tête du composant,
@@ -79,6 +87,12 @@ export default function App() {
   useEffect(() => {
     setAutoEditId(null)
   }, [autoEditId])
+
+  // Le thème, le partage, le plein écran, le filtre Actifs/Archivés et la
+  // création de compteur vivent dans ce menu déroulant horizontal, replié
+  // par défaut pour ne pas encombrer l'en-tête ; déplié, il reprend la même
+  // rangée de boutons qu'avant son introduction.
+  const [menuOpen, setMenuOpen] = useState(false)
 
   const [syncOpen, setSyncOpen] = useState(false)
   const [undo, setUndo] = useState<{ label: string; counters: Counter[] } | null>(null)
@@ -328,13 +342,6 @@ export default function App() {
           <header className="app-header">
             <h1>+1</h1>
             <div className="app-header-actions">
-              <button
-                className="add-btn icon-btn"
-                onClick={() => setThemePreference(NEXT_THEME[themePreference])}
-                aria-label={`Thème : ${THEME_LABEL[themePreference]}`}
-              >
-                {THEME_ICON[themePreference]}
-              </button>
               {counters.length > 0 && (
                 <button
                   className="add-btn icon-btn"
@@ -344,6 +351,27 @@ export default function App() {
                   🔍
                 </button>
               )}
+              <button
+                className="add-btn icon-btn"
+                onClick={() => setMenuOpen((v) => !v)}
+                aria-haspopup="true"
+                aria-expanded={menuOpen}
+                aria-label={menuOpen ? 'Masquer le menu' : 'Ouvrir le menu'}
+              >
+                ⋯
+              </button>
+            </div>
+          </header>
+
+          {menuOpen && (
+            <div className="app-menu" role="menu">
+              <button
+                className="add-btn icon-btn"
+                onClick={() => setThemePreference(NEXT_THEME[themePreference])}
+                aria-label={`Thème : ${THEME_LABEL[themePreference]}`}
+              >
+                {THEME_ICON[themePreference]}
+              </button>
               <button className="add-btn icon-btn" onClick={() => setSyncOpen(true)} aria-label="Synchroniser">
                 ⇄
               </button>
@@ -352,29 +380,21 @@ export default function App() {
                   ⛶
                 </button>
               )}
+              <button
+                className="add-btn icon-btn"
+                onClick={() => setArchiveView(NEXT_ARCHIVE_VIEW[archiveView])}
+                aria-label={
+                  archiveView === 'archived'
+                    ? `Vue : Archivés (${archivedCount})`
+                    : archivedCount > 0
+                      ? `Vue : Actifs (${archivedCount} archivé(s))`
+                      : 'Vue : Actifs'
+                }
+              >
+                {ARCHIVE_VIEW_ICON[archiveView]}
+              </button>
               <button className="add-btn" onClick={addCounter}>
                 + Nouveau compteur
-              </button>
-            </div>
-          </header>
-
-          {(archivedCount > 0 || archiveView === 'archived') && (
-            <div className="archive-toggle" role="tablist" aria-label="Filtrer par statut">
-              <button
-                role="tab"
-                aria-selected={archiveView === 'active'}
-                className={`archive-toggle-btn${archiveView === 'active' ? ' active' : ''}`}
-                onClick={() => setArchiveView('active')}
-              >
-                Actifs
-              </button>
-              <button
-                role="tab"
-                aria-selected={archiveView === 'archived'}
-                className={`archive-toggle-btn${archiveView === 'archived' ? ' active' : ''}`}
-                onClick={() => setArchiveView('archived')}
-              >
-                Archivés{archivedCount > 0 ? ` (${archivedCount})` : ''}
               </button>
             </div>
           )}

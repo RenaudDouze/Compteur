@@ -1,13 +1,22 @@
 import { expect, test } from '@playwright/test'
-import { addCounter, gotoFresh } from './helpers'
+import { addCounter, gotoFresh, openMenu } from './helpers'
+
+// Le filtre Actifs/Archivés est un bouton unique du menu déroulant, qui
+// bascule entre les deux vues au clic (comme le thème) plutôt qu'une paire
+// d'onglets affichés simultanément.
+async function toggleArchiveView(page: import('@playwright/test').Page) {
+  await openMenu(page)
+  await page.getByRole('button', { name: /^Vue : / }).click()
+}
 
 test.describe('Archivage de compteurs', () => {
   test.beforeEach(async ({ page }) => {
     await gotoFresh(page)
   })
 
-  test("n'affiche pas le sélecteur Actifs/Archivés sans compteur", async ({ page }) => {
-    await expect(page.getByRole('tab', { name: 'Actifs' })).not.toBeVisible()
+  test('affiche le filtre Actifs/Archivés même sans compteur (élément fixe du menu)', async ({ page }) => {
+    await openMenu(page)
+    await expect(page.getByRole('button', { name: 'Vue : Actifs' })).toBeVisible()
   })
 
   test('archive un compteur, le masque des actifs, et le retrouve via Archivés', async ({ page }) => {
@@ -19,9 +28,10 @@ test.describe('Archivage de compteurs', () => {
     await page.getByRole('button', { name: 'Actions du compteur' }).click()
     await page.getByText('📦 Archiver ce compteur').click()
     await expect(page.getByText('À ranger', { exact: true })).not.toBeVisible()
-    await expect(page.getByRole('tab', { name: 'Archivés (1)' })).toBeVisible()
+    await openMenu(page)
+    await expect(page.getByRole('button', { name: 'Vue : Actifs (1 archivé(s))' })).toBeVisible()
 
-    await page.getByRole('tab', { name: 'Archivés (1)' }).click()
+    await page.getByRole('button', { name: /^Vue : / }).click()
     await expect(page.getByText('À ranger', { exact: true })).toBeVisible()
   })
 
@@ -30,15 +40,15 @@ test.describe('Archivage de compteurs', () => {
     await page.getByRole('button', { name: 'Actions du compteur' }).click()
     await page.getByText('📦 Archiver ce compteur').click()
 
-    await page.getByRole('tab', { name: 'Archivés (1)' }).click()
+    await toggleArchiveView(page)
     await page.getByRole('button', { name: 'Actions du compteur' }).click()
     await page.getByText('📤 Désarchiver ce compteur').click()
 
-    await page.getByRole('tab', { name: 'Actifs' }).click()
+    await page.getByRole('button', { name: /^Vue : / }).click()
     await expect(page.getByText('Compteur 1', { exact: true })).toBeVisible()
   })
 
-  test('la recherche retrouve un compteur archivé au sein de son onglet', async ({ page }) => {
+  test('la recherche retrouve un compteur archivé au sein de sa vue', async ({ page }) => {
     await addCounter(page)
     await page.getByText('Compteur 1', { exact: true }).click()
     await page.locator('.counter-name-input').fill('Pompes')
@@ -46,7 +56,7 @@ test.describe('Archivage de compteurs', () => {
     await page.getByRole('button', { name: 'Actions du compteur' }).click()
     await page.getByText('📦 Archiver ce compteur').click()
 
-    await page.getByRole('tab', { name: 'Archivés (1)' }).click()
+    await toggleArchiveView(page)
     await page.getByRole('button', { name: 'Rechercher' }).click()
     await page.getByPlaceholder('Rechercher un compteur…').fill('pom')
     await expect(page.getByText('Pompes', { exact: true })).toBeVisible()
@@ -56,7 +66,7 @@ test.describe('Archivage de compteurs', () => {
     await addCounter(page)
     await page.getByRole('button', { name: 'Actions du compteur' }).click()
     await page.getByText('📦 Archiver ce compteur').click()
-    await page.getByRole('tab', { name: 'Archivés (1)' }).click()
+    await toggleArchiveView(page)
 
     const card = page.locator('.counter-card')
     await card.click()
@@ -83,7 +93,7 @@ test.describe('Archivage de compteurs', () => {
     await page.getByRole('button', { name: 'Incrémenter', exact: true }).click()
     await page.getByRole('button', { name: 'Actions du compteur' }).click()
     await page.getByText('📦 Archiver ce compteur').click()
-    await page.getByRole('tab', { name: 'Archivés (1)' }).click()
+    await toggleArchiveView(page)
 
     await expect(page.getByText(/Durée totale : .*→.*aujourd'hui/)).toBeVisible()
     await expect(page.getByText(/Moyenne : 2 \/ jour/)).toBeVisible()
