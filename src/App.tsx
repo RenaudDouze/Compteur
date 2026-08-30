@@ -4,6 +4,17 @@ import { useLocalStorage } from './hooks/useLocalStorage'
 import { useRemoteSync } from './hooks/useRemoteSync'
 import { useSystemDarkMode } from './hooks/useSystemDarkMode'
 import { CounterCard } from './components/CounterCard'
+import {
+  ArchiveIcon,
+  FolderOpenIcon,
+  FullscreenIcon,
+  MoonIcon,
+  MoreIcon,
+  SearchIcon,
+  SunIcon,
+  SyncIcon,
+  ThemeAutoIcon,
+} from './components/icons'
 import { decodeCountersFromParam, migrateStoredCounter } from './sync'
 import { mergeVisibleOrder } from './reorder'
 import { appendHistoryPoint } from './history'
@@ -20,7 +31,7 @@ const UNDO_TIMEOUT_MS = 5000
 
 type ThemePreference = 'system' | 'light' | 'dark'
 
-const THEME_ICON: Record<ThemePreference, string> = { system: '🌓', light: '☀️', dark: '🌙' }
+const THEME_ICON: Record<ThemePreference, typeof ThemeAutoIcon> = { system: ThemeAutoIcon, light: SunIcon, dark: MoonIcon }
 const THEME_LABEL: Record<ThemePreference, string> = { system: 'Auto', light: 'Clair', dark: 'Sombre' }
 const NEXT_THEME: Record<ThemePreference, ThemePreference> = { system: 'light', light: 'dark', dark: 'system' }
 
@@ -29,7 +40,7 @@ type ArchiveView = 'active' | 'archived'
 // Même logique d'icône cyclique que le thème : un seul bouton dont
 // l'icône/le libellé reflètent la vue courante, plutôt qu'une paire d'onglets
 // affichés simultanément.
-const ARCHIVE_VIEW_ICON: Record<ArchiveView, string> = { active: '📂', archived: '📦' }
+const ARCHIVE_VIEW_ICON: Record<ArchiveView, typeof FolderOpenIcon> = { active: FolderOpenIcon, archived: ArchiveIcon }
 const NEXT_ARCHIVE_VIEW: Record<ArchiveView, ArchiveView> = { active: 'archived', archived: 'active' }
 
 // Migration depuis les clés "compteur.*" (nom du projet avant son renommage
@@ -348,6 +359,8 @@ export default function App() {
       : archivedCount > 0
         ? `Vue : Actifs (${archivedCount} archivé(s))`
         : 'Vue : Actifs'
+  const ThemeIcon = THEME_ICON[themePreference]
+  const ArchiveViewIcon = ARCHIVE_VIEW_ICON[archiveView]
 
   return (
     <div className="app">
@@ -378,7 +391,7 @@ export default function App() {
                 aria-label={menuButtonLabel}
                 title={menuButtonLabel}
               >
-                ⋯
+                <MoreIcon />
               </button>
             </div>
 
@@ -394,7 +407,7 @@ export default function App() {
                     aria-label="Rechercher"
                     title="Rechercher"
                   >
-                    🔍
+                    <SearchIcon />
                   </button>
                 )}
                 <button
@@ -406,7 +419,7 @@ export default function App() {
                   aria-label={`Thème : ${THEME_LABEL[themePreference]}`}
                   title={`Thème : ${THEME_LABEL[themePreference]}`}
                 >
-                  {THEME_ICON[themePreference]}
+                  <ThemeIcon />
                 </button>
                 <button
                   className="add-btn icon-btn"
@@ -417,7 +430,7 @@ export default function App() {
                   aria-label="Synchroniser"
                   title="Synchroniser"
                 >
-                  ⇄
+                  <SyncIcon />
                 </button>
                 {counters.length > 0 && (
                   <button
@@ -429,7 +442,7 @@ export default function App() {
                     aria-label="Mode plein écran"
                     title="Mode plein écran"
                   >
-                    ⛶
+                    <FullscreenIcon />
                   </button>
                 )}
                 <button
@@ -441,7 +454,7 @@ export default function App() {
                   aria-label={archiveViewLabel}
                   title={archiveViewLabel}
                 >
-                  {ARCHIVE_VIEW_ICON[archiveView]}
+                  <ArchiveViewIcon />
                 </button>
               </div>
             )}

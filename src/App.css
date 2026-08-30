@@ -65,9 +65,10 @@
 }
 
 .icon-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
   padding: 10px 14px;
-  font-size: 1.1rem;
-  line-height: 1;
 }
 
 /* Seul point de sortie du mode plein écran : reste donc toujours visible
