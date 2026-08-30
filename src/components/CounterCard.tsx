@@ -254,6 +254,14 @@ export function CounterCard({
         />
       )}
 
+      {counter.pinned && (
+        <span className="counter-pin-badge" aria-hidden="true">
+          <svg viewBox="0 0 24 24" width="14" height="14" fill="currentColor">
+            <path d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7zm0 9.5A2.5 2.5 0 1 1 12 6a2.5 2.5 0 0 1 0 5.5z" />
+          </svg>
+        </span>
+      )}
+
       {celebrating && (
         <div className="counter-celebration" aria-hidden="true">
           {CONFETTI_ANGLES.map((angle, i) => (
@@ -342,11 +350,6 @@ export function CounterCard({
           onPointerDown={(e) => e.stopPropagation()}
           title={locked ? 'Compteur archivé : lecture seule' : 'Toucher pour renommer'}
         >
-          {counter.pinned && (
-            <span className="counter-pin-badge" aria-hidden="true">
-              📌
-            </span>
-          )}
           {counter.name}
         </h2>
       )}
