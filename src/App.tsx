@@ -334,10 +334,25 @@ export default function App() {
     setCounters((prev) => mergeVisibleOrder(prev, newOrder))
   }
 
+  // Calculés une fois pour servir à la fois d'aria-label et d'infobulle
+  // (`title`) sur leur bouton respectif.
+  const menuButtonLabel = menuOpen ? 'Masquer le menu' : 'Ouvrir le menu'
+  const archiveViewLabel =
+    archiveView === 'archived'
+      ? `Vue : Archivés (${archivedCount})`
+      : archivedCount > 0
+        ? `Vue : Actifs (${archivedCount} archivé(s))`
+        : 'Vue : Actifs'
+
   return (
     <div className="app">
       {focusMode && (
-        <button className="focus-exit-btn" onClick={() => setFocusMode(false)} aria-label="Quitter le mode plein écran">
+        <button
+          className="focus-exit-btn"
+          onClick={() => setFocusMode(false)}
+          aria-label="Quitter le mode plein écran"
+          title="Quitter le mode plein écran"
+        >
           ✕
         </button>
       )}
@@ -355,7 +370,8 @@ export default function App() {
                 onClick={() => setMenuOpen((v) => !v)}
                 aria-haspopup="true"
                 aria-expanded={menuOpen}
-                aria-label={menuOpen ? 'Masquer le menu' : 'Ouvrir le menu'}
+                aria-label={menuButtonLabel}
+                title={menuButtonLabel}
               >
                 ⋯
               </button>
@@ -371,6 +387,7 @@ export default function App() {
                       setMenuOpen(false)
                     }}
                     aria-label="Rechercher"
+                    title="Rechercher"
                   >
                     🔍
                   </button>
@@ -382,6 +399,7 @@ export default function App() {
                     setMenuOpen(false)
                   }}
                   aria-label={`Thème : ${THEME_LABEL[themePreference]}`}
+                  title={`Thème : ${THEME_LABEL[themePreference]}`}
                 >
                   {THEME_ICON[themePreference]}
                 </button>
@@ -392,6 +410,7 @@ export default function App() {
                     setMenuOpen(false)
                   }}
                   aria-label="Synchroniser"
+                  title="Synchroniser"
                 >
                   ⇄
                 </button>
@@ -403,6 +422,7 @@ export default function App() {
                       setMenuOpen(false)
                     }}
                     aria-label="Mode plein écran"
+                    title="Mode plein écran"
                   >
                     ⛶
                   </button>
@@ -413,13 +433,8 @@ export default function App() {
                     setArchiveView(NEXT_ARCHIVE_VIEW[archiveView])
                     setMenuOpen(false)
                   }}
-                  aria-label={
-                    archiveView === 'archived'
-                      ? `Vue : Archivés (${archivedCount})`
-                      : archivedCount > 0
-                        ? `Vue : Actifs (${archivedCount} archivé(s))`
-                        : 'Vue : Actifs'
-                  }
+                  aria-label={archiveViewLabel}
+                  title={archiveViewLabel}
                 >
                   {ARCHIVE_VIEW_ICON[archiveView]}
                 </button>
@@ -440,7 +455,7 @@ export default function App() {
                   if (e.key === 'Escape') closeSearch()
                 }}
               />
-              <button className="modal-close" onClick={closeSearch} aria-label="Fermer la recherche">
+              <button className="modal-close" onClick={closeSearch} aria-label="Fermer la recherche" title="Fermer la recherche">
                 ✕
               </button>
             </div>

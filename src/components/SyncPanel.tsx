@@ -71,7 +71,7 @@ export function SyncPanel({ counters, onClose, onImport }: SyncPanelProps) {
       <div className="modal-panel" onClick={(e) => e.stopPropagation()}>
         <div className="modal-panel-header">
           <h2>Synchroniser mes compteurs</h2>
-          <button className="modal-close" onClick={onClose} aria-label="Fermer">
+          <button className="modal-close" onClick={onClose} aria-label="Fermer" title="Fermer">
             ✕
           </button>
         </div>
