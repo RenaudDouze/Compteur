@@ -443,6 +443,44 @@ describe('SyncPanel', () => {
         )
         expect(screen.getByText('Erreur de synchronisation')).toBeInTheDocument()
       })
+
+      describe('suggestion du code de synchro pour un lien long', () => {
+        const manyCounters = Array.from({ length: 20 }, (_, i) => makeCounter({ id: `c${i}`, name: `Compteur ${i}` }))
+
+        it('suggère le code de synchro quand le lien devient long et la synchro est inactive', async () => {
+          render(<SyncPanel counters={manyCounters} onClose={vi.fn()} onImport={vi.fn()} remoteSync={makeRemoteSync()} />)
+          await waitFor(() => expect(screen.getByAltText('QR code de tes compteurs')).toBeInTheDocument())
+          expect(
+            screen.getByText('Beaucoup de compteurs : le code de synchro (ci-dessus) reste pratique même quand ce lien devient long.')
+          ).toBeInTheDocument()
+        })
+
+        it("ne suggère rien pour un lien court (peu de compteurs)", async () => {
+          render(<SyncPanel counters={[makeCounter()]} onClose={vi.fn()} onImport={vi.fn()} remoteSync={makeRemoteSync()} />)
+          await waitFor(() => expect(screen.getByAltText('QR code de tes compteurs')).toBeInTheDocument())
+          expect(screen.queryByText(/reste pratique même quand ce lien devient long/)).not.toBeInTheDocument()
+        })
+
+        it('ne suggère rien si un code de synchro est déjà actif (rien à suggérer)', async () => {
+          render(
+            <SyncPanel
+              counters={manyCounters}
+              onClose={vi.fn()}
+              onImport={vi.fn()}
+              remoteSync={makeRemoteSync({ code: 'ABCDEFGH' })}
+            />
+          )
+          await waitFor(() => expect(screen.getByAltText('QR code de tes compteurs')).toBeInTheDocument())
+          expect(screen.queryByText(/reste pratique même quand ce lien devient long/)).not.toBeInTheDocument()
+        })
+      })
+    })
+
+    it('ne suggère jamais le code de synchro sans worker configuré (rien à proposer)', async () => {
+      const manyCounters = Array.from({ length: 20 }, (_, i) => makeCounter({ id: `c${i}`, name: `Compteur ${i}` }))
+      render(<SyncPanel counters={manyCounters} onClose={vi.fn()} onImport={vi.fn()} remoteSync={makeRemoteSync()} />)
+      await waitFor(() => expect(screen.getByAltText('QR code de tes compteurs')).toBeInTheDocument())
+      expect(screen.queryByText(/reste pratique même quand ce lien devient long/)).not.toBeInTheDocument()
     })
   })
 })
