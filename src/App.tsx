@@ -88,10 +88,15 @@ export default function App() {
     setAutoEditId(null)
   }, [autoEditId])
 
-  // Le thème, le partage, le plein écran, le filtre Actifs/Archivés et la
-  // création de compteur vivent dans ce menu déroulant horizontal, replié
-  // par défaut pour ne pas encombrer l'en-tête ; déplié, il reprend la même
-  // rangée de boutons qu'avant son introduction.
+  // La recherche, le thème, le partage, le plein écran et le filtre
+  // Actifs/Archivés vivent dans ce menu déroulant horizontal, replié par
+  // défaut pour ne pas encombrer l'en-tête. Il s'ouvre en survol (position
+  // absolue ancrée sous le bouton ⋯, pas en poussant le reste de la page) et
+  // se referme après chaque sélection, comme un menu classique — sinon il
+  // resterait posé par-dessus les compteurs en dessous. Contrairement à ces
+  // actions, « + Nouveau compteur » reste toujours visible dans l'en-tête :
+  // c'est l'action la plus fréquente, elle ne doit pas se cacher derrière un
+  // clic supplémentaire.
   const [menuOpen, setMenuOpen] = useState(false)
 
   const [syncOpen, setSyncOpen] = useState(false)
@@ -342,15 +347,9 @@ export default function App() {
           <header className="app-header">
             <h1>+1</h1>
             <div className="app-header-actions">
-              {counters.length > 0 && (
-                <button
-                  className="add-btn icon-btn"
-                  onClick={() => setSearchOpen((v) => !v)}
-                  aria-label="Rechercher"
-                >
-                  🔍
-                </button>
-              )}
+              <button className="add-btn" onClick={addCounter}>
+                + Nouveau compteur
+              </button>
               <button
                 className="add-btn icon-btn"
                 onClick={() => setMenuOpen((v) => !v)}
@@ -361,43 +360,72 @@ export default function App() {
                 ⋯
               </button>
             </div>
-          </header>
 
-          {menuOpen && (
-            <div className="app-menu" role="menu">
-              <button
-                className="add-btn icon-btn"
-                onClick={() => setThemePreference(NEXT_THEME[themePreference])}
-                aria-label={`Thème : ${THEME_LABEL[themePreference]}`}
-              >
-                {THEME_ICON[themePreference]}
-              </button>
-              <button className="add-btn icon-btn" onClick={() => setSyncOpen(true)} aria-label="Synchroniser">
-                ⇄
-              </button>
-              {counters.length > 0 && (
-                <button className="add-btn icon-btn" onClick={() => setFocusMode(true)} aria-label="Mode plein écran">
-                  ⛶
+            {menuOpen && (
+              <div className="app-menu" role="menu">
+                {counters.length > 0 && (
+                  <button
+                    className="add-btn icon-btn"
+                    onClick={() => {
+                      setSearchOpen((v) => !v)
+                      setMenuOpen(false)
+                    }}
+                    aria-label="Rechercher"
+                  >
+                    🔍
+                  </button>
+                )}
+                <button
+                  className="add-btn icon-btn"
+                  onClick={() => {
+                    setThemePreference(NEXT_THEME[themePreference])
+                    setMenuOpen(false)
+                  }}
+                  aria-label={`Thème : ${THEME_LABEL[themePreference]}`}
+                >
+                  {THEME_ICON[themePreference]}
                 </button>
-              )}
-              <button
-                className="add-btn icon-btn"
-                onClick={() => setArchiveView(NEXT_ARCHIVE_VIEW[archiveView])}
-                aria-label={
-                  archiveView === 'archived'
-                    ? `Vue : Archivés (${archivedCount})`
-                    : archivedCount > 0
-                      ? `Vue : Actifs (${archivedCount} archivé(s))`
-                      : 'Vue : Actifs'
-                }
-              >
-                {ARCHIVE_VIEW_ICON[archiveView]}
-              </button>
-              <button className="add-btn" onClick={addCounter}>
-                + Nouveau compteur
-              </button>
-            </div>
-          )}
+                <button
+                  className="add-btn icon-btn"
+                  onClick={() => {
+                    setSyncOpen(true)
+                    setMenuOpen(false)
+                  }}
+                  aria-label="Synchroniser"
+                >
+                  ⇄
+                </button>
+                {counters.length > 0 && (
+                  <button
+                    className="add-btn icon-btn"
+                    onClick={() => {
+                      setFocusMode(true)
+                      setMenuOpen(false)
+                    }}
+                    aria-label="Mode plein écran"
+                  >
+                    ⛶
+                  </button>
+                )}
+                <button
+                  className="add-btn icon-btn"
+                  onClick={() => {
+                    setArchiveView(NEXT_ARCHIVE_VIEW[archiveView])
+                    setMenuOpen(false)
+                  }}
+                  aria-label={
+                    archiveView === 'archived'
+                      ? `Vue : Archivés (${archivedCount})`
+                      : archivedCount > 0
+                        ? `Vue : Actifs (${archivedCount} archivé(s))`
+                        : 'Vue : Actifs'
+                  }
+                >
+                  {ARCHIVE_VIEW_ICON[archiveView]}
+                </button>
+              </div>
+            )}
+          </header>
 
           {searchOpen && counters.length > 0 && (
             <div className="search-bar">

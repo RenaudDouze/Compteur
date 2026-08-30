@@ -1,5 +1,5 @@
 import { expect, test } from '@playwright/test'
-import { addCounter, gotoFresh } from './helpers'
+import { addCounter, gotoFresh, openMenu } from './helpers'
 
 test.describe('Recherche de compteurs', () => {
   test.beforeEach(async ({ page }) => {
@@ -7,6 +7,7 @@ test.describe('Recherche de compteurs', () => {
   })
 
   test("n'affiche pas le bouton de recherche sans compteur", async ({ page }) => {
+    await openMenu(page)
     await expect(page.getByRole('button', { name: 'Rechercher' })).not.toBeVisible()
   })
 
@@ -24,6 +25,7 @@ test.describe('Recherche de compteurs', () => {
     const searchInput = page.getByPlaceholder('Rechercher un compteur…')
     await expect(searchInput).not.toBeVisible()
 
+    await openMenu(page)
     await page.getByRole('button', { name: 'Rechercher' }).click()
     await expect(searchInput).toBeVisible()
     await searchInput.fill('pom')

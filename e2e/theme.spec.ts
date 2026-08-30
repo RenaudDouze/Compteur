@@ -12,21 +12,29 @@ test.describe('Thème clair/sombre', () => {
     await expect(toggle).toBeVisible()
     await expect(page.locator('html')).not.toHaveAttribute('data-theme', 'dark')
 
+    // Le menu se referme après chaque sélection (comme un menu classique) :
+    // il faut le rouvrir avant chaque nouvelle interaction avec un de ses
+    // boutons, y compris pour vérifier son libellé mis à jour.
     await toggle.click()
+    await openMenu(page)
     await expect(page.getByRole('button', { name: 'Thème : Clair' })).toBeVisible()
     await expect(page.locator('html')).toHaveAttribute('data-theme', 'light')
 
     await page.getByRole('button', { name: 'Thème : Clair' }).click()
+    await openMenu(page)
     await expect(page.getByRole('button', { name: 'Thème : Sombre' })).toBeVisible()
     await expect(page.locator('html')).toHaveAttribute('data-theme', 'dark')
 
     await page.getByRole('button', { name: 'Thème : Sombre' }).click()
+    await openMenu(page)
     await expect(page.getByRole('button', { name: 'Thème : Auto' })).toBeVisible()
   })
 
   test('retient le thème choisi après rechargement', async ({ page }) => {
     await page.getByRole('button', { name: 'Thème : Auto' }).click()
+    await openMenu(page)
     await page.getByRole('button', { name: 'Thème : Clair' }).click()
+    await openMenu(page)
     await expect(page.getByRole('button', { name: 'Thème : Sombre' })).toBeVisible()
 
     await page.reload()

@@ -7,8 +7,8 @@ export async function gotoFresh(page: Page) {
   await page.reload()
 }
 
-/** Ouvre le menu déroulant de l'en-tête (thème, partage, plein écran, filtre
- * Actifs/Archivés, nouveau compteur) s'il n'est pas déjà déplié. */
+/** Ouvre le menu déroulant de l'en-tête (recherche, thème, partage, plein
+ * écran, filtre Actifs/Archivés) s'il n'est pas déjà déplié. */
 export async function openMenu(page: Page) {
   const trigger = page.getByRole('button', { name: 'Ouvrir le menu' })
   if (await trigger.isVisible().catch(() => false)) {
@@ -24,8 +24,7 @@ export async function addCounter(page: Page) {
   if (await empty.isVisible().catch(() => false)) {
     await empty.click()
   } else {
-    await openMenu(page)
-    await page.locator('.app-menu .add-btn:not(.icon-btn)').click()
+    await page.getByRole('button', { name: '+ Nouveau compteur' }).click()
   }
   await page.locator('.counter-name-input').last().press('Escape')
 }
