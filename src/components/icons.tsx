@@ -1,13 +1,16 @@
-// Icônes de l'en-tête/menu : SVG dessinés à la main (comme le badge d'épingle
-// dans CounterCard), plutôt qu'une bibliothèque externe — voir la discussion
+// Icônes de l'app (en-tête/menu, carte compteur) : SVG dessinés à la main
+// (comme le badge d'épingle dans CounterCard), plutôt qu'une bibliothèque
+// externe — voir la discussion
 // dans la session : un CDN casserait le fonctionnement hors-ligne (PWA), et
 // pour ce volume d'icônes une dépendance npm n'apporterait rien qu'un SVG
 // direct n'apporte déjà (déjà tree-shaké par construction, zéro Ko de trop).
 // `aria-hidden` : le libellé accessible vit déjà sur le bouton parent
 // (aria-label/title), l'icône ne doit pas être annoncée une seconde fois.
 
-interface IconProps {
+export interface IconProps {
   className?: string
+  width?: number
+  height?: number
 }
 
 const BASE = { viewBox: '0 0 24 24', width: 18, height: 18, 'aria-hidden': true } as const
@@ -112,6 +115,65 @@ export function MoreIcon(props: IconProps) {
       <circle cx="6" cy="12" r="1.6" />
       <circle cx="12" cy="12" r="1.6" />
       <circle cx="18" cy="12" r="1.6" />
+    </svg>
+  )
+}
+
+/** Poignée de glisser-déposer : grille de 6 points, convention standard pour
+ * une prise en main. */
+export function DragHandleIcon(props: IconProps) {
+  return (
+    <svg {...BASE} {...props} fill="currentColor" stroke="none">
+      <circle cx="9" cy="6" r="1.5" />
+      <circle cx="15" cy="6" r="1.5" />
+      <circle cx="9" cy="12" r="1.5" />
+      <circle cx="15" cy="12" r="1.5" />
+      <circle cx="9" cy="18" r="1.5" />
+      <circle cx="15" cy="18" r="1.5" />
+    </svg>
+  )
+}
+
+/** Comportement (pas, objectif, probabilité, date de début) : des curseurs
+ * réglables plutôt qu'un +/- littéral, plus proche de ce que couvre ce
+ * panneau. */
+export function SlidersIcon(props: IconProps) {
+  return (
+    <svg {...BASE} {...STROKE} {...props}>
+      <line x1="4" y1="7" x2="20" y2="7" />
+      <circle cx="9" cy="7" r="2" fill="currentColor" stroke="none" />
+      <line x1="4" y1="14" x2="20" y2="14" />
+      <circle cx="15" cy="14" r="2" fill="currentColor" stroke="none" />
+      <line x1="4" y1="19" x2="20" y2="19" />
+      <circle cx="11" cy="19" r="2" fill="currentColor" stroke="none" />
+    </svg>
+  )
+}
+
+const GEAR_TOOTH_ANGLES = [0, 45, 90, 135, 180, 225, 270, 315]
+
+/** Personnalisation (nom, couleur, style, image de fond) : un engrenage
+ * classique. Dents posées par rotation autour du centre plutôt que sur un
+ * tracé dessiné à la main : une silhouette anneau + dents reste lisible en
+ * petit format (bouton de 26px), contrairement à une forme plus fine (ex :
+ * une palette avec de petits points) qui s'y brouille. */
+export function GearIcon(props: IconProps) {
+  return (
+    <svg {...BASE} {...props}>
+      <circle cx="12" cy="12" r="5.5" fill="none" stroke="currentColor" strokeWidth={1.8} />
+      <circle cx="12" cy="12" r="2" fill="currentColor" stroke="none" />
+      {GEAR_TOOTH_ANGLES.map((angle) => (
+        <rect key={angle} x="11" y="1.3" width="2" height="3.2" rx="0.6" transform={`rotate(${angle} 12 12)`} fill="currentColor" stroke="none" />
+      ))}
+    </svg>
+  )
+}
+
+export function TrendingUpIcon(props: IconProps) {
+  return (
+    <svg {...BASE} {...STROKE} {...props}>
+      <polyline points="3,17 9,11 13,15 21,6" />
+      <polyline points="14,6 21,6 21,13" />
     </svg>
   )
 }
