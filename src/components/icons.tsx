@@ -85,11 +85,15 @@ export function FullscreenIcon(props: IconProps) {
   )
 }
 
-export function FolderOpenIcon(props: IconProps) {
+/** Bac de réception ouvert : fait la paire avec ArchiveIcon (boîte fermée,
+ * couvercle scellé) — en circulation vs rangé, plutôt qu'un dossier plus
+ * abstrait. */
+export function InboxIcon(props: IconProps) {
   return (
-    <svg {...BASE} {...props} fill="currentColor" stroke="none">
-      <path d="M3 8a1.5 1.5 0 0 1 1.5-1.5h4l1.5 2H19a1.5 1.5 0 0 1 1.5 1.5v.5H5.8a1.5 1.5 0 0 0-1.45 1.14L3 17.5V8z" />
-      <path d="M4.3 19.5h13.9a1 1 0 0 0 .97-.76L20.7 12H6.2a1 1 0 0 0-.97.76z" />
+    <svg {...BASE} {...STROKE} {...props}>
+      <path d="M5 12 6.6 5.3A1 1 0 0 1 7.57 4.5h8.86a1 1 0 0 1 .97.8L19 12" />
+      <path d="M4 12h4.5l1.7 2.5h3.6L15.5 12H20" />
+      <path d="M4 12v6a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-6" />
     </svg>
   )
 }
