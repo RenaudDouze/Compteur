@@ -6,7 +6,7 @@ compatibility_date = "2025-01-01"
 # remplace `id` par celui que la commande affiche avant de déployer.
 [[kv_namespaces]]
 binding = "SYNC_KV"
-id = "REMPLACE_MOI"
+id = "459cd0bfdb054351859d715dc53a8784"
 
 # Optionnel : restreint les requêtes à une seule origine (ex :
 # "https://tonpseudo.github.io") plutôt que d'accepter n'importe quel site.
