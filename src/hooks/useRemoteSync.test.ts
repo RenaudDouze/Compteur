@@ -71,12 +71,12 @@ describe('useRemoteSync', () => {
       expect(createSyncCode).not.toHaveBeenCalled()
     })
 
-    it('crée un code, pousse les compteurs actuels et se synchronise', async () => {
+    it('crée un code, pousse les compteurs actuels avec baseVersion 0 et se synchronise', async () => {
       vi.mocked(createSyncCode).mockResolvedValue('ABCDEFGH')
-      vi.mocked(pushSyncState).mockResolvedValue({ accepted: true, state: { updatedAt: 1, counters: [] } })
+      vi.mocked(pushSyncState).mockResolvedValue({ accepted: true, state: { version: 1, counters: [] } })
       // Le code fraîchement défini déclenche aussitôt le sondage périodique
       // (effet séparé) : le mocker aussi pour ne pas fausser le statut final.
-      vi.mocked(fetchSyncState).mockResolvedValue({ updatedAt: 1, counters: [] })
+      vi.mocked(fetchSyncState).mockResolvedValue({ version: 1, counters: [] })
       const initial = [makeCounter()]
       const { result } = renderHook(() => useHost(WORKER_URL, initial))
 
@@ -88,41 +88,15 @@ describe('useRemoteSync', () => {
       expect(outcome).toBe(true)
       expect(result.current.sync.code).toBe('ABCDEFGH')
       expect(result.current.sync.status).toBe('synced')
+      // Un code fraîchement créé démarre à la version 0 côté serveur (voir
+      // handleCreate) : la première poussée part toujours de là, un seul
+      // appel suffit (pas de retry — voir worker/README.md pour pourquoi
+      // un numéro de version élimine le besoin d'en gérer un ici).
+      expect(pushSyncState).toHaveBeenCalledTimes(1)
       expect(pushSyncState).toHaveBeenCalledWith(WORKER_URL, 'ABCDEFGH', {
-        updatedAt: expect.any(Number),
+        baseVersion: 0,
         counters: initial,
       })
-    })
-
-    it('repousse avec un horodatage postérieur si le push initial est rejeté (horloge cliente en retard)', async () => {
-      vi.mocked(createSyncCode).mockResolvedValue('ABCDEFGH')
-      // Le serveur a créé le code avec son propre horodatage (état vide),
-      // plus récent que celui du client dont l'horloge retarde : le premier
-      // push est donc rejeté (409), comme entre deux appareils réels.
-      vi.mocked(pushSyncState)
-        .mockResolvedValueOnce({ accepted: false, state: { updatedAt: 9_999, counters: [] } })
-        .mockResolvedValueOnce({ accepted: true, state: { updatedAt: 10_000, counters: [makeCounter()] } })
-      vi.mocked(fetchSyncState).mockResolvedValue({ updatedAt: 10_000, counters: [makeCounter()] })
-      const initial = [makeCounter()]
-      const { result } = renderHook(() => useHost(WORKER_URL, initial))
-
-      let outcome: boolean | undefined
-      await act(async () => {
-        outcome = await result.current.sync.createCode()
-      })
-
-      expect(outcome).toBe(true)
-      expect(pushSyncState).toHaveBeenCalledTimes(2)
-      // Le second push utilise un horodatage garanti postérieur à celui du
-      // serveur (9 999), pas un nouveau `Date.now()` qui pourrait retomber en
-      // dessous à cause du même décalage d'horloge.
-      expect(pushSyncState).toHaveBeenLastCalledWith(WORKER_URL, 'ABCDEFGH', {
-        updatedAt: 10_000,
-        counters: initial,
-      })
-      // Le sondage qui suit aussitôt ne doit pas écraser les compteurs locaux
-      // avec l'état vide créé par le serveur.
-      expect(result.current.counters).toEqual(initial)
     })
 
     it('signale une erreur si la création échoue côté serveur', async () => {
@@ -175,7 +149,7 @@ describe('useRemoteSync', () => {
     it('adopte directement la version distante quand aucun compteur local (pas de confirmation demandée)', async () => {
       const confirmSpy = vi.spyOn(window, 'confirm')
       const remoteCounters = [makeCounter({ id: 'distant' })]
-      vi.mocked(fetchSyncState).mockResolvedValue({ updatedAt: 50, counters: remoteCounters })
+      vi.mocked(fetchSyncState).mockResolvedValue({ version: 50, counters: remoteCounters })
       const { result } = renderHook(() => useHost(WORKER_URL, []))
 
       let outcome: string | undefined
@@ -192,7 +166,7 @@ describe('useRemoteSync', () => {
     it('remplace les compteurs locaux si la confirmation est acceptée', async () => {
       vi.spyOn(window, 'confirm').mockReturnValue(true)
       const remoteCounters = [makeCounter({ id: 'distant' })]
-      vi.mocked(fetchSyncState).mockResolvedValue({ updatedAt: 50, counters: remoteCounters })
+      vi.mocked(fetchSyncState).mockResolvedValue({ version: 50, counters: remoteCounters })
       const { result } = renderHook(() => useHost(WORKER_URL, [makeCounter({ id: 'local' })]))
 
       await act(async () => {
@@ -203,14 +177,14 @@ describe('useRemoteSync', () => {
       expect(pushSyncState).not.toHaveBeenCalled()
     })
 
-    it('fusionne (et repousse) les compteurs si la confirmation est refusée', async () => {
+    it('fusionne (et repousse depuis la version lue) les compteurs si la confirmation est refusée', async () => {
       vi.spyOn(window, 'confirm').mockReturnValue(false)
       const localCounter = makeCounter({ id: 'local' })
       const remoteCounter = makeCounter({ id: 'distant' })
-      vi.mocked(fetchSyncState).mockResolvedValue({ updatedAt: 50, counters: [remoteCounter] })
+      vi.mocked(fetchSyncState).mockResolvedValue({ version: 50, counters: [remoteCounter] })
       vi.mocked(pushSyncState).mockResolvedValue({
         accepted: true,
-        state: { updatedAt: 60, counters: [localCounter, remoteCounter] },
+        state: { version: 51, counters: [localCounter, remoteCounter] },
       })
       const { result } = renderHook(() => useHost(WORKER_URL, [localCounter]))
 
@@ -220,9 +194,27 @@ describe('useRemoteSync', () => {
 
       expect(result.current.counters).toEqual([localCounter, remoteCounter])
       expect(pushSyncState).toHaveBeenCalledWith(WORKER_URL, 'ABCDEFGH', {
-        updatedAt: expect.any(Number),
+        baseVersion: 50,
         counters: [localCounter, remoteCounter],
       })
+    })
+
+    it('adopte la version serveur si la poussée de fusion est refusée (un autre appareil a poussé entre-temps)', async () => {
+      vi.spyOn(window, 'confirm').mockReturnValue(false)
+      const localCounter = makeCounter({ id: 'local' })
+      const remoteCounter = makeCounter({ id: 'distant' })
+      const serverCounters = [makeCounter({ id: 'depuis-un-autre-appareil' })]
+      vi.mocked(fetchSyncState).mockResolvedValue({ version: 50, counters: [remoteCounter] })
+      vi.mocked(pushSyncState).mockResolvedValue({ accepted: false, state: { version: 51, counters: serverCounters } })
+      const { result } = renderHook(() => useHost(WORKER_URL, [localCounter]))
+
+      await act(async () => {
+        await result.current.sync.joinCode('ABCDEFGH')
+      })
+
+      // La fusion calculée localement est devenue périmée : on adopte l'état
+      // serveur renvoyé plutôt que de l'écraser avec.
+      expect(result.current.counters).toEqual(serverCounters)
     })
 
     it('signale une erreur si la requête réseau échoue', async () => {
@@ -241,7 +233,7 @@ describe('useRemoteSync', () => {
     it('applique au montage une version distante plus récente pour un code déjà actif', async () => {
       window.localStorage.setItem('+1.sync.code.v1', JSON.stringify('ABCDEFGH'))
       const remoteCounters = [makeCounter({ id: 'depuis-serveur' })]
-      vi.mocked(fetchSyncState).mockResolvedValue({ updatedAt: 10, counters: remoteCounters })
+      vi.mocked(fetchSyncState).mockResolvedValue({ version: 10, counters: remoteCounters })
 
       const { result } = renderHook(() => useHost(WORKER_URL, []))
       await act(async () => {
@@ -252,10 +244,10 @@ describe('useRemoteSync', () => {
       expect(result.current.sync.status).toBe('synced')
     })
 
-    it("n'applique rien de nouveau si le sondage suivant renvoie le même horodatage", async () => {
+    it("n'applique rien de nouveau si le sondage suivant renvoie le même numéro de version", async () => {
       window.localStorage.setItem('+1.sync.code.v1', JSON.stringify('ABCDEFGH'))
       const remoteCounters = [makeCounter({ id: 'depuis-serveur' })]
-      vi.mocked(fetchSyncState).mockResolvedValue({ updatedAt: 10, counters: remoteCounters })
+      vi.mocked(fetchSyncState).mockResolvedValue({ version: 10, counters: remoteCounters })
 
       const { result } = renderHook(() => useHost(WORKER_URL, []))
       await act(async () => {
@@ -300,13 +292,13 @@ describe('useRemoteSync', () => {
 
     it('ignore une réponse de succès qui arrive après le démontage', async () => {
       window.localStorage.setItem('+1.sync.code.v1', JSON.stringify('ABCDEFGH'))
-      let resolvePoll!: (value: { updatedAt: number; counters: Counter[] }) => void
+      let resolvePoll!: (value: { version: number; counters: Counter[] }) => void
       vi.mocked(fetchSyncState).mockReturnValue(new Promise((resolve) => (resolvePoll = resolve)))
 
       const { unmount } = renderHook(() => useHost(WORKER_URL, []))
       unmount()
       await act(async () => {
-        resolvePoll({ updatedAt: 1, counters: [makeCounter()] })
+        resolvePoll({ version: 1, counters: [makeCounter()] })
         await vi.runAllTimersAsync()
       })
       // N'aurait de toute façon rien à vérifier de visible (démonté) : le
@@ -328,7 +320,7 @@ describe('useRemoteSync', () => {
 
     it("n'interroge plus le serveur une fois le composant démonté", async () => {
       window.localStorage.setItem('+1.sync.code.v1', JSON.stringify('ABCDEFGH'))
-      vi.mocked(fetchSyncState).mockResolvedValue({ updatedAt: 1, counters: [] })
+      vi.mocked(fetchSyncState).mockResolvedValue({ version: 1, counters: [] })
 
       const { unmount } = renderHook(() => useHost(WORKER_URL, []))
       await act(async () => {
@@ -347,7 +339,7 @@ describe('useRemoteSync', () => {
   describe('poussée différée (push) des changements locaux', () => {
     it("ne pousse rien pour l'état déjà en place au montage (hydratation, pas une vraie modification)", async () => {
       window.localStorage.setItem('+1.sync.code.v1', JSON.stringify('ABCDEFGH'))
-      vi.mocked(fetchSyncState).mockResolvedValue({ updatedAt: 0, counters: [] })
+      vi.mocked(fetchSyncState).mockResolvedValue({ version: 0, counters: [] })
       renderHook(() => useHost(WORKER_URL, [makeCounter()]))
 
       await act(async () => {
@@ -357,10 +349,10 @@ describe('useRemoteSync', () => {
       expect(pushSyncState).not.toHaveBeenCalled()
     })
 
-    it('pousse un changement local après le délai de regroupement', async () => {
+    it('pousse un changement local après le délai de regroupement, depuis la dernière version connue', async () => {
       window.localStorage.setItem('+1.sync.code.v1', JSON.stringify('ABCDEFGH'))
-      vi.mocked(fetchSyncState).mockResolvedValue({ updatedAt: 0, counters: [] })
-      vi.mocked(pushSyncState).mockResolvedValue({ accepted: true, state: { updatedAt: 1, counters: [] } })
+      vi.mocked(fetchSyncState).mockResolvedValue({ version: 0, counters: [] })
+      vi.mocked(pushSyncState).mockResolvedValue({ accepted: true, state: { version: 1, counters: [] } })
       const { result } = renderHook(() => useHost(WORKER_URL, []))
       await act(async () => {
         await vi.runOnlyPendingTimersAsync()
@@ -375,7 +367,7 @@ describe('useRemoteSync', () => {
       })
 
       expect(pushSyncState).toHaveBeenCalledWith(WORKER_URL, 'ABCDEFGH', {
-        updatedAt: expect.any(Number),
+        baseVersion: 0,
         counters: edited,
       })
       expect(result.current.sync.status).toBe('synced')
@@ -383,8 +375,8 @@ describe('useRemoteSync', () => {
 
     it('ne renvoie qu\'une seule requête pour plusieurs changements rapprochés', async () => {
       window.localStorage.setItem('+1.sync.code.v1', JSON.stringify('ABCDEFGH'))
-      vi.mocked(fetchSyncState).mockResolvedValue({ updatedAt: 0, counters: [] })
-      vi.mocked(pushSyncState).mockResolvedValue({ accepted: true, state: { updatedAt: 1, counters: [] } })
+      vi.mocked(fetchSyncState).mockResolvedValue({ version: 0, counters: [] })
+      vi.mocked(pushSyncState).mockResolvedValue({ accepted: true, state: { version: 1, counters: [] } })
       const { result } = renderHook(() => useHost(WORKER_URL, []))
       await act(async () => {
         await vi.runOnlyPendingTimersAsync()
@@ -406,13 +398,13 @@ describe('useRemoteSync', () => {
       expect(pushSyncState).toHaveBeenCalledTimes(1)
     })
 
-    it('adopte la version serveur quand la poussée est refusée (409, version plus récente ailleurs)', async () => {
+    it('adopte la version serveur quand la poussée est refusée (409, un autre appareil a poussé entre-temps)', async () => {
       window.localStorage.setItem('+1.sync.code.v1', JSON.stringify('ABCDEFGH'))
-      vi.mocked(fetchSyncState).mockResolvedValue({ updatedAt: 0, counters: [] })
+      vi.mocked(fetchSyncState).mockResolvedValue({ version: 0, counters: [] })
       const serverCounters = [makeCounter({ id: 'depuis-un-autre-appareil' })]
       vi.mocked(pushSyncState).mockResolvedValue({
         accepted: false,
-        state: { updatedAt: 999, counters: serverCounters },
+        state: { version: 999, counters: serverCounters },
       })
       const { result } = renderHook(() => useHost(WORKER_URL, []))
       await act(async () => {
@@ -434,7 +426,7 @@ describe('useRemoteSync', () => {
 
     it('signale une erreur si la poussée échoue', async () => {
       window.localStorage.setItem('+1.sync.code.v1', JSON.stringify('ABCDEFGH'))
-      vi.mocked(fetchSyncState).mockResolvedValue({ updatedAt: 0, counters: [] })
+      vi.mocked(fetchSyncState).mockResolvedValue({ version: 0, counters: [] })
       vi.mocked(pushSyncState).mockRejectedValue(new Error('boom'))
       const { result } = renderHook(() => useHost(WORKER_URL, []))
       await act(async () => {
@@ -466,7 +458,7 @@ describe('useRemoteSync', () => {
   describe('disable', () => {
     it('efface le code, repasse en désactivé et annule une poussée en attente', async () => {
       window.localStorage.setItem('+1.sync.code.v1', JSON.stringify('ABCDEFGH'))
-      vi.mocked(fetchSyncState).mockResolvedValue({ updatedAt: 0, counters: [] })
+      vi.mocked(fetchSyncState).mockResolvedValue({ version: 0, counters: [] })
       const { result } = renderHook(() => useHost(WORKER_URL, []))
       await act(async () => {
         await vi.runOnlyPendingTimersAsync()

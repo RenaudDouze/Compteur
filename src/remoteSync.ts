@@ -7,8 +7,24 @@ import type { Counter } from './types'
 const CODE_ALPHABET = 'ABCDEFGHJKMNPQRSTWXYZ23456789'
 const CODE_LENGTH = 8
 
+/** État renvoyé par le worker (GET/PUT) : `version` est un entier attribué
+ * par le serveur, incrémenté à chaque écriture acceptée — jamais une horloge
+ * (voir `PushRequest` pour pourquoi). */
 export interface SyncState {
-  updatedAt: number
+  version: number
+  counters: Counter[]
+}
+
+/** Corps d'une requête PUT : `baseVersion` est la version que ce client
+ * pensait être la version courante (dernière connue via un GET/PUT
+ * précédent). Comparer des horodatages entre appareils suppose des horloges
+ * synchronisées entre eux, ce qui n'est pas garanti — l'horloge d'un appareil
+ * en retard suffit à faire rejeter à tort une poussée légitime, ou pire, à
+ * faire accepter une poussée périmée comme si elle était la plus récente. Un
+ * entier attribué par le serveur élimine ce risque : la comparaison
+ * d'égalité stricte faite côté worker ne dépend d'aucune horloge cliente. */
+export interface PushRequest {
+  baseVersion: number
   counters: Counter[]
 }
 
@@ -61,19 +77,20 @@ export async function fetchSyncState(workerUrl: string, code: string): Promise<S
 }
 
 export interface PushResult {
-  /** `false` si un autre appareil a poussé une version plus récente entre-temps
-   * (voir la résolution "dernier écrit gagne" du worker) : `state` porte alors
-   * cette version plus récente, à adopter localement plutôt que réessayer. */
+  /** `false` si `baseVersion` ne correspondait plus à la version stockée
+   * (un autre appareil a poussé entre-temps, voir l'écriture optimiste du
+   * worker) : `state` porte alors la version actuelle du serveur, à adopter
+   * localement plutôt que réessayer avec le même `baseVersion`. */
   accepted: boolean
   state: SyncState
 }
 
 /** Pousse l'état local vers le worker. */
-export async function pushSyncState(workerUrl: string, code: string, state: SyncState): Promise<PushResult> {
+export async function pushSyncState(workerUrl: string, code: string, push: PushRequest): Promise<PushResult> {
   const response = await fetch(`${workerUrl}/api/sync/${code}`, {
     method: 'PUT',
     headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify(state),
+    body: JSON.stringify(push),
   })
   if (response.status === 409) return { accepted: false, state: (await readJsonOrThrow(response)) as SyncState }
   if (!response.ok) throw new Error('Impossible de synchroniser les compteurs.')

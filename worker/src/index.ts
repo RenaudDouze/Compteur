@@ -5,8 +5,23 @@ export interface Env {
   ALLOWED_ORIGIN?: string
 }
 
-export interface SyncPayload {
-  updatedAt: number
+/** État stocké côté serveur (réponse GET/PUT) : `version` est un compteur
+ * entier propre au serveur, incrémenté à chaque écriture acceptée. */
+export interface SyncState {
+  version: number
+  counters: unknown[]
+}
+
+/** Corps d'une requête PUT : `baseVersion` est la version que le client
+ * pensait être la version courante au moment de pousser (obtenue via un GET
+ * ou un PUT précédent), jamais une horloge. Comparer des horodatages entre
+ * appareils suppose des horloges synchronisées, ce qui n'est pas garanti (une
+ * horloge en retard suffit à faire rejeter à tort des poussées légitimes, ou
+ * pire, à faire accepter une poussée plus ancienne comme si elle était plus
+ * récente) : la comparaison d'égalité stricte sur un entier attribué par le
+ * serveur ne dépend d'aucune horloge cliente. */
+export interface PushRequest {
+  baseVersion: number
   counters: unknown[]
 }
 
@@ -22,10 +37,10 @@ export function kvKey(code: string): string {
   return `sync:${code}`
 }
 
-export function isValidPayload(value: unknown): value is SyncPayload {
+export function isValidPushRequest(value: unknown): value is PushRequest {
   if (!value || typeof value !== 'object') return false
   const v = value as Record<string, unknown>
-  return typeof v.updatedAt === 'number' && Array.isArray(v.counters)
+  return typeof v.baseVersion === 'number' && Array.isArray(v.counters)
 }
 
 function corsHeaders(env: Env): HeadersInit {
@@ -53,8 +68,10 @@ async function handleCreate(env: Env): Promise<Response> {
     const code = generateSyncCode()
     const existing = await env.SYNC_KV.get(kvKey(code))
     if (existing !== null) continue
-    const payload: SyncPayload = { updatedAt: Date.now(), counters: [] }
-    await env.SYNC_KV.put(kvKey(code), JSON.stringify(payload), { expirationTtl: KV_TTL_SECONDS })
+    // version 0 = « rien poussé encore » : le premier PUT doit fournir
+    // baseVersion 0 pour réussir (voir handlePut).
+    const state: SyncState = { version: 0, counters: [] }
+    await env.SYNC_KV.put(kvKey(code), JSON.stringify(state), { expirationTtl: KV_TTL_SECONDS })
     return json({ code }, { status: 201 }, env)
   }
   return json({ error: 'Impossible de générer un code, réessaie.' }, { status: 500 }, env)
@@ -78,23 +95,28 @@ async function handlePut(request: Request, env: Env, code: string): Promise<Resp
   } catch {
     return json({ error: 'JSON invalide.' }, { status: 400 }, env)
   }
-  if (!isValidPayload(payload)) {
-    return json({ error: 'Format invalide (updatedAt et counters requis).' }, { status: 400 }, env)
+  if (!isValidPushRequest(payload)) {
+    return json({ error: 'Format invalide (baseVersion et counters requis).' }, { status: 400 }, env)
   }
 
   const existingRaw = await env.SYNC_KV.get(kvKey(code))
-  const existing: SyncPayload | null = existingRaw ? JSON.parse(existingRaw) : null
+  const existing: SyncState | null = existingRaw ? JSON.parse(existingRaw) : null
+  const currentVersion = existing?.version ?? 0
 
-  // Dernier écrit gagne : si un autre appareil a déjà poussé une version plus
-  // récente entre-temps, on la renvoie telle quelle plutôt que de l'écraser —
-  // l'appelant s'aligne dessus au prochain rendu plutôt que de perdre les
-  // changements de l'autre appareil.
-  if (existing && existing.updatedAt > payload.updatedAt) {
-    return json(existing, { status: 409 }, env)
+  // Écriture optimiste façon « compare-and-swap » : la poussée n'est acceptée
+  // que si le client est bien parti de la dernière version connue du
+  // serveur. Un entier attribué par le serveur (jamais une horloge cliente)
+  // rend la comparaison fiable même si l'horloge d'un appareil dérive —
+  // contrairement à un horodatage, un décalage d'horloge ne peut ni faire
+  // rejeter à tort une poussée légitime, ni faire accepter une poussée
+  // périmée comme si elle était la plus récente.
+  if (payload.baseVersion !== currentVersion) {
+    return json(existing ?? { version: 0, counters: [] }, { status: 409 }, env)
   }
 
-  await env.SYNC_KV.put(kvKey(code), JSON.stringify(payload), { expirationTtl: KV_TTL_SECONDS })
-  return json(payload, { status: 200 }, env)
+  const next: SyncState = { version: currentVersion + 1, counters: payload.counters }
+  await env.SYNC_KV.put(kvKey(code), JSON.stringify(next), { expirationTtl: KV_TTL_SECONDS })
+  return json(next, { status: 200 }, env)
 }
 
 export default {
