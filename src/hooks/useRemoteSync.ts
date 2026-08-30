@@ -131,8 +131,18 @@ export function useRemoteSync(
     setErrorMessage(null)
     try {
       const newCode = await createSyncCode(workerUrl)
-      const updatedAt = Date.now()
-      await pushSyncState(workerUrl, newCode, { updatedAt, counters: countersRef.current })
+      let updatedAt = Date.now()
+      let result = await pushSyncState(workerUrl, newCode, { updatedAt, counters: countersRef.current })
+      if (!result.accepted) {
+        // Horloge de l'appareil en retard sur celle du serveur : l'horodatage
+        // de création (posé côté serveur) l'emporterait sinon sur le nôtre, et
+        // le prochain sondage remplacerait nos compteurs par l'état vide créé
+        // par handleCreate. Le code vient d'être créé à l'instant (aucun autre
+        // appareil ne peut encore l'avoir modifié) : on repousse avec un
+        // horodatage garanti postérieur, qui aboutit forcément cette fois.
+        updatedAt = result.state.updatedAt + 1
+        result = await pushSyncState(workerUrl, newCode, { updatedAt, counters: countersRef.current })
+      }
       lastSyncedAtRef.current = updatedAt
       setCode(newCode)
       setStatus('synced')
