@@ -13,7 +13,7 @@ export default defineConfig({
     globals: true,
     setupFiles: ['./src/test/setup.ts'],
     css: true,
-    exclude: ['node_modules/**', 'e2e/**', 'dist/**'],
+    exclude: ['node_modules/**', 'e2e/**', 'dist/**', 'worker/**'],
     // Le défaut (5000ms) est parfois trop court sous couverture v8 (surcoût
     // d'instrumentation) pour les tests les plus longs (ex: App.test.tsx,
     // qui enchaîne de nombreuses interactions sur plusieurs compteurs) —

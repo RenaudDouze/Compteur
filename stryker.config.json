@@ -15,6 +15,7 @@
     "src/odds.ts",
     "src/date.ts",
     "src/sync.ts",
+    "src/remoteSync.ts",
     "src/share.ts",
     "src/id.ts",
     "src/url.ts",

@@ -1,6 +1,7 @@
 import { lazy, Suspense, useEffect, useMemo, useRef, useState } from 'react'
 import { AnimatePresence, Reorder } from 'framer-motion'
 import { useLocalStorage } from './hooks/useLocalStorage'
+import { useRemoteSync } from './hooks/useRemoteSync'
 import { useSystemDarkMode } from './hooks/useSystemDarkMode'
 import { CounterCard } from './components/CounterCard'
 import { decodeCountersFromParam, migrateStoredCounter } from './sync'
@@ -78,6 +79,10 @@ export default function App() {
   migrateCounterShape('+1.counters.v1')
 
   const [counters, setCounters] = useLocalStorage<Counter[]>('+1.counters.v1', [])
+  // Absent (fonctionnalité non configurée) tant que le worker de synchro n'a
+  // pas été déployé et sa variable d'environnement renseignée au build — voir
+  // worker/README.md. `useRemoteSync` reste alors inerte (aucun appel réseau).
+  const remoteSync = useRemoteSync(import.meta.env.VITE_SYNC_WORKER_URL, counters, setCounters)
   // Id du compteur qui vient d'être créé, pour ouvrir directement son champ
   // de nom en édition (voir `addCounter`). Remis à `null` juste après le
   // montage de la carte concernée : sans ça, un futur remontage de la même
@@ -517,7 +522,7 @@ export default function App() {
 
       {syncOpen && (
         <Suspense fallback={null}>
-          <SyncPanel counters={counters} onClose={() => setSyncOpen(false)} onImport={handleImport} />
+          <SyncPanel counters={counters} onClose={() => setSyncOpen(false)} onImport={handleImport} remoteSync={remoteSync} />
         </Suspense>
       )}
 
