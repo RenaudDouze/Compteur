@@ -560,150 +560,6 @@ describe('CounterCard', () => {
     })
   })
 
-  describe('édition directe de la valeur', () => {
-    it('ouvre un champ pré-rempli au clic sur le crayon', () => {
-      renderCard({ count: 42 })
-      fireEvent.click(screen.getByRole('button', { name: 'Définir la valeur du compteur' }))
-      expect(screen.getByDisplayValue('42')).toBeInTheDocument()
-    })
-
-    it('sélectionne le texte au focus', () => {
-      renderCard({ count: 42 })
-      fireEvent.click(screen.getByRole('button', { name: 'Définir la valeur du compteur' }))
-      const input = screen.getByDisplayValue('42') as HTMLInputElement
-      const selectSpy = vi.spyOn(input, 'select')
-      fireEvent.focus(input)
-      expect(selectSpy).toHaveBeenCalled()
-    })
-
-    it('valide la nouvelle valeur avec Entrée', () => {
-      const { onSetCount } = renderCard({ count: 0 })
-      fireEvent.click(screen.getByRole('button', { name: 'Définir la valeur du compteur' }))
-      const input = screen.getByDisplayValue('0')
-      fireEvent.change(input, { target: { value: '250' } })
-      fireEvent.keyDown(input, { key: 'Enter' })
-      expect(onSetCount).toHaveBeenCalledWith(250)
-    })
-
-    it('accepte une valeur négative', () => {
-      const { onSetCount } = renderCard({ count: 0 })
-      fireEvent.click(screen.getByRole('button', { name: 'Définir la valeur du compteur' }))
-      const input = screen.getByDisplayValue('0')
-      fireEvent.change(input, { target: { value: '-15' } })
-      fireEvent.keyDown(input, { key: 'Enter' })
-      expect(onSetCount).toHaveBeenCalledWith(-15)
-    })
-
-    it('affiche une erreur et ne commite pas si la saisie est invalide', () => {
-      const { onSetCount } = renderCard({ count: 12 })
-      fireEvent.click(screen.getByRole('button', { name: 'Définir la valeur du compteur' }))
-      const input = screen.getByDisplayValue('12')
-      fireEvent.change(input, { target: { value: '' } })
-      fireEvent.keyDown(input, { key: 'Enter' })
-      expect(onSetCount).not.toHaveBeenCalled()
-      expect(screen.getByText('Nombre entier requis.')).toBeInTheDocument()
-      // Le champ reste ouvert pour corriger la saisie.
-      expect(screen.getByDisplayValue('')).toBeInTheDocument()
-    })
-
-    it('rejette une saisie contenant des lettres plutôt que de garder seulement les chiffres', () => {
-      const { onSetCount } = renderCard({ count: 12 })
-      fireEvent.click(screen.getByRole('button', { name: 'Définir la valeur du compteur' }))
-      const input = screen.getByDisplayValue('12')
-      fireEvent.change(input, { target: { value: 'abd7' } })
-      fireEvent.keyDown(input, { key: 'Enter' })
-      expect(onSetCount).not.toHaveBeenCalled()
-      expect(screen.getByText('Nombre entier requis.')).toBeInTheDocument()
-    })
-
-    it('efface l\'erreur dès que la saisie est modifiée', () => {
-      renderCard({ count: 12 })
-      fireEvent.click(screen.getByRole('button', { name: 'Définir la valeur du compteur' }))
-      const input = screen.getByDisplayValue('12')
-      fireEvent.change(input, { target: { value: '' } })
-      fireEvent.keyDown(input, { key: 'Enter' })
-      expect(screen.getByText('Nombre entier requis.')).toBeInTheDocument()
-      fireEvent.change(input, { target: { value: '5' } })
-      expect(screen.queryByText('Nombre entier requis.')).not.toBeInTheDocument()
-    })
-
-    it('permet de corriger la saisie après une erreur puis de valider', () => {
-      const { onSetCount } = renderCard({ count: 12 })
-      fireEvent.click(screen.getByRole('button', { name: 'Définir la valeur du compteur' }))
-      const input = screen.getByDisplayValue('12')
-      fireEvent.change(input, { target: { value: '' } })
-      fireEvent.keyDown(input, { key: 'Enter' })
-      fireEvent.change(input, { target: { value: '20' } })
-      fireEvent.keyDown(input, { key: 'Enter' })
-      expect(onSetCount).toHaveBeenCalledWith(20)
-    })
-
-    it('annule avec Échap sans appeler onSetCount', () => {
-      const { onSetCount } = renderCard({ count: 5 })
-      fireEvent.click(screen.getByRole('button', { name: 'Définir la valeur du compteur' }))
-      const input = screen.getByDisplayValue('5')
-      fireEvent.change(input, { target: { value: '999' } })
-      fireEvent.keyDown(input, { key: 'Escape' })
-      expect(onSetCount).not.toHaveBeenCalled()
-      expect(screen.getByText('5')).toBeInTheDocument()
-    })
-
-    it('valide aussi au blur', () => {
-      const { onSetCount } = renderCard({ count: 5 })
-      fireEvent.click(screen.getByRole('button', { name: 'Définir la valeur du compteur' }))
-      const input = screen.getByDisplayValue('5')
-      fireEvent.change(input, { target: { value: '77' } })
-      fireEvent.blur(input)
-      expect(onSetCount).toHaveBeenCalledWith(77)
-    })
-
-    it("le clic sur le crayon n'incrémente pas le compteur", () => {
-      const { onChange } = renderCard()
-      fireEvent.click(screen.getByRole('button', { name: 'Définir la valeur du compteur' }))
-      expect(onChange).not.toHaveBeenCalled()
-    })
-
-    it("cliquer dans le champ de valeur n'incrémente pas le compteur", () => {
-      const { onChange } = renderCard({ count: 42 })
-      fireEvent.click(screen.getByRole('button', { name: 'Définir la valeur du compteur' }))
-      fireEvent.click(screen.getByDisplayValue('42'))
-      expect(onChange).not.toHaveBeenCalled()
-    })
-
-    it("pointerdown sur le crayon n'incrémente pas le compteur", () => {
-      const { onChange } = renderCard()
-      fireEvent.pointerDown(screen.getByRole('button', { name: 'Définir la valeur du compteur' }))
-      expect(onChange).not.toHaveBeenCalled()
-    })
-
-    it("pointerdown dans le champ de valeur n'incrémente pas le compteur", () => {
-      const { onChange } = renderCard({ count: 42 })
-      fireEvent.click(screen.getByRole('button', { name: 'Définir la valeur du compteur' }))
-      fireEvent.pointerDown(screen.getByDisplayValue('42'))
-      expect(onChange).not.toHaveBeenCalled()
-    })
-
-    it("cliquer sur le message d'erreur n'incrémente pas le compteur", () => {
-      const { onChange } = renderCard({ count: 42 })
-      fireEvent.click(screen.getByRole('button', { name: 'Définir la valeur du compteur' }))
-      const input = screen.getByDisplayValue('42')
-      fireEvent.change(input, { target: { value: '' } })
-      fireEvent.keyDown(input, { key: 'Enter' })
-      fireEvent.click(screen.getByText('Nombre entier requis.'))
-      expect(onChange).not.toHaveBeenCalled()
-    })
-
-    it("pointerdown sur le message d'erreur n'incrémente pas le compteur", () => {
-      const { onChange } = renderCard({ count: 42 })
-      fireEvent.click(screen.getByRole('button', { name: 'Définir la valeur du compteur' }))
-      const input = screen.getByDisplayValue('42')
-      fireEvent.change(input, { target: { value: '' } })
-      fireEvent.keyDown(input, { key: 'Enter' })
-      fireEvent.pointerDown(screen.getByText('Nombre entier requis.'))
-      expect(onChange).not.toHaveBeenCalled()
-    })
-  })
-
   describe("style d'affichage", () => {
     it("rend l'odomètre par défaut sans classe modificatrice, sans style d'affichage défini", () => {
       renderCard({ count: 3 })
@@ -757,46 +613,6 @@ describe('CounterCard', () => {
       expect(valueEl.style.fontSize).toMatch(/px$/)
       widthSpy.mockRestore()
       heightSpy.mockRestore()
-    })
-
-    it("gère le cas où le conteneur n'est pas monté (mode édition) lors d'un changement de compteur", () => {
-      const counter = makeCounter({ count: 1 })
-      const { rerender } = render(
-        <Reorder.Group as="div" values={[counter]} onReorder={() => {}}>
-          <CounterCard
-            counter={counter}
-            fill
-            onChange={vi.fn()}
-            onSetCount={vi.fn()}
-            onUpdate={vi.fn()}
-            colors={['#2563eb', '#7c3aed']}
-            onDuplicate={vi.fn()}
-            onToggleArchive={vi.fn()}
-            onTogglePin={vi.fn()}
-            onDelete={vi.fn()}
-          />
-        </Reorder.Group>
-      )
-      fireEvent.click(screen.getByRole('button', { name: 'Définir la valeur du compteur' }))
-      const updated = { ...counter, count: 2 }
-      rerender(
-        <Reorder.Group as="div" values={[updated]} onReorder={() => {}}>
-          <CounterCard
-            counter={updated}
-            fill
-            onChange={vi.fn()}
-            onSetCount={vi.fn()}
-            onUpdate={vi.fn()}
-            colors={['#2563eb', '#7c3aed']}
-            onDuplicate={vi.fn()}
-            onToggleArchive={vi.fn()}
-            onTogglePin={vi.fn()}
-            onDelete={vi.fn()}
-          />
-        </Reorder.Group>
-      )
-      // Ne doit pas planter même si le div mesuré n'est pas monté (input affiché à la place).
-      expect(screen.getByDisplayValue('1')).toBeInTheDocument()
     })
   })
 
@@ -967,6 +783,88 @@ describe('CounterCard', () => {
       )
       expect(playIncrementSound).toHaveBeenCalledTimes(1)
     })
+
+    it('déduit le sens depuis une nouvelle valeur définie via la modale Comportement (augmentation → son joué)', () => {
+      const counter = makeCounter({ count: 1 })
+      const { rerender } = render(
+        <Reorder.Group as="div" values={[counter]} onReorder={() => {}}>
+          <CounterCard
+            counter={counter}
+            onChange={vi.fn()}
+            onSetCount={vi.fn()}
+            onUpdate={vi.fn()}
+            colors={['#2563eb', '#7c3aed']}
+            onDuplicate={vi.fn()}
+            onToggleArchive={vi.fn()}
+            onTogglePin={vi.fn()}
+            onDelete={vi.fn()}
+          />
+        </Reorder.Group>
+      )
+      fireEvent.click(screen.getByRole('button', { name: 'Régler le comportement du compteur' }))
+      const input = screen.getByDisplayValue('1')
+      fireEvent.change(input, { target: { value: '5' } })
+      fireEvent.keyDown(input, { key: 'Enter' })
+
+      const updated = { ...counter, count: 5 }
+      rerender(
+        <Reorder.Group as="div" values={[updated]} onReorder={() => {}}>
+          <CounterCard
+            counter={updated}
+            onChange={vi.fn()}
+            onSetCount={vi.fn()}
+            onUpdate={vi.fn()}
+            colors={['#2563eb', '#7c3aed']}
+            onDuplicate={vi.fn()}
+            onToggleArchive={vi.fn()}
+            onTogglePin={vi.fn()}
+            onDelete={vi.fn()}
+          />
+        </Reorder.Group>
+      )
+      expect(playIncrementSound).toHaveBeenCalledTimes(1)
+    })
+
+    it('déduit le sens depuis une nouvelle valeur définie via la modale Comportement (diminution → pas de son)', () => {
+      const counter = makeCounter({ count: 5 })
+      const { rerender } = render(
+        <Reorder.Group as="div" values={[counter]} onReorder={() => {}}>
+          <CounterCard
+            counter={counter}
+            onChange={vi.fn()}
+            onSetCount={vi.fn()}
+            onUpdate={vi.fn()}
+            colors={['#2563eb', '#7c3aed']}
+            onDuplicate={vi.fn()}
+            onToggleArchive={vi.fn()}
+            onTogglePin={vi.fn()}
+            onDelete={vi.fn()}
+          />
+        </Reorder.Group>
+      )
+      fireEvent.click(screen.getByRole('button', { name: 'Régler le comportement du compteur' }))
+      const input = screen.getByDisplayValue('5')
+      fireEvent.change(input, { target: { value: '1' } })
+      fireEvent.keyDown(input, { key: 'Enter' })
+
+      const updated = { ...counter, count: 1 }
+      rerender(
+        <Reorder.Group as="div" values={[updated]} onReorder={() => {}}>
+          <CounterCard
+            counter={updated}
+            onChange={vi.fn()}
+            onSetCount={vi.fn()}
+            onUpdate={vi.fn()}
+            colors={['#2563eb', '#7c3aed']}
+            onDuplicate={vi.fn()}
+            onToggleArchive={vi.fn()}
+            onTogglePin={vi.fn()}
+            onDelete={vi.fn()}
+          />
+        </Reorder.Group>
+      )
+      expect(playIncrementSound).not.toHaveBeenCalled()
+    })
   })
 
   describe('épinglage', () => {
@@ -1098,11 +996,6 @@ describe('CounterCard', () => {
       const { onChange } = renderCard({ archived: true })
       fireEvent.keyDown(screen.getByRole('button', { name: /Compteur 1/ }), { key: 'ArrowUp' })
       expect(onChange).not.toHaveBeenCalled()
-    })
-
-    it('désactive le bouton de définition directe de la valeur', () => {
-      renderCard({ archived: true })
-      expect(screen.getByRole('button', { name: 'Définir la valeur du compteur' })).toBeDisabled()
     })
 
     it('ne passe pas en mode renommage au clic sur le nom', () => {

@@ -21,10 +21,11 @@ test.describe('Parcours de base', () => {
     // Modifier la valeur déclenche le toast "Annuler", qui reste affiché 5s
     // en position fixe : il peut visuellement recouvrir le bouton + d'un
     // compteur en bas d'écran. Le tap doit quand même atteindre le bouton.
-    await page.getByRole('button', { name: 'Définir la valeur du compteur' }).click()
-    const input = page.locator('.counter-value-input')
+    await page.getByRole('button', { name: 'Régler le comportement du compteur' }).click()
+    const input = page.locator('.modal-section:has-text("Valeur actuelle") input')
     await input.fill('10')
     await input.press('Enter')
+    await page.getByRole('button', { name: 'Fermer' }).click()
     await expect(page.getByRole('button', { name: 'Annuler' })).toBeVisible()
 
     const plus = page.getByRole('button', { name: 'Incrémenter', exact: true })

@@ -90,12 +90,10 @@ export function CounterCard({
   const [draftName, setDraftName] = useState(counter.name)
   // 4 modales distinctes : la personnalisation de l'apparence (couleur,
   // style, image de fond), le comportement du compteur (pas d'incrément,
-  // objectif, probabilité, date de début), son historique, et les actions
-  // (partage, duplication). Chacune peut naviguer vers les 3 autres.
+  // objectif, probabilité, date de début, valeur actuelle), son historique,
+  // et les actions (partage, duplication). Chacune peut naviguer vers les 3
+  // autres.
   const [openPanel, setOpenPanel] = useState<PanelKind | null>(null)
-  const [editingCount, setEditingCount] = useState(false)
-  const [draftCount, setDraftCount] = useState(counter.count.toString())
-  const [countError, setCountError] = useState<string | null>(null)
   const [direction, setDirection] = useState<1 | -1>(1)
   const pulseControls = useAnimationControls()
   const isFirstCount = useRef(true)
@@ -134,19 +132,12 @@ export function CounterCard({
     setEditing(false)
   }
 
-  const commitCount = () => {
-    const trimmed = draftCount.trim()
-    // N'accepte que des chiffres (et un signe moins optionnel) : une saisie
-    // comme "abd7" doit être rejetée, pas silencieusement réduite à "7".
-    if (!/^-?\d+$/.test(trimmed)) {
-      setCountError('Nombre entier requis.')
-      return
-    }
-    const parsed = parseInt(trimmed, 10)
-    setCountError(null)
-    setDirection(parsed >= counter.count ? 1 : -1)
-    onSetCount(parsed)
-    setEditingCount(false)
+  // La modale Comportement porte elle-même la validation/saisie ; ce point
+  // d'entrée ne fait qu'ajouter la mise à jour de `direction`, propre à
+  // l'animation de la carte (sens du défilement de l'odomètre).
+  const handleSetCount = (newCount: number) => {
+    setDirection(newCount >= counter.count ? 1 : -1)
+    onSetCount(newCount)
   }
 
   // Quand il n'y a qu'1 ou 2 compteurs, on mesure l'espace réellement
@@ -355,54 +346,15 @@ export function CounterCard({
         </h2>
       )}
 
-      {editingCount ? (
-        <>
-          <input
-            className="counter-value-input"
-            autoFocus
-            inputMode="numeric"
-            pattern="-?[0-9]*"
-            aria-invalid={countError !== null}
-            value={draftCount}
-            onClick={(e) => e.stopPropagation()}
-            onPointerDown={(e) => e.stopPropagation()}
-            onFocus={(e) => e.currentTarget.select()}
-            onChange={(e) => {
-              setDraftCount(e.target.value)
-              setCountError(null)
-            }}
-            onBlur={commitCount}
-            onKeyDown={(e) => {
-              if (e.key === 'Enter') commitCount()
-              if (e.key === 'Escape') {
-                setDraftCount(counter.count.toString())
-                setCountError(null)
-                setEditingCount(false)
-              }
-            }}
-          />
-          {countError && (
-            <p className="modal-error" onClick={(e) => e.stopPropagation()} onPointerDown={(e) => e.stopPropagation()}>
-              {countError}
-            </p>
-          )}
-        </>
-      ) : (
-        <motion.div
-          className={`counter-value${counter.appearance.displayStyle ? ` counter-value--${counter.appearance.displayStyle}` : ''}`}
-          ref={valueRef}
-          style={fillFontSize ? { fontSize: `${fillFontSize}px` } : undefined}
-          animate={pulseControls}
-          aria-hidden="true"
-        >
-          <CounterValueDisplay
-            value={counter.count}
-            direction={direction}
-            style={counter.appearance.displayStyle}
-            progress={progress}
-          />
-        </motion.div>
-      )}
+      <motion.div
+        className={`counter-value${counter.appearance.displayStyle ? ` counter-value--${counter.appearance.displayStyle}` : ''}`}
+        ref={valueRef}
+        style={fillFontSize ? { fontSize: `${fillFontSize}px` } : undefined}
+        animate={pulseControls}
+        aria-hidden="true"
+      >
+        <CounterValueDisplay value={counter.count} direction={direction} style={counter.appearance.displayStyle} progress={progress} />
+      </motion.div>
 
       {/* Les chiffres de l'odomètre se montent/démontent en continu pour
           l'animation de défilement (visuellement clair, mais illisible pour
@@ -426,21 +378,6 @@ export function CounterCard({
       )}
 
       <div className="counter-actions">
-        <button
-          className="counter-btn edit"
-          disabled={locked}
-          onClick={(e) => {
-            e.stopPropagation()
-            setDraftCount(counter.count.toString())
-            setCountError(null)
-            setEditingCount(true)
-          }}
-          onPointerDown={(e) => e.stopPropagation()}
-          aria-label="Définir la valeur du compteur"
-          title="Définir la valeur du compteur"
-        >
-          ✎
-        </button>
         <button
           className="counter-btn minus"
           disabled={locked}
@@ -502,6 +439,7 @@ export function CounterCard({
           counter={counter}
           onClose={() => setOpenPanel(null)}
           onUpdate={onUpdate}
+          onSetCount={handleSetCount}
           onNavigate={setOpenPanel}
         />
       )}

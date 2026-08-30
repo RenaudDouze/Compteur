@@ -26,6 +26,7 @@ function renderPanel(
   const handlers = {
     onClose: vi.fn(),
     onUpdate: vi.fn(),
+    onSetCount: vi.fn(),
     onNavigate: vi.fn(),
     ...props,
   }
@@ -51,6 +52,85 @@ describe('CounterBehaviorSettingsPanel', () => {
     const { onClose } = renderPanel()
     fireEvent.click(screen.getByRole('button', { name: 'Fermer' }))
     expect(onClose).toHaveBeenCalledTimes(1)
+  })
+
+  describe('valeur actuelle', () => {
+    it('préremplit le champ avec la valeur actuelle', () => {
+      renderPanel({ count: 42 })
+      expect(screen.getByDisplayValue('42')).toBeInTheDocument()
+    })
+
+    it('valide la nouvelle valeur avec Entrée', () => {
+      const { onSetCount } = renderPanel({ count: 0 })
+      const input = screen.getByDisplayValue('0')
+      fireEvent.change(input, { target: { value: '250' } })
+      fireEvent.keyDown(input, { key: 'Enter' })
+      expect(onSetCount).toHaveBeenCalledWith(250)
+    })
+
+    it('accepte une valeur négative', () => {
+      const { onSetCount } = renderPanel({ count: 0 })
+      const input = screen.getByDisplayValue('0')
+      fireEvent.change(input, { target: { value: '-15' } })
+      fireEvent.keyDown(input, { key: 'Enter' })
+      expect(onSetCount).toHaveBeenCalledWith(-15)
+    })
+
+    it('valide aussi au blur', () => {
+      const { onSetCount } = renderPanel({ count: 5 })
+      const input = screen.getByDisplayValue('5')
+      fireEvent.change(input, { target: { value: '77' } })
+      fireEvent.blur(input)
+      expect(onSetCount).toHaveBeenCalledWith(77)
+    })
+
+    it('affiche une erreur et ne commite pas si la saisie est invalide', () => {
+      const { onSetCount } = renderPanel({ count: 12 })
+      const input = screen.getByDisplayValue('12')
+      fireEvent.change(input, { target: { value: '' } })
+      fireEvent.keyDown(input, { key: 'Enter' })
+      expect(onSetCount).not.toHaveBeenCalled()
+      expect(screen.getByText('Nombre entier requis.')).toBeInTheDocument()
+      // Le champ reste ouvert pour corriger la saisie, sa saisie invalide affichée telle quelle.
+      expect(input).toHaveValue('')
+    })
+
+    it('rejette une saisie contenant des lettres plutôt que de garder seulement les chiffres', () => {
+      const { onSetCount } = renderPanel({ count: 12 })
+      const input = screen.getByDisplayValue('12')
+      fireEvent.change(input, { target: { value: 'abd7' } })
+      fireEvent.keyDown(input, { key: 'Enter' })
+      expect(onSetCount).not.toHaveBeenCalled()
+      expect(screen.getByText('Nombre entier requis.')).toBeInTheDocument()
+    })
+
+    it("efface l'erreur dès que la saisie est modifiée", () => {
+      renderPanel({ count: 12 })
+      const input = screen.getByDisplayValue('12')
+      fireEvent.change(input, { target: { value: '' } })
+      fireEvent.keyDown(input, { key: 'Enter' })
+      expect(screen.getByText('Nombre entier requis.')).toBeInTheDocument()
+      fireEvent.change(input, { target: { value: '5' } })
+      expect(screen.queryByText('Nombre entier requis.')).not.toBeInTheDocument()
+    })
+
+    it('permet de corriger la saisie après une erreur puis de valider', () => {
+      const { onSetCount } = renderPanel({ count: 12 })
+      const input = screen.getByDisplayValue('12')
+      fireEvent.change(input, { target: { value: '' } })
+      fireEvent.keyDown(input, { key: 'Enter' })
+      fireEvent.change(input, { target: { value: '20' } })
+      fireEvent.keyDown(input, { key: 'Enter' })
+      expect(onSetCount).toHaveBeenCalledWith(20)
+    })
+
+    it("ne commite pas sur une touche autre qu'Entrée", () => {
+      const { onSetCount } = renderPanel({ count: 12 })
+      const input = screen.getByDisplayValue('12')
+      fireEvent.change(input, { target: { value: '20' } })
+      fireEvent.keyDown(input, { key: 'a' })
+      expect(onSetCount).not.toHaveBeenCalled()
+    })
   })
 
   describe("pas d'incrément", () => {
@@ -105,7 +185,7 @@ describe('CounterBehaviorSettingsPanel', () => {
       fireEvent.keyDown(input, { key: 'Enter' })
       expect(onUpdate).not.toHaveBeenCalled()
       expect(screen.getByText('Nombre entier positif requis.')).toBeInTheDocument()
-      expect(screen.getByDisplayValue('0')).toBeInTheDocument()
+      expect(input).toHaveValue('0')
     })
 
     it("efface l'erreur dès que la saisie est modifiée", () => {
@@ -195,7 +275,7 @@ describe('CounterBehaviorSettingsPanel', () => {
       fireEvent.keyDown(input, { key: 'Enter' })
       expect(onUpdate).not.toHaveBeenCalled()
       expect(screen.getByText('Nombre entier positif requis.')).toBeInTheDocument()
-      expect(screen.getByDisplayValue('0')).toBeInTheDocument()
+      expect(input).toHaveValue('0')
     })
 
     it("garde l'erreur affichée si le champ reperd le focus sans être corrigé", () => {
@@ -288,7 +368,7 @@ describe('CounterBehaviorSettingsPanel', () => {
       fireEvent.keyDown(input, { key: 'Enter' })
       expect(onUpdate).not.toHaveBeenCalled()
       expect(screen.getByText('Nombre entier positif requis.')).toBeInTheDocument()
-      expect(screen.getByDisplayValue('0')).toBeInTheDocument()
+      expect(input).toHaveValue('0')
     })
 
     it("garde l'erreur affichée si le champ reperd le focus sans être corrigé", () => {
@@ -455,8 +535,9 @@ describe('CounterBehaviorSettingsPanel', () => {
       expect(screen.queryByText(/Compteur archivé : lecture seule/)).not.toBeInTheDocument()
     })
 
-    it("désactive les champs pas d'incrément, objectif, probabilité et date de début", () => {
-      renderPanel({ archived: true })
+    it("désactive les champs valeur actuelle, pas d'incrément, objectif, probabilité et date de début", () => {
+      renderPanel({ archived: true, count: 12 })
+      expect(screen.getByDisplayValue('12')).toBeDisabled()
       expect(screen.getByPlaceholderText('1')).toBeDisabled()
       expect(screen.getByPlaceholderText('ex : 50')).toBeDisabled()
       expect(screen.getByPlaceholderText('4096')).toBeDisabled()
