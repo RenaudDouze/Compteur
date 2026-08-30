@@ -554,6 +554,34 @@ describe('encodeCountersToParam / decodeCountersFromParam', () => {
     expect(encoded.length).toBeLessThan(naiveBase64Length * 0.6)
   })
 
+  it('décode un lien legacy (base64 fait main, avant lz-string) dont le base64 brut contient +/-', () => {
+    // Réplique l'ancien schéma d'encodage (base64 url-safe fait main,
+    // remplacé depuis par lz-string) pour vérifier que decodeCountersFromParam
+    // sait toujours le lire : les substitutions - -> + et _ -> / faites par
+    // decodeLegacyParam doivent être correctement inversées, sinon atob()
+    // échoue sur un base64 invalide. Contenu à forte entropie : garantit de
+    // générer, dans le base64 brut, des caractères + et / (donc - et _ une
+    // fois substitués) qui exercent vraiment cette logique.
+    const legacyEncode = (json: string): string => {
+      const bytes = new TextEncoder().encode(json)
+      let binary = ''
+      bytes.forEach((b) => (binary += String.fromCharCode(b)))
+      return btoa(binary).replace(/\+/g, '-').replace(/\//g, '_').replace(/=+/, '')
+    }
+
+    let sawDashOrUnderscore = false
+    for (let i = 0; i < 30; i++) {
+      const name = pseudoRandomString(i + 1, 40)
+      const json = JSON.stringify([{ n: name, c: 1, k: '#2563eb', t: 1_700_000_000_000 }])
+      const legacyParam = legacyEncode(json)
+      if (/[-_]/.test(legacyParam)) sawDashOrUnderscore = true
+      expect(decodeCountersFromParam(legacyParam)?.[0].name).toBe(name)
+    }
+    // Garantit que le test exerce bien le cas qui nous intéresse (sinon il
+    // passerait trivialement même avec une substitution inverse cassée).
+    expect(sawDashOrUnderscore).toBe(true)
+  })
+
   it('régénère un id à chaque décodage (les ids ne sont pas transmis)', () => {
     const counters = [makeCounter({ id: 'original' })]
     const encoded = encodeCountersToParam(counters)
