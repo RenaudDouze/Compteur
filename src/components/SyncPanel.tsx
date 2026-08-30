@@ -28,6 +28,7 @@ const JOIN_OUTCOME_ERROR: Record<'invalid' | 'not-found' | 'error', string> = {
 export function SyncPanel({ counters, onClose, onImport, remoteSync }: SyncPanelProps) {
   const fileInputRef = useRef<HTMLInputElement>(null)
   const [qrDataUrl, setQrDataUrl] = useState<string | null>(null)
+  const [qrError, setQrError] = useState<string | null>(null)
   const [shareUrl, setShareUrl] = useState('')
   const [copied, setCopied] = useState(false)
   const [error, setError] = useState<string | null>(null)
@@ -41,13 +42,27 @@ export function SyncPanel({ counters, onClose, onImport, remoteSync }: SyncPanel
   useEffect(() => {
     if (counters.length === 0) {
       setQrDataUrl(null)
+      setQrError(null)
       return
     }
     const url = buildShareUrl(counters)
     setShareUrl(url)
-    QRCode.toDataURL(url, { width: 240, margin: 1, color: { dark: '#0f172a', light: '#ffffff' } })
-      .then(setQrDataUrl)
-      .catch(() => setQrDataUrl(null))
+    // `scale` (pixels par module) plutôt qu'un `width` fixe : un lien plus
+    // long (beaucoup de compteurs) produit un QR code à plus de modules, qui
+    // grandit en conséquence pour rester scannable, au lieu d'être compressé
+    // dans une image de taille constante (modules devenant illisibles).
+    QRCode.toDataURL(url, { scale: 6, margin: 2, color: { dark: '#0f172a', light: '#ffffff' } })
+      .then((dataUrl) => {
+        setQrDataUrl(dataUrl)
+        setQrError(null)
+      })
+      .catch(() => {
+        // Dépassement de la capacité maximale d'un QR code (~2,9 Ko) : au-delà,
+        // pas de version qui l'encode. Message explicite plutôt que de
+        // réutiliser par erreur celui de la liste vide.
+        setQrDataUrl(null)
+        setQrError('Trop de compteurs pour un QR code : utilise le code de synchro ou le fichier de sauvegarde.')
+      })
   }, [counters])
   // oxlint-enable react/set-state-in-effect
 
@@ -164,9 +179,11 @@ export function SyncPanel({ counters, onClose, onImport, remoteSync }: SyncPanel
             Scanne ce QR code depuis l'autre appareil (appareil photo ou navigateur), ou copie le lien.
           </p>
           {qrDataUrl ? (
-            <img className="sync-qr" src={qrDataUrl} alt="QR code de tes compteurs" width={200} height={200} />
+            <img className="sync-qr" src={qrDataUrl} alt="QR code de tes compteurs" />
           ) : (
-            <p className="modal-hint">Ajoute au moins un compteur pour générer un QR code.</p>
+            <p className="modal-hint">
+              {qrError ?? 'Ajoute au moins un compteur pour générer un QR code.'}
+            </p>
           )}
           {shareUrl && (
             <button className="modal-btn" onClick={copyLink}>
