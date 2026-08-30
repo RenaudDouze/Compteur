@@ -369,7 +369,8 @@ test.describe('Fonctionnalités avancées', () => {
 
     await cards.nth(2).getByRole('button', { name: 'Actions du compteur' }).click()
     await page.getByText('📌 Épingler en haut').click()
-    await expect(page.locator('.counter-name')).toHaveText(['C', 'A', 'B'])
+    // Le nom épinglé est précédé du repère 📌 : on vérifie juste la fin du texte.
+    await expect(page.locator('.counter-name')).toHaveText([/C$/, /A$/, /B$/])
     await expect(cards.first().locator('.counter-pin-badge')).toBeVisible()
 
     await cards.first().getByRole('button', { name: 'Actions du compteur' }).click()
