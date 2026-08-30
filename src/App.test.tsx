@@ -923,7 +923,16 @@ describe('App', () => {
   })
 
   describe('épinglage', () => {
-    const counterNames = () => Array.from(document.querySelectorAll('.counter-name')).map((el) => el.textContent)
+    // Le nom peut être précédé du repère d'épinglage (📌, un <span> imbriqué) :
+    // on ne garde que les nœuds texte directs du <h2>, pas son textContent
+    // complet, pour comparer le nom seul.
+    const counterNames = () =>
+      Array.from(document.querySelectorAll('.counter-name')).map((el) =>
+        Array.from(el.childNodes)
+          .filter((n) => n.nodeType === Node.TEXT_NODE)
+          .map((n) => n.textContent)
+          .join('')
+      )
 
     const togglePinFor = (name: string) => {
       fireEvent.click(within(screen.getByText(name).closest('article')!).getByRole('button', { name: 'Actions du compteur' }))
