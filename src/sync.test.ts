@@ -522,25 +522,36 @@ describe('encodeCountersToParam / decodeCountersFromParam', () => {
     expect(decoded?.[0].name).toBe('Écrémé 🎲 été – café')
   })
 
-  it('produit une chaîne compatible URL et se décode correctement (sans +, / ni =)', () => {
-    // Contenu pseudo-aléatoire à forte entropie : garantit de générer, dans
-    // le base64 brut, des caractères +, / et = qui doivent être neutralisés
-    // pour un usage direct dans une URL. On vérifie aussi l'aller-retour
-    // complet pour s'assurer que ce ne sont pas juste supprimés mais bien
-    // substitués puis correctement inversés au décodage.
-    let seenPlusOrSlashInRawBase64 = false
+  it('se décode fidèlement même quand la sortie lz-string contient des caractères réservés dans une URL (+, $)', () => {
+    // L'alphabet "URI safe" de lz-string inclut +, - et $ (jamais / ni =) :
+    // ce ne sont pas des caractères valides tels quels dans une URL, mais
+    // buildShareUrl les neutralise correctement via URLSearchParams (qui les
+    // encode en %2B/%24 à la construction du lien, et les décode à
+    // l'identique) — donc pas de substitution manuelle nécessaire ici,
+    // contrairement à l'ancien schéma base64 fait main.
+    let sawReservedChar = false
     for (let i = 0; i < 30; i++) {
       const name = pseudoRandomString(i + 1, 40)
-      const rawBase64 = btoa(unescape(encodeURIComponent(name)))
-      if (/[+/]/.test(rawBase64)) seenPlusOrSlashInRawBase64 = true
-
       const encoded = encodeCountersToParam([makeCounter({ name })])
-      expect(encoded).not.toMatch(/[+/=]/)
+      if (/[+$]/.test(encoded)) sawReservedChar = true
       expect(decodeCountersFromParam(encoded)?.[0].name).toBe(name)
     }
     // Garantit que le test exerce bien le cas qui nous intéresse (sinon il
-    // passerait trivialement même avec un remplacement cassé).
-    expect(seenPlusOrSlashInRawBase64).toBe(true)
+    // passerait trivialement même avec un aller-retour cassé sur ces
+    // caractères).
+    expect(sawReservedChar).toBe(true)
+  })
+
+  it('produit un lien nettement plus court que du base64 brut avec beaucoup de compteurs', () => {
+    // Motive le passage à lz-string : un JSON de compteurs répète beaucoup
+    // les mêmes clés/valeurs (couleur par défaut, styles...), qui se
+    // compressent très bien — le lien de partage devient impraticable
+    // (trop long à coller, QR illisible) sans cette compression au-delà de
+    // quelques compteurs.
+    const counters = Array.from({ length: 30 }, (_, i) => makeCounter({ name: `Compteur ${i}`, count: i }))
+    const encoded = encodeCountersToParam(counters)
+    const naiveBase64Length = btoa(unescape(encodeURIComponent(JSON.stringify(counters)))).length
+    expect(encoded.length).toBeLessThan(naiveBase64Length * 0.6)
   })
 
   it('régénère un id à chaque décodage (les ids ne sont pas transmis)', () => {
