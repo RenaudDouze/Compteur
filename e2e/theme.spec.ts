@@ -1,9 +1,10 @@
 import { expect, test } from '@playwright/test'
-import { gotoFresh } from './helpers'
+import { gotoFresh, openMenu } from './helpers'
 
 test.describe('Thème clair/sombre', () => {
   test.beforeEach(async ({ page }) => {
     await gotoFresh(page)
+    await openMenu(page)
   })
 
   test('démarre en mode automatique et permet de forcer clair puis sombre', async ({ page }) => {
@@ -29,6 +30,7 @@ test.describe('Thème clair/sombre', () => {
     await expect(page.getByRole('button', { name: 'Thème : Sombre' })).toBeVisible()
 
     await page.reload()
+    await openMenu(page)
     await expect(page.getByRole('button', { name: 'Thème : Sombre' })).toBeVisible()
     await expect(page.locator('html')).toHaveAttribute('data-theme', 'dark')
   })
@@ -36,6 +38,7 @@ test.describe('Thème clair/sombre', () => {
   test('respecte la préférence système en mode automatique', async ({ page }) => {
     await page.emulateMedia({ colorScheme: 'dark' })
     await page.reload()
+    await openMenu(page)
     await expect(page.getByRole('button', { name: 'Thème : Auto' })).toBeVisible()
     await expect(page.locator('html')).toHaveAttribute('data-theme', 'dark')
   })

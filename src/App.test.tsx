@@ -23,6 +23,13 @@ function makeCounter(overrides: Partial<Counter> = {}): Counter {
   }
 }
 
+// Le thème, le partage, le plein écran, le filtre Actifs/Archivés et la
+// création de compteur vivent désormais dans le menu déroulant de l'en-tête,
+// replié par défaut : chaque test qui les exerce doit d'abord l'ouvrir.
+function openMenu() {
+  fireEvent.click(screen.getByRole('button', { name: 'Ouvrir le menu' }))
+}
+
 beforeEach(() => {
   window.localStorage.clear()
   window.history.pushState({}, '', '/')
@@ -47,12 +54,14 @@ describe('App', () => {
 
   it('ajoute un compteur depuis le bouton d\'en-tête', () => {
     render(<App />)
+    openMenu()
     fireEvent.click(screen.getByRole('button', { name: '+ Nouveau compteur' }))
     expect(screen.getByDisplayValue('Compteur 1')).toBeInTheDocument()
   })
 
   it('numérote les compteurs successifs', () => {
     render(<App />)
+    openMenu()
     const addBtn = screen.getByRole('button', { name: '+ Nouveau compteur' })
     fireEvent.click(addBtn)
     fireEvent.click(addBtn)
@@ -64,12 +73,14 @@ describe('App', () => {
 
   it('utilise la classe --solo pour un seul compteur', () => {
     render(<App />)
+    openMenu()
     fireEvent.click(screen.getByRole('button', { name: '+ Nouveau compteur' }))
     expect(document.querySelector('.counter-grid--solo')).toBeInTheDocument()
   })
 
   it('utilise la classe --duo pour deux compteurs', () => {
     render(<App />)
+    openMenu()
     const addBtn = screen.getByRole('button', { name: '+ Nouveau compteur' })
     fireEvent.click(addBtn)
     fireEvent.click(addBtn)
@@ -78,6 +89,7 @@ describe('App', () => {
 
   it('utilise la classe --pack à partir de trois compteurs', () => {
     render(<App />)
+    openMenu()
     const addBtn = screen.getByRole('button', { name: '+ Nouveau compteur' })
     fireEvent.click(addBtn)
     fireEvent.click(addBtn)
@@ -87,6 +99,7 @@ describe('App', () => {
 
   it('incrémente un compteur au clic', () => {
     render(<App />)
+    openMenu()
     fireEvent.click(screen.getByRole('button', { name: '+ Nouveau compteur' }))
     fireEvent.click(screen.getByText('0'))
     expect(screen.getByText('1')).toBeInTheDocument()
@@ -94,6 +107,7 @@ describe('App', () => {
 
   it('définit directement la valeur depuis la modale Valeur & réglages', async () => {
     render(<App />)
+    openMenu()
     fireEvent.click(screen.getByRole('button', { name: '+ Nouveau compteur' }))
     fireEvent.click(screen.getByRole('button', { name: 'Régler le comportement du compteur' }))
     const input = screen.getByDisplayValue('0')
@@ -107,6 +121,7 @@ describe('App', () => {
 
   it('renomme un compteur', () => {
     render(<App />)
+    openMenu()
     fireEvent.click(screen.getByRole('button', { name: '+ Nouveau compteur' }))
     // Le champ de nom s'ouvre déjà en édition à la création (voir plus bas) :
     // on le referme d'abord pour tester le renommage ultérieur au clic sur
@@ -121,6 +136,7 @@ describe('App', () => {
 
   it('ouvre directement le champ de nom en édition à la création', () => {
     render(<App />)
+    openMenu()
     fireEvent.click(screen.getByRole('button', { name: '+ Nouveau compteur' }))
     const input = screen.getByDisplayValue('Compteur 1')
     fireEvent.change(input, { target: { value: 'Immédiat' } })
@@ -130,6 +146,7 @@ describe('App', () => {
 
   it('définit une probabilité', () => {
     render(<App />)
+    openMenu()
     fireEvent.click(screen.getByRole('button', { name: '+ Nouveau compteur' }))
     fireEvent.click(screen.getByRole('button', { name: 'Personnaliser le compteur' }))
     fireEvent.click(screen.getByRole('button', { name: 'Valeur & réglages' }))
@@ -144,6 +161,7 @@ describe('App', () => {
 
   it("définit un pas d'incrément personnalisé et l'applique au clic", () => {
     render(<App />)
+    openMenu()
     fireEvent.click(screen.getByRole('button', { name: '+ Nouveau compteur' }))
     fireEvent.click(screen.getByRole('button', { name: 'Personnaliser le compteur' }))
     fireEvent.click(screen.getByRole('button', { name: 'Valeur & réglages' }))
@@ -163,6 +181,7 @@ describe('App', () => {
 
   it('définit une date de début', () => {
     render(<App />)
+    openMenu()
     fireEvent.click(screen.getByRole('button', { name: '+ Nouveau compteur' }))
     fireEvent.click(screen.getByRole('button', { name: 'Personnaliser le compteur' }))
     fireEvent.click(screen.getByRole('button', { name: 'Valeur & réglages' }))
@@ -176,6 +195,7 @@ describe('App', () => {
 
   it('définit une image de fond', () => {
     render(<App />)
+    openMenu()
     fireEvent.click(screen.getByRole('button', { name: '+ Nouveau compteur' }))
     fireEvent.click(screen.getByRole('button', { name: 'Personnaliser le compteur' }))
     const input = screen.getByPlaceholderText('https://exemple.com/image.jpg')
@@ -187,6 +207,7 @@ describe('App', () => {
 
   it('change la couleur du compteur', () => {
     render(<App />)
+    openMenu()
     fireEvent.click(screen.getByRole('button', { name: '+ Nouveau compteur' }))
     fireEvent.click(screen.getByRole('button', { name: 'Personnaliser le compteur' }))
     fireEvent.click(screen.getByRole('button', { name: `Choisir la couleur ${COLORS[1]}` }))
@@ -198,6 +219,7 @@ describe('App', () => {
 
   it("définit un style d'affichage pour le compteur", () => {
     render(<App />)
+    openMenu()
     fireEvent.click(screen.getByRole('button', { name: '+ Nouveau compteur' }))
     fireEvent.click(screen.getByRole('button', { name: 'Personnaliser le compteur' }))
     fireEvent.click(screen.getByRole('button', { name: 'Choisir le style Volets' }))
@@ -209,6 +231,7 @@ describe('App', () => {
 
   it('définit un objectif pour le compteur', () => {
     render(<App />)
+    openMenu()
     fireEvent.click(screen.getByRole('button', { name: '+ Nouveau compteur' }))
     fireEvent.click(screen.getByRole('button', { name: 'Personnaliser le compteur' }))
     fireEvent.click(screen.getByRole('button', { name: 'Valeur & réglages' }))
@@ -223,6 +246,7 @@ describe('App', () => {
 
   it('duplique un compteur avec sa configuration, mais repart de zéro', () => {
     render(<App />)
+    openMenu()
     fireEvent.click(screen.getByRole('button', { name: '+ Nouveau compteur' }))
     fireEvent.click(screen.getByRole('button', { name: 'Personnaliser le compteur' }))
     fireEvent.click(screen.getByRole('button', { name: `Choisir la couleur ${COLORS[1]}` }))
@@ -238,6 +262,7 @@ describe('App', () => {
 
   it('supprime un compteur après confirmation', () => {
     render(<App />)
+    openMenu()
     fireEvent.click(screen.getByRole('button', { name: '+ Nouveau compteur' }))
     fireEvent.click(screen.getByRole('button', { name: 'Actions du compteur' }))
     fireEvent.click(screen.getByText('🗑 Supprimer ce compteur'))
@@ -252,6 +277,7 @@ describe('App', () => {
 
     it("propose d'annuler après une suppression et restaure le compteur", () => {
       render(<App />)
+      openMenu()
       fireEvent.click(screen.getByRole('button', { name: '+ Nouveau compteur' }))
       fireEvent.change(screen.getByDisplayValue('Compteur 1'), { target: { value: 'À restaurer' } })
       fireEvent.keyDown(screen.getByDisplayValue('À restaurer'), { key: 'Enter' })
@@ -269,6 +295,7 @@ describe('App', () => {
 
     it("propose d'annuler après une modification directe de la valeur", async () => {
       render(<App />)
+      openMenu()
       fireEvent.click(screen.getByRole('button', { name: '+ Nouveau compteur' }))
       fireEvent.click(screen.getByRole('button', { name: 'Régler le comportement du compteur' }))
       const input = screen.getByDisplayValue('0')
@@ -285,6 +312,7 @@ describe('App', () => {
 
     it("ne propose pas d'annuler si la valeur éditée est identique", () => {
       render(<App />)
+      openMenu()
       fireEvent.click(screen.getByRole('button', { name: '+ Nouveau compteur' }))
       fireEvent.click(screen.getByRole('button', { name: 'Régler le comportement du compteur' }))
       const input = screen.getByDisplayValue('0')
@@ -295,6 +323,7 @@ describe('App', () => {
     it("le message d'annulation disparaît après le délai", () => {
       vi.useFakeTimers({ shouldAdvanceTime: true })
       render(<App />)
+      openMenu()
       fireEvent.click(screen.getByRole('button', { name: '+ Nouveau compteur' }))
       fireEvent.click(screen.getByRole('button', { name: 'Actions du compteur' }))
       fireEvent.click(screen.getByText('🗑 Supprimer ce compteur'))
@@ -314,6 +343,7 @@ describe('App', () => {
 
     it('démarre en mode automatique et suit la préférence système', () => {
       render(<App />)
+      openMenu()
       expect(screen.getByRole('button', { name: 'Thème : Auto' })).toBeInTheDocument()
       // matchMedia est mocké sur `matches: false` (clair) dans le setup des tests.
       expect(document.documentElement.dataset.theme).toBe('light')
@@ -341,6 +371,7 @@ describe('App', () => {
 
     it('permet de forcer le thème clair puis sombre puis de revenir en automatique', () => {
       render(<App />)
+      openMenu()
       const toggle = screen.getByRole('button', { name: 'Thème : Auto' })
 
       fireEvent.click(toggle)
@@ -357,16 +388,19 @@ describe('App', () => {
 
     it('retient le thème choisi après rechargement', () => {
       const { unmount } = render(<App />)
+      openMenu()
       fireEvent.click(screen.getByRole('button', { name: 'Thème : Auto' }))
       expect(screen.getByRole('button', { name: 'Thème : Clair' })).toBeInTheDocument()
       unmount()
 
       render(<App />)
+      openMenu()
       expect(screen.getByRole('button', { name: 'Thème : Clair' })).toBeInTheDocument()
     })
 
     it('adapte la couleur de la barre de statut au thème actif', () => {
       render(<App />)
+      openMenu()
       const meta = document.querySelector('meta[name="theme-color"]')
       fireEvent.click(screen.getByRole('button', { name: 'Thème : Auto' }))
       fireEvent.click(screen.getByRole('button', { name: 'Thème : Clair' }))
@@ -376,6 +410,7 @@ describe('App', () => {
 
   it('persiste les compteurs dans le localStorage', () => {
     render(<App />)
+    openMenu()
     fireEvent.click(screen.getByRole('button', { name: '+ Nouveau compteur' }))
     const stored = JSON.parse(window.localStorage.getItem('+1.counters.v1') ?? '[]')
     expect(stored).toHaveLength(1)
@@ -408,6 +443,7 @@ describe('App', () => {
     it("migre la préférence de thème depuis l'ancienne clé et la nettoie", () => {
       window.localStorage.setItem('compteur.theme.v1', JSON.stringify('dark'))
       render(<App />)
+      openMenu()
       expect(screen.getByRole('button', { name: 'Thème : Sombre' })).toBeInTheDocument()
       expect(window.localStorage.getItem('compteur.theme.v1')).toBeNull()
     })
@@ -552,6 +588,7 @@ describe('App', () => {
   describe('panneau de synchronisation', () => {
     it("s'ouvre et se ferme", async () => {
       render(<App />)
+      openMenu()
       fireEvent.click(screen.getByRole('button', { name: 'Synchroniser' }))
       // Le panneau est chargé à la demande (React.lazy) : son apparition est
       // donc asynchrone, contrairement au reste de l'interface.
@@ -562,6 +599,7 @@ describe('App', () => {
 
     it('importe des compteurs partagés (remplacement quand la liste est vide)', async () => {
       render(<App />)
+      openMenu()
       fireEvent.click(screen.getByRole('button', { name: 'Synchroniser' }))
       await screen.findByText('Synchroniser mes compteurs')
       const input = document.querySelector('input[type="file"]') as HTMLInputElement
@@ -578,6 +616,7 @@ describe('App', () => {
       window.localStorage.setItem('+1.counters.v1', JSON.stringify([makeCounter({ name: 'Déjà là' })]))
       render(<App />)
       vi.spyOn(window, 'confirm').mockReturnValue(false)
+      openMenu()
       fireEvent.click(screen.getByRole('button', { name: 'Synchroniser' }))
       await screen.findByText('Synchroniser mes compteurs')
       const input = document.querySelector('input[type="file"]') as HTMLInputElement
@@ -754,48 +793,44 @@ describe('App', () => {
       fireEvent.click(screen.getByText('📦 Archiver ce compteur'))
     }
 
-    it("n'affiche pas le sélecteur Actifs/Archivés sans compteur", () => {
+    // Le filtre Actifs/Archivés est désormais un bouton unique (élément fixe
+    // du menu, comme le thème) qui bascule entre les deux vues au clic — plus
+    // un couple d'onglets affichés simultanément.
+    const toggleArchiveView = () => {
+      fireEvent.click(screen.getByRole('button', { name: /^Vue : / }))
+    }
+
+    it('affiche le filtre Actifs/Archivés même sans compteur (élément fixe du menu)', () => {
       render(<App />)
-      expect(screen.queryByRole('tab', { name: /Actifs/ })).not.toBeInTheDocument()
+      openMenu()
+      expect(screen.getByRole('button', { name: 'Vue : Actifs' })).toBeInTheDocument()
     })
 
-    it("ne montre le sélecteur qu'une fois un compteur archivé (pas de place perdue sinon)", () => {
-      window.localStorage.setItem('+1.counters.v1', JSON.stringify([makeCounter()]))
-      render(<App />)
-      expect(screen.queryByRole('tab', { name: /Actifs/ })).not.toBeInTheDocument()
-    })
-
-    it('affiche "Actifs" comme onglet actif par défaut une fois le sélecteur affiché', async () => {
+    it('reste sur la vue Actifs par défaut et affiche le nombre de compteurs archivés une fois un compteur archivé', async () => {
       window.localStorage.setItem('+1.counters.v1', JSON.stringify([makeCounter({ name: 'À ranger' })]))
       render(<App />)
       archiveCounter('À ranger')
-      await waitFor(() => expect(screen.getByRole('tab', { name: 'Actifs' })).toBeInTheDocument())
-      expect(screen.getByRole('tab', { name: 'Actifs' })).toHaveAttribute('aria-selected', 'true')
-      expect(screen.getByRole('tab', { name: 'Archivés (1)' })).toHaveAttribute('aria-selected', 'false')
+      openMenu()
+      await waitFor(() => expect(screen.getByRole('button', { name: 'Vue : Actifs (1 archivé(s))' })).toBeInTheDocument())
     })
 
-    it("masque un compteur archivé de l'onglet Actifs", async () => {
-      window.localStorage.setItem('+1.counters.v1', JSON.stringify([makeCounter({ name: 'À ranger' })]))
-      render(<App />)
-      archiveCounter('À ranger')
-      await waitFor(() => expect(screen.queryByText('À ranger')).not.toBeInTheDocument())
-    })
-
-    it("retrouve un compteur archivé via l'onglet Archivés", async () => {
+    it("masque un compteur archivé de la vue Actifs", async () => {
       window.localStorage.setItem('+1.counters.v1', JSON.stringify([makeCounter({ name: 'À ranger' })]))
       render(<App />)
       archiveCounter('À ranger')
       await waitFor(() => expect(screen.queryByText('À ranger')).not.toBeInTheDocument())
+    })
 
-      fireEvent.click(screen.getByRole('tab', { name: /Archivés/ }))
+    it('retrouve un compteur archivé via la vue Archivés', async () => {
+      window.localStorage.setItem('+1.counters.v1', JSON.stringify([makeCounter({ name: 'À ranger' })]))
+      render(<App />)
+      archiveCounter('À ranger')
+      await waitFor(() => expect(screen.queryByText('À ranger')).not.toBeInTheDocument())
+
+      openMenu()
+      toggleArchiveView()
       expect(screen.getByText('À ranger')).toBeInTheDocument()
-    })
-
-    it("indique le nombre de compteurs archivés sur l'onglet", async () => {
-      window.localStorage.setItem('+1.counters.v1', JSON.stringify([makeCounter({ name: 'À ranger' })]))
-      render(<App />)
-      archiveCounter('À ranger')
-      await waitFor(() => expect(screen.getByRole('tab', { name: 'Archivés (1)' })).toBeInTheDocument())
+      expect(screen.getByRole('button', { name: 'Vue : Archivés (1)' })).toBeInTheDocument()
     })
 
     it('désarchive un compteur et le fait réapparaître dans les actifs', async () => {
@@ -804,12 +839,13 @@ describe('App', () => {
       archiveCounter('À ranger')
       await waitFor(() => expect(screen.queryByText('À ranger')).not.toBeInTheDocument())
 
-      fireEvent.click(screen.getByRole('tab', { name: /Archivés/ }))
+      openMenu()
+      toggleArchiveView()
       fireEvent.click(screen.getByRole('button', { name: 'Actions du compteur' }))
       fireEvent.click(screen.getByText('📤 Désarchiver ce compteur'))
       await waitFor(() => expect(screen.queryByText('À ranger')).not.toBeInTheDocument())
 
-      fireEvent.click(screen.getByRole('tab', { name: 'Actifs' }))
+      toggleArchiveView()
       expect(screen.getByText('À ranger')).toBeInTheDocument()
     })
 
@@ -820,19 +856,20 @@ describe('App', () => {
       await waitFor(() => expect(screen.getByText('Tous tes compteurs sont archivés.')).toBeInTheDocument())
     })
 
-    it("affiche un message dédié sur l'onglet Archivés une fois vidé (dernier compteur désarchivé)", async () => {
+    it('affiche un message dédié une fois la vue Archivés vidée (dernier compteur désarchivé)', async () => {
       window.localStorage.setItem('+1.counters.v1', JSON.stringify([makeCounter({ name: 'À ranger' })]))
       render(<App />)
       archiveCounter('À ranger')
-      await waitFor(() => expect(screen.getByRole('tab', { name: 'Archivés (1)' })).toBeInTheDocument())
+      openMenu()
+      await waitFor(() => expect(screen.getByRole('button', { name: 'Vue : Actifs (1 archivé(s))' })).toBeInTheDocument())
 
-      fireEvent.click(screen.getByRole('tab', { name: 'Archivés (1)' }))
+      toggleArchiveView()
       fireEvent.click(screen.getByRole('button', { name: 'Actions du compteur' }))
       fireEvent.click(screen.getByText('📤 Désarchiver ce compteur'))
       expect(screen.getByText('Aucun compteur archivé.')).toBeInTheDocument()
     })
 
-    it("filtre par nom à l'intérieur de l'onglet Archivés", async () => {
+    it('filtre par nom à l\'intérieur de la vue Archivés', async () => {
       window.localStorage.setItem(
         '+1.counters.v1',
         JSON.stringify([makeCounter({ id: 'a', name: 'Pompes' }), makeCounter({ id: 'b', name: 'Squats' })])
@@ -842,7 +879,8 @@ describe('App', () => {
       archiveCounter('Squats')
       await waitFor(() => expect(screen.getByText('Tous tes compteurs sont archivés.')).toBeInTheDocument())
 
-      fireEvent.click(screen.getByRole('tab', { name: /Archivés/ }))
+      openMenu()
+      toggleArchiveView()
       fireEvent.click(screen.getByRole('button', { name: 'Rechercher' }))
       fireEvent.change(screen.getByPlaceholderText('Rechercher un compteur…'), { target: { value: 'pom' } })
       expect(screen.getByText('Pompes')).toBeInTheDocument()
@@ -855,23 +893,27 @@ describe('App', () => {
       archiveCounter('Source')
       await waitFor(() => expect(screen.getByText('Tous tes compteurs sont archivés.')).toBeInTheDocument())
 
-      fireEvent.click(screen.getByRole('tab', { name: /Archivés/ }))
+      openMenu()
+      toggleArchiveView()
       fireEvent.click(screen.getByRole('button', { name: 'Actions du compteur' }))
       fireEvent.click(screen.getByText('⧉ Dupliquer ce compteur'))
 
-      fireEvent.click(screen.getByRole('tab', { name: 'Actifs' }))
+      toggleArchiveView()
       expect(screen.getByText('Source (copie)')).toBeInTheDocument()
     })
 
-    it("revient sur l'onglet Actifs à la création d'un compteur depuis l'onglet Archivés", async () => {
+    it("revient sur la vue Actifs à la création d'un compteur depuis la vue Archivés", async () => {
       window.localStorage.setItem('+1.counters.v1', JSON.stringify([makeCounter({ name: 'Existant' })]))
       render(<App />)
       archiveCounter('Existant')
-      await waitFor(() => expect(screen.getByRole('tab', { name: 'Archivés (1)' })).toBeInTheDocument())
+      await waitFor(() => expect(screen.queryByText('Existant')).not.toBeInTheDocument())
 
-      fireEvent.click(screen.getByRole('tab', { name: 'Archivés (1)' }))
+      openMenu()
+      toggleArchiveView()
+      expect(screen.getByText('Existant')).toBeInTheDocument()
+
       fireEvent.click(screen.getByRole('button', { name: '+ Nouveau compteur' }))
-      expect(screen.getByRole('tab', { name: 'Actifs' })).toHaveAttribute('aria-selected', 'true')
+      expect(screen.getByRole('button', { name: /^Vue : Actifs/ })).toBeInTheDocument()
       expect(screen.getByDisplayValue('Compteur 2')).toBeInTheDocument()
     })
 
@@ -914,7 +956,8 @@ describe('App', () => {
           ])
         )
         render(<App />)
-        fireEvent.click(screen.getByRole('tab', { name: /Archivés/ }))
+        openMenu()
+        toggleArchiveView()
         fireEvent.click(screen.getByRole('button', { name: 'Actions du compteur' }))
         fireEvent.click(screen.getByText('📤 Désarchiver ce compteur'))
         await waitFor(() => {
@@ -972,12 +1015,14 @@ describe('App', () => {
 
     it("n'affiche pas le bouton plein écran sans compteur", () => {
       render(<App />)
+      openMenu()
       expect(screen.queryByRole('button', { name: 'Mode plein écran' })).not.toBeInTheDocument()
     })
 
     it('masque l\'en-tête et affiche le bouton de sortie au clic', () => {
       window.localStorage.setItem('+1.counters.v1', JSON.stringify([makeCounter()]))
       render(<App />)
+      openMenu()
       fireEvent.click(screen.getByRole('button', { name: 'Mode plein écran' }))
       expect(screen.queryByRole('heading', { name: '+1' })).not.toBeInTheDocument()
       expect(screen.getByRole('button', { name: 'Quitter le mode plein écran' })).toBeInTheDocument()
@@ -986,6 +1031,7 @@ describe('App', () => {
     it('quitte le mode plein écran au clic sur le bouton de sortie', () => {
       window.localStorage.setItem('+1.counters.v1', JSON.stringify([makeCounter()]))
       render(<App />)
+      openMenu()
       fireEvent.click(screen.getByRole('button', { name: 'Mode plein écran' }))
       fireEvent.click(screen.getByRole('button', { name: 'Quitter le mode plein écran' }))
       expect(screen.getByRole('heading', { name: '+1' })).toBeInTheDocument()
@@ -995,6 +1041,7 @@ describe('App', () => {
     it('quitte le mode plein écran avec Échap', () => {
       window.localStorage.setItem('+1.counters.v1', JSON.stringify([makeCounter()]))
       render(<App />)
+      openMenu()
       fireEvent.click(screen.getByRole('button', { name: 'Mode plein écran' }))
       fireEvent.keyDown(document, { key: 'Escape' })
       expect(screen.getByRole('heading', { name: '+1' })).toBeInTheDocument()
@@ -1003,6 +1050,7 @@ describe('App', () => {
     it('ignore une autre touche que Échap en mode plein écran', () => {
       window.localStorage.setItem('+1.counters.v1', JSON.stringify([makeCounter()]))
       render(<App />)
+      openMenu()
       fireEvent.click(screen.getByRole('button', { name: 'Mode plein écran' }))
       fireEvent.keyDown(document, { key: 'a' })
       expect(screen.queryByRole('heading', { name: '+1' })).not.toBeInTheDocument()
@@ -1013,6 +1061,7 @@ describe('App', () => {
       const requestFullscreen = vi.fn().mockRejectedValue(new Error('refusé'))
       document.documentElement.requestFullscreen = requestFullscreen
       render(<App />)
+      openMenu()
       await act(async () => {
         fireEvent.click(screen.getByRole('button', { name: 'Mode plein écran' }))
       })
@@ -1027,6 +1076,7 @@ describe('App', () => {
       const exitFullscreen = vi.fn().mockRejectedValue(new Error('refusé'))
       document.exitFullscreen = exitFullscreen
       render(<App />)
+      openMenu()
       fireEvent.click(screen.getByRole('button', { name: 'Mode plein écran' }))
       stubFullscreenElement(document.body)
       await act(async () => {
@@ -1040,6 +1090,7 @@ describe('App', () => {
     it("resynchronise l'état si le plein écran natif est quitté autrement que par notre bouton", () => {
       window.localStorage.setItem('+1.counters.v1', JSON.stringify([makeCounter()]))
       render(<App />)
+      openMenu()
       fireEvent.click(screen.getByRole('button', { name: 'Mode plein écran' }))
       stubFullscreenElement(null)
       fireEvent(document, new Event('fullscreenchange'))
@@ -1049,6 +1100,7 @@ describe('App', () => {
     it('ignore un changement de plein écran natif tant que celui-ci reste actif', () => {
       window.localStorage.setItem('+1.counters.v1', JSON.stringify([makeCounter()]))
       render(<App />)
+      openMenu()
       fireEvent.click(screen.getByRole('button', { name: 'Mode plein écran' }))
       stubFullscreenElement(document.body)
       fireEvent(document, new Event('fullscreenchange'))

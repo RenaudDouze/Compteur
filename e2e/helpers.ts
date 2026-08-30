@@ -7,6 +7,15 @@ export async function gotoFresh(page: Page) {
   await page.reload()
 }
 
+/** Ouvre le menu déroulant de l'en-tête (thème, partage, plein écran, filtre
+ * Actifs/Archivés, nouveau compteur) s'il n'est pas déjà déplié. */
+export async function openMenu(page: Page) {
+  const trigger = page.getByRole('button', { name: 'Ouvrir le menu' })
+  if (await trigger.isVisible().catch(() => false)) {
+    await trigger.click()
+  }
+}
+
 /** Crée un compteur, puis ferme le champ de nom qui s'ouvre directement en
  * édition (garde le nom par défaut) : les tests qui n'ont pas besoin de
  * cette édition immédiate peuvent ainsi continuer sans s'en soucier. */
@@ -15,7 +24,8 @@ export async function addCounter(page: Page) {
   if (await empty.isVisible().catch(() => false)) {
     await empty.click()
   } else {
-    await page.locator('.app-header-actions .add-btn:not(.icon-btn)').click()
+    await openMenu(page)
+    await page.locator('.app-menu .add-btn:not(.icon-btn)').click()
   }
   await page.locator('.counter-name-input').last().press('Escape')
 }

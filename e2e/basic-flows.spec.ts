@@ -1,5 +1,5 @@
 import { expect, test } from '@playwright/test'
-import { addCounter, gotoFresh } from './helpers'
+import { addCounter, gotoFresh, openMenu } from './helpers'
 
 test.describe('Parcours de base', () => {
   test.beforeEach(async ({ page }) => {
@@ -145,6 +145,7 @@ test.describe('Parcours de base', () => {
 
   test('masque l\'en-tête en mode plein écran, restauré par le bouton de sortie ou Échap', async ({ page }) => {
     await addCounter(page)
+    await openMenu(page)
     await page.getByRole('button', { name: 'Mode plein écran' }).click()
     await expect(page.getByRole('heading', { name: '+1', exact: true })).not.toBeVisible()
     const exitBtn = page.getByRole('button', { name: 'Quitter le mode plein écran' })

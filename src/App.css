@@ -30,38 +30,23 @@
   gap: 8px;
 }
 
+/* Menu déroulant horizontal (thème, partage, plein écran, filtre
+   Actifs/Archivés, nouveau compteur) : reprend exactement la rangée de
+   boutons de `.app-header-actions` d'avant son introduction, simplement
+   repliée par défaut derrière le bouton ⋯ de l'en-tête. */
+.app-menu {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+  margin-bottom: 14px;
+}
+
 .search-bar {
   display: flex;
   align-items: center;
   gap: 8px;
   margin-bottom: 20px;
-}
-
-.archive-toggle {
-  display: inline-flex;
-  align-self: flex-start;
-  gap: 2px;
-  padding: 2px;
-  border-radius: 999px;
-  background: var(--bg-2);
-  margin-bottom: 14px;
-}
-
-.archive-toggle-btn {
-  border: none;
-  background: none;
-  color: var(--text-dim);
-  padding: 4px 12px;
-  border-radius: 999px;
-  font-size: 0.78rem;
-  font-weight: 600;
-  transition: background 0.15s ease, color 0.15s ease;
-}
-
-.archive-toggle-btn.active {
-  background: var(--surface);
-  color: var(--text);
-  box-shadow: 0 1px 2px rgba(15, 23, 42, 0.08);
 }
 
 .modal-input.search-input {

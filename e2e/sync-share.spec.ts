@@ -1,5 +1,5 @@
 import { expect, test } from '@playwright/test'
-import { addCounter, gotoFresh } from './helpers'
+import { addCounter, gotoFresh, openMenu } from './helpers'
 
 test.describe('Synchronisation et partage', () => {
   test.beforeEach(async ({ page }) => {
@@ -7,6 +7,7 @@ test.describe('Synchronisation et partage', () => {
   })
 
   test('ouvre et ferme le panneau de synchronisation', async ({ page }) => {
+    await openMenu(page)
     await page.getByRole('button', { name: 'Synchroniser' }).click()
     await expect(page.getByText('Synchroniser mes compteurs')).toBeVisible()
     await page.getByRole('button', { name: 'Fermer' }).click()
@@ -14,12 +15,14 @@ test.describe('Synchronisation et partage', () => {
   })
 
   test("affiche la version de l'application", async ({ page }) => {
+    await openMenu(page)
     await page.getByRole('button', { name: 'Synchroniser' }).click()
     await expect(page.locator('.sync-version')).toHaveText(/^Version \S+$/)
   })
 
   test('affiche un QR code une fois un compteur créé', async ({ page }) => {
     await addCounter(page)
+    await openMenu(page)
     await page.getByRole('button', { name: 'Synchroniser' }).click()
     await expect(page.locator('.sync-qr')).toBeVisible()
   })
@@ -29,6 +32,8 @@ test.describe('Synchronisation et partage', () => {
     await page.getByText('Compteur 1', { exact: true }).click()
     await page.locator('.counter-name-input').fill('Export test')
     await page.locator('.counter-name-input').press('Enter')
+
+    await openMenu(page)
 
     await page.getByRole('button', { name: 'Synchroniser' }).click()
     const downloadPromise = page.waitForEvent('download')
@@ -43,6 +48,7 @@ test.describe('Synchronisation et partage', () => {
   })
 
   test('importe un fichier de sauvegarde JSON', async ({ page }) => {
+    await openMenu(page)
     await page.getByRole('button', { name: 'Synchroniser' }).click()
     const fileChooserPromise = page.waitForEvent('filechooser')
     await page.getByRole('button', { name: 'Importer' }).click()
@@ -66,6 +72,8 @@ test.describe('Synchronisation et partage', () => {
     await page.getByText('Compteur 1', { exact: true }).click()
     await page.locator('.counter-name-input').fill('Partagé E2E')
     await page.locator('.counter-name-input').press('Enter')
+
+    await openMenu(page)
 
     await page.getByRole('button', { name: 'Synchroniser' }).click()
     await page.evaluate(() => {
