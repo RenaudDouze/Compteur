@@ -94,6 +94,37 @@ describe('useRemoteSync', () => {
       })
     })
 
+    it('repousse avec un horodatage postérieur si le push initial est rejeté (horloge cliente en retard)', async () => {
+      vi.mocked(createSyncCode).mockResolvedValue('ABCDEFGH')
+      // Le serveur a créé le code avec son propre horodatage (état vide),
+      // plus récent que celui du client dont l'horloge retarde : le premier
+      // push est donc rejeté (409), comme entre deux appareils réels.
+      vi.mocked(pushSyncState)
+        .mockResolvedValueOnce({ accepted: false, state: { updatedAt: 9_999, counters: [] } })
+        .mockResolvedValueOnce({ accepted: true, state: { updatedAt: 10_000, counters: [makeCounter()] } })
+      vi.mocked(fetchSyncState).mockResolvedValue({ updatedAt: 10_000, counters: [makeCounter()] })
+      const initial = [makeCounter()]
+      const { result } = renderHook(() => useHost(WORKER_URL, initial))
+
+      let outcome: boolean | undefined
+      await act(async () => {
+        outcome = await result.current.sync.createCode()
+      })
+
+      expect(outcome).toBe(true)
+      expect(pushSyncState).toHaveBeenCalledTimes(2)
+      // Le second push utilise un horodatage garanti postérieur à celui du
+      // serveur (9 999), pas un nouveau `Date.now()` qui pourrait retomber en
+      // dessous à cause du même décalage d'horloge.
+      expect(pushSyncState).toHaveBeenLastCalledWith(WORKER_URL, 'ABCDEFGH', {
+        updatedAt: 10_000,
+        counters: initial,
+      })
+      // Le sondage qui suit aussitôt ne doit pas écraser les compteurs locaux
+      // avec l'état vide créé par le serveur.
+      expect(result.current.counters).toEqual(initial)
+    })
+
     it('signale une erreur si la création échoue côté serveur', async () => {
       vi.mocked(createSyncCode).mockRejectedValue(new Error('boom'))
       const { result } = renderHook(() => useHost(WORKER_URL, []))
