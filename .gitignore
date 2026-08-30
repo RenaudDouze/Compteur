@@ -20,6 +20,10 @@ blob-report
 .stryker-tmp
 reports
 
+# Worker Cloudflare (worker/)
+.wrangler
+.dev.vars
+
 # Editor directories and files
 .vscode/*
 !.vscode/extensions.json

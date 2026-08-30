@@ -1118,6 +1118,31 @@
   opacity: 0.7;
 }
 
+.sync-code {
+  margin: 0;
+  font-family: var(--font-mono);
+  font-size: 1.4rem;
+  font-weight: 600;
+  letter-spacing: 0.12em;
+  text-align: center;
+  color: var(--text);
+}
+
+.sync-status {
+  margin: 2px 0 0;
+  font-size: 0.82rem;
+  text-align: center;
+  color: var(--text-dim);
+}
+
+.sync-status--synced {
+  color: #16a34a;
+}
+
+.sync-status--error {
+  color: #dc2626;
+}
+
 .undo-toast {
   position: fixed;
   left: 50%;
