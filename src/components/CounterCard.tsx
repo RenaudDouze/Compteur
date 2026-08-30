@@ -1,10 +1,13 @@
 import { useEffect, useRef, useState } from 'react'
+import type { ComponentType } from 'react'
 import { motion, Reorder, useAnimationControls, useDragControls } from 'framer-motion'
 import { CounterValueDisplay } from './CounterValueDisplay'
 import { CounterSettingsPanel } from './CounterSettingsPanel'
 import { CounterBehaviorSettingsPanel } from './CounterBehaviorSettingsPanel'
 import { CounterHistoryPanel } from './CounterHistoryPanel'
 import { CounterActionsPanel } from './CounterActionsPanel'
+import { DragHandleIcon, GearIcon, MoreIcon, SlidersIcon, TrendingUpIcon } from './icons'
+import type { IconProps } from './icons'
 import type { PanelKind } from './PanelNav'
 import { useHoldToRepeat } from '../hooks/useHoldToRepeat'
 import { useTapGesture } from '../hooks/useTapGesture'
@@ -22,34 +25,34 @@ const CONFETTI_ANGLES = [-90, -65, -40, -15, 15, 40, 65, 90, -110, 110]
 const CONFETTI_COLORS = ['#f43f5e', '#f59e0b', '#10b981', '#3b82f6', '#8b5cf6', '#ec4899']
 
 // Icônes d'accès direct aux 4 modales, dans leur ordre d'affichage.
-const PANEL_BUTTONS: { panel: PanelKind; className: string; label: string; title: string; icon: string }[] = [
+const PANEL_BUTTONS: { panel: PanelKind; className: string; label: string; title: string; icon: ComponentType<IconProps> }[] = [
   {
     panel: 'comportement',
     className: 'counter-behavior-btn',
     label: 'Régler le comportement du compteur',
     title: "Pas d'incrément, objectif, probabilité, date de début, partage, duplication",
-    icon: '±',
+    icon: SlidersIcon,
   },
   {
     panel: 'personnalisation',
     className: 'counter-settings-btn',
     label: 'Personnaliser le compteur',
     title: "Nom, couleur, style d'affichage, image de fond",
-    icon: '⚙',
+    icon: GearIcon,
   },
   {
     panel: 'historique',
     className: 'counter-history-btn',
     label: "Voir l'historique du compteur",
     title: 'Historique des valeurs',
-    icon: '↗',
+    icon: TrendingUpIcon,
   },
   {
     panel: 'actions',
     className: 'counter-actions-btn',
     label: 'Actions du compteur',
     title: 'Partager, dupliquer, supprimer',
-    icon: '⋯',
+    icon: MoreIcon,
   },
 ]
 
@@ -290,11 +293,11 @@ export function CounterCard({
             aria-label="Réordonner le compteur"
             title="Glisser pour réordonner"
           >
-            ⠿
+            <DragHandleIcon width={15} height={15} />
           </button>
         )}
 
-        {PANEL_BUTTONS.map(({ panel, className, label, title, icon }) => (
+        {PANEL_BUTTONS.map(({ panel, className, label, title, icon: Icon }) => (
           <button
             key={panel}
             className={className}
@@ -306,7 +309,7 @@ export function CounterCard({
             aria-label={label}
             title={title}
           >
-            {icon}
+            <Icon width={15} height={15} />
           </button>
         ))}
       </div>
