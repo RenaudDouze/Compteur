@@ -6,29 +6,38 @@ const WORKER_URL = 'http://sync.invalid'
 const CODE = 'ABCDEFGH'
 
 /** Simule le worker de synchro en mémoire pour la durée d'un test : suit un
- * unique code, avec la même résolution "dernier écrit gagne" que le vrai
- * service (voir worker/src/index.ts). */
-async function mockWorker(page: Page, initial: { updatedAt: number; counters: unknown[] } | null = null) {
+ * unique code, avec la même écriture optimiste par numéro de version que le
+ * vrai service (voir worker/src/index.ts). */
+async function mockWorker(page: Page, initial: { version: number; counters: unknown[] } | null = null) {
   let stored = initial
+  // `context.setOffline` ne coupe pas les requêtes déjà interceptées par
+  // `page.route` (elles sont servies localement, jamais envoyées sur le
+  // réseau) : simuler une coupure du worker passe donc par ce drapeau,
+  // vérifié explicitement dans les deux handlers ci-dessous plutôt que par
+  // le mode hors-ligne du navigateur.
+  let offline = false
 
   await page.route(`${WORKER_URL}/api/sync`, async (route: Route) => {
+    if (offline) return route.abort('internetdisconnected')
     if (route.request().method() !== 'POST') return route.continue()
-    stored = { updatedAt: Date.now(), counters: [] }
+    stored = { version: 0, counters: [] }
     await route.fulfill({ status: 201, json: { code: CODE } })
   })
 
   await page.route(`${WORKER_URL}/api/sync/${CODE}`, async (route: Route) => {
+    if (offline) return route.abort('internetdisconnected')
     const method = route.request().method()
     if (method === 'GET') {
       if (stored === null) return route.fulfill({ status: 404, json: { error: 'Code inconnu.' } })
       return route.fulfill({ status: 200, json: stored })
     }
     if (method === 'PUT') {
-      const body = route.request().postDataJSON() as { updatedAt: number; counters: unknown[] }
-      if (stored && stored.updatedAt > body.updatedAt) {
-        return route.fulfill({ status: 409, json: stored })
+      const body = route.request().postDataJSON() as { baseVersion: number; counters: unknown[] }
+      const currentVersion = stored?.version ?? 0
+      if (body.baseVersion !== currentVersion) {
+        return route.fulfill({ status: 409, json: stored ?? { version: 0, counters: [] } })
       }
-      stored = body
+      stored = { version: currentVersion + 1, counters: body.counters }
       return route.fulfill({ status: 200, json: stored })
     }
     return route.continue()
@@ -37,6 +46,9 @@ async function mockWorker(page: Page, initial: { updatedAt: number; counters: un
   return {
     get current() {
       return stored
+    },
+    setOffline(value: boolean) {
+      offline = value
     },
   }
 }
@@ -67,7 +79,7 @@ test.describe('Synchronisation via code (worker)', () => {
   test('rejoint un code existant sans compteur local (sans confirmation) et affiche les compteurs distants', async ({
     page,
   }) => {
-    await mockWorker(page, { updatedAt: Date.now(), counters: [{ id: 'x', name: 'Depuis un autre appareil', count: 3, createdAt: Date.now(), behavior: {}, appearance: { color: '#2563eb' } }] })
+    await mockWorker(page, { version: 1, counters: [{ id: 'x', name: 'Depuis un autre appareil', count: 3, createdAt: Date.now(), behavior: {}, appearance: { color: '#2563eb' } }] })
 
     await openMenu(page)
     await page.getByRole('button', { name: 'Synchroniser', exact: true }).click()
@@ -102,5 +114,36 @@ test.describe('Synchronisation via code (worker)', () => {
     await expect(page.getByText('ABCD EFGH')).not.toBeVisible()
     await expect(page.getByRole('button', { name: 'Nouveau code' })).toBeVisible()
     await expect(page.getByRole('button', { name: 'Saisir un code' })).toBeVisible()
+  })
+
+  test('signale une erreur sans planter quand le worker devient injoignable, puis reprend au retour', async ({
+    page,
+  }) => {
+    const worker = await mockWorker(page)
+    await openMenu(page)
+    await page.getByRole('button', { name: 'Synchroniser', exact: true }).click()
+    await page.getByRole('button', { name: 'Nouveau code' }).click()
+    await expect(page.getByText('Synchronisé ✓')).toBeVisible()
+    await page.getByRole('button', { name: 'Fermer' }).click()
+
+    worker.setOffline(true)
+    // Modifie un compteur pendant la coupure : la poussée différée doit
+    // échouer proprement (statut d'erreur) plutôt que de planter l'app.
+    await addCounter(page)
+
+    await openMenu(page)
+    await page.getByRole('button', { name: 'Synchroniser', exact: true }).click()
+    await expect(page.getByText('Erreur de synchronisation')).toBeVisible()
+    await page.getByRole('button', { name: 'Fermer' }).click()
+
+    worker.setOffline(false)
+    // Un nouveau changement local relance une poussée sans attendre le
+    // prochain sondage périodique (jusqu'à 20 s) : reprise plus rapide et
+    // plus déterministe pour le test.
+    await page.locator('.counter-card').click()
+
+    await openMenu(page)
+    await page.getByRole('button', { name: 'Synchroniser', exact: true }).click()
+    await expect(page.getByText('Synchronisé ✓')).toBeVisible({ timeout: 10_000 })
   })
 })
