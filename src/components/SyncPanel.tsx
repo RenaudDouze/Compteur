@@ -2,6 +2,7 @@ import { useEffect, useRef, useState } from 'react'
 import QRCode from 'qrcode'
 import { buildShareUrl, downloadBackup, parseBackupJson } from '../sync'
 import { formatSyncCode } from '../remoteSync'
+import { CloseIcon } from './icons'
 import type { UseRemoteSyncResult } from '../hooks/useRemoteSync'
 import type { Counter } from '../types'
 
@@ -123,7 +124,7 @@ export function SyncPanel({ counters, onClose, onImport, remoteSync }: SyncPanel
         <div className="modal-panel-header">
           <h2>Synchroniser mes compteurs</h2>
           <button className="modal-close" onClick={onClose} aria-label="Fermer" title="Fermer">
-            ✕
+            <CloseIcon />
           </button>
         </div>
 

@@ -4,6 +4,7 @@ import { CounterValueDisplay } from './CounterValueDisplay'
 import { DISPLAY_STYLES } from '../displayStyles'
 import { Modal } from './Modal'
 import { PanelNav } from './PanelNav'
+import { CloseIcon } from './icons'
 import type { PanelKind } from './PanelNav'
 import type { Counter, DisplayStyle } from '../types'
 
@@ -141,7 +142,7 @@ export function CounterSettingsPanel({ counter, colors, onClose, onUpdate, onNav
               aria-label="Vider l'image de fond"
               title="Vider l'image de fond"
             >
-              ✕
+              <CloseIcon width={14} height={14} />
             </button>
           )}
         </div>
