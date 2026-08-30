@@ -370,13 +370,23 @@
 }
 
 /* Repère visuel statique (pas un bouton : l'action se fait depuis la modale
-   Actions), collé au nom plutôt que flottant dans un coin de la carte —
-   ainsi il suit le nom qu'il illustre, y compris quand celui-ci est tronqué
-   (ellipsis) sur les noms longs. */
+   Actions) dans le coin libéré par le déplacement de la poignée de glisser
+   vers la rangée d'actions. Une icône monochrome (SVG en currentColor)
+   plutôt que l'émoji 📌 coloré, pour rester cohérente avec le style des
+   autres icônes de la carte (glisser, personnalisation, historique, actions). */
 .counter-pin-badge {
-  display: inline-block;
-  margin-right: 4px;
-  font-size: 0.8rem;
+  position: absolute;
+  top: 8px;
+  left: 8px;
+  z-index: 2;
+  width: 26px;
+  height: 26px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 50%;
+  background: var(--bg-2);
+  color: var(--text-dim);
   pointer-events: none;
 }
 
