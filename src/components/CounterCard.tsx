@@ -132,8 +132,8 @@ export function CounterCard({
     setEditing(false)
   }
 
-  // La modale Comportement porte elle-même la validation/saisie ; ce point
-  // d'entrée ne fait qu'ajouter la mise à jour de `direction`, propre à
+  // La modale Valeur & réglages porte elle-même la validation/saisie ; ce
+  // point d'entrée ne fait qu'ajouter la mise à jour de `direction`, propre à
   // l'animation de la carte (sens du défilement de l'odomètre).
   const handleSetCount = (newCount: number) => {
     setDirection(newCount >= counter.count ? 1 : -1)

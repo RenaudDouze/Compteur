@@ -5,7 +5,7 @@ const PANEL_ORDER: PanelKind[] = ['comportement', 'personnalisation', 'historiqu
 
 const PANEL_LABELS: Record<PanelKind, string> = {
   personnalisation: 'Personnalisation',
-  comportement: 'Comportement',
+  comportement: 'Valeur & réglages',
   historique: 'Historique',
   actions: 'Actions',
 }

@@ -48,9 +48,9 @@ describe('CounterSettingsPanel', () => {
     expect(onClose).toHaveBeenCalledTimes(1)
   })
 
-  it('navigue vers le panneau "Comportement" au clic sur le lien dédié', () => {
+  it('navigue vers le panneau "Valeur & réglages" au clic sur le lien dédié', () => {
     const { onNavigate } = renderPanel()
-    fireEvent.click(screen.getByRole('button', { name: 'Comportement' }))
+    fireEvent.click(screen.getByRole('button', { name: 'Valeur & réglages' }))
     expect(onNavigate).toHaveBeenCalledWith('comportement')
   })
 

@@ -45,7 +45,7 @@ describe('CounterBehaviorSettingsPanel', () => {
 
   it('affiche le nom du compteur dans le titre', () => {
     renderPanel({ name: 'Mon compteur' })
-    expect(screen.getByText('Comportement « Mon compteur »')).toBeInTheDocument()
+    expect(screen.getByText('Valeur & réglages « Mon compteur »')).toBeInTheDocument()
   })
 
   it('ferme au clic sur la croix', () => {

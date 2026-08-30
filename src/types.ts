@@ -37,7 +37,7 @@ export interface Counter {
   /** Compteur archivé : masqué de la liste par défaut. Absent = actif. */
   archived?: boolean
   /** Horodatage de l'archivage, pour figer la durée totale affichée sur la
-   * carte et dans la modale Comportement. Absent tant que non archivé, ou
+   * carte et dans la modale Valeur & réglages. Absent tant que non archivé, ou
    * pour un compteur archivé avant l'ajout de ce champ. */
   archivedAt?: number
   /** Épinglé en tête de liste, devant les compteurs non épinglés. Absent = non épinglé. */

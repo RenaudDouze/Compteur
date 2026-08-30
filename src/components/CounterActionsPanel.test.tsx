@@ -57,7 +57,7 @@ describe('CounterActionsPanel', () => {
 
   it('navigue vers un autre panneau au clic sur un lien dédié', () => {
     const { onNavigate } = renderPanel()
-    fireEvent.click(screen.getByRole('button', { name: 'Comportement' }))
+    fireEvent.click(screen.getByRole('button', { name: 'Valeur & réglages' }))
     expect(onNavigate).toHaveBeenCalledWith('comportement')
   })
 

@@ -286,7 +286,7 @@ export default function App() {
   }
 
   // Fige `archivedAt` à l'archivage : sert de date de fin pour figer la
-  // durée totale affichée (carte + modale Comportement). Effacé au
+  // durée totale affichée (carte + modale Valeur & réglages). Effacé au
   // désarchivage, un ré-archivage ultérieur repart d'une nouvelle date.
   const toggleArchive = (id: string) => {
     setCounters((prev) =>

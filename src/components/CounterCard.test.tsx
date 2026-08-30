@@ -487,11 +487,11 @@ describe('CounterCard', () => {
       expect(screen.queryByRole('button', { name: 'Fermer' })).not.toBeInTheDocument()
     })
 
-    it('ouvre le panneau "Comportement" depuis la personnalisation', () => {
+    it('ouvre le panneau "Valeur & réglages" depuis la personnalisation', () => {
       renderCard({ name: 'Mon compteur' })
       fireEvent.click(screen.getByRole('button', { name: 'Personnaliser le compteur' }))
-      fireEvent.click(screen.getByRole('button', { name: 'Comportement' }))
-      expect(screen.getByText('Comportement « Mon compteur »')).toBeInTheDocument()
+      fireEvent.click(screen.getByRole('button', { name: 'Valeur & réglages' }))
+      expect(screen.getByText('Valeur & réglages « Mon compteur »')).toBeInTheDocument()
     })
 
     it('ouvre puis ferme le panneau "Historique" depuis la personnalisation', () => {
@@ -505,10 +505,10 @@ describe('CounterCard', () => {
   })
 
   describe('icônes d\'accès direct (comportement, historique, actions)', () => {
-    it('ouvre directement le panneau "Comportement" au clic sur ±', () => {
+    it('ouvre directement le panneau "Valeur & réglages" au clic sur ±', () => {
       renderCard({ name: 'Mon compteur' })
       fireEvent.click(screen.getByRole('button', { name: 'Régler le comportement du compteur' }))
-      expect(screen.getByText('Comportement « Mon compteur »')).toBeInTheDocument()
+      expect(screen.getByText('Valeur & réglages « Mon compteur »')).toBeInTheDocument()
     })
 
     it("le clic sur ± n'incrémente pas le compteur", () => {
@@ -784,7 +784,7 @@ describe('CounterCard', () => {
       expect(playIncrementSound).toHaveBeenCalledTimes(1)
     })
 
-    it('déduit le sens depuis une nouvelle valeur définie via la modale Comportement (augmentation → son joué)', () => {
+    it('déduit le sens depuis une nouvelle valeur définie via la modale Valeur & réglages (augmentation → son joué)', () => {
       const counter = makeCounter({ count: 1 })
       const { rerender } = render(
         <Reorder.Group as="div" values={[counter]} onReorder={() => {}}>
@@ -825,7 +825,7 @@ describe('CounterCard', () => {
       expect(playIncrementSound).toHaveBeenCalledTimes(1)
     })
 
-    it('déduit le sens depuis une nouvelle valeur définie via la modale Comportement (diminution → pas de son)', () => {
+    it('déduit le sens depuis une nouvelle valeur définie via la modale Valeur & réglages (diminution → pas de son)', () => {
       const counter = makeCounter({ count: 5 })
       const { rerender } = render(
         <Reorder.Group as="div" values={[counter]} onReorder={() => {}}>

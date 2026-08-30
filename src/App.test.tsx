@@ -92,7 +92,7 @@ describe('App', () => {
     expect(screen.getByText('1')).toBeInTheDocument()
   })
 
-  it('définit directement la valeur depuis la modale Comportement', async () => {
+  it('définit directement la valeur depuis la modale Valeur & réglages', async () => {
     render(<App />)
     fireEvent.click(screen.getByRole('button', { name: '+ Nouveau compteur' }))
     fireEvent.click(screen.getByRole('button', { name: 'Régler le comportement du compteur' }))
@@ -132,13 +132,13 @@ describe('App', () => {
     render(<App />)
     fireEvent.click(screen.getByRole('button', { name: '+ Nouveau compteur' }))
     fireEvent.click(screen.getByRole('button', { name: 'Personnaliser le compteur' }))
-    fireEvent.click(screen.getByRole('button', { name: 'Comportement' }))
+    fireEvent.click(screen.getByRole('button', { name: 'Valeur & réglages' }))
     const input = screen.getByPlaceholderText('4096')
     fireEvent.change(input, { target: { value: '10' } })
     fireEvent.keyDown(input, { key: 'Enter' })
     fireEvent.click(screen.getByRole('button', { name: 'Fermer' }))
     fireEvent.click(screen.getByRole('button', { name: 'Personnaliser le compteur' }))
-    fireEvent.click(screen.getByRole('button', { name: 'Comportement' }))
+    fireEvent.click(screen.getByRole('button', { name: 'Valeur & réglages' }))
     expect(screen.getByDisplayValue('10')).toBeInTheDocument()
   })
 
@@ -146,14 +146,14 @@ describe('App', () => {
     render(<App />)
     fireEvent.click(screen.getByRole('button', { name: '+ Nouveau compteur' }))
     fireEvent.click(screen.getByRole('button', { name: 'Personnaliser le compteur' }))
-    fireEvent.click(screen.getByRole('button', { name: 'Comportement' }))
+    fireEvent.click(screen.getByRole('button', { name: 'Valeur & réglages' }))
     const input = screen.getByPlaceholderText('1')
     fireEvent.change(input, { target: { value: '5' } })
     fireEvent.keyDown(input, { key: 'Enter' })
     fireEvent.click(screen.getByRole('button', { name: 'Fermer' }))
 
     fireEvent.click(screen.getByRole('button', { name: 'Personnaliser le compteur' }))
-    fireEvent.click(screen.getByRole('button', { name: 'Comportement' }))
+    fireEvent.click(screen.getByRole('button', { name: 'Valeur & réglages' }))
     expect(screen.getByDisplayValue('5')).toBeInTheDocument()
     fireEvent.click(screen.getByRole('button', { name: 'Fermer' }))
 
@@ -165,12 +165,12 @@ describe('App', () => {
     render(<App />)
     fireEvent.click(screen.getByRole('button', { name: '+ Nouveau compteur' }))
     fireEvent.click(screen.getByRole('button', { name: 'Personnaliser le compteur' }))
-    fireEvent.click(screen.getByRole('button', { name: 'Comportement' }))
+    fireEvent.click(screen.getByRole('button', { name: 'Valeur & réglages' }))
     const input = document.querySelector('input[type="date"]') as HTMLInputElement
     fireEvent.change(input, { target: { value: '2020-01-01' } })
     fireEvent.click(screen.getByRole('button', { name: 'Fermer' }))
     fireEvent.click(screen.getByRole('button', { name: 'Personnaliser le compteur' }))
-    fireEvent.click(screen.getByRole('button', { name: 'Comportement' }))
+    fireEvent.click(screen.getByRole('button', { name: 'Valeur & réglages' }))
     expect(document.querySelector('input[type="date"]')).toHaveValue('2020-01-01')
   })
 
@@ -211,13 +211,13 @@ describe('App', () => {
     render(<App />)
     fireEvent.click(screen.getByRole('button', { name: '+ Nouveau compteur' }))
     fireEvent.click(screen.getByRole('button', { name: 'Personnaliser le compteur' }))
-    fireEvent.click(screen.getByRole('button', { name: 'Comportement' }))
+    fireEvent.click(screen.getByRole('button', { name: 'Valeur & réglages' }))
     const input = screen.getByPlaceholderText('ex : 50')
     fireEvent.change(input, { target: { value: '20' } })
     fireEvent.keyDown(input, { key: 'Enter' })
     fireEvent.click(screen.getByRole('button', { name: 'Fermer' }))
     fireEvent.click(screen.getByRole('button', { name: 'Personnaliser le compteur' }))
-    fireEvent.click(screen.getByRole('button', { name: 'Comportement' }))
+    fireEvent.click(screen.getByRole('button', { name: 'Valeur & réglages' }))
     expect(screen.getByDisplayValue('20')).toBeInTheDocument()
   })
 
@@ -467,25 +467,25 @@ describe('App', () => {
     const firstCard = document.getElementById('a') as HTMLElement
     const secondCard = document.getElementById('b') as HTMLElement
     fireEvent.click(within(firstCard).getByRole('button', { name: 'Personnaliser le compteur' }))
-    fireEvent.click(screen.getByRole('button', { name: 'Comportement' }))
+    fireEvent.click(screen.getByRole('button', { name: 'Valeur & réglages' }))
     fireEvent.change(screen.getByPlaceholderText('4096'), { target: { value: '5' } })
     fireEvent.keyDown(screen.getByPlaceholderText('4096'), { key: 'Enter' })
     fireEvent.click(screen.getByRole('button', { name: 'Fermer' }))
 
     fireEvent.click(within(secondCard).getByRole('button', { name: 'Personnaliser le compteur' }))
-    fireEvent.click(screen.getByRole('button', { name: 'Comportement' }))
+    fireEvent.click(screen.getByRole('button', { name: 'Valeur & réglages' }))
     expect(screen.queryByDisplayValue('5')).not.toBeInTheDocument()
 
     // Définit une date de début uniquement sur le premier.
     fireEvent.click(screen.getByRole('button', { name: 'Fermer' }))
     fireEvent.click(within(firstCard).getByRole('button', { name: 'Personnaliser le compteur' }))
-    fireEvent.click(screen.getByRole('button', { name: 'Comportement' }))
+    fireEvent.click(screen.getByRole('button', { name: 'Valeur & réglages' }))
     const dateInput = document.querySelector('input[type="date"]') as HTMLInputElement
     fireEvent.change(dateInput, { target: { value: '2020-01-01' } })
     fireEvent.click(screen.getByRole('button', { name: 'Fermer' }))
 
     fireEvent.click(within(secondCard).getByRole('button', { name: 'Personnaliser le compteur' }))
-    fireEvent.click(screen.getByRole('button', { name: 'Comportement' }))
+    fireEvent.click(screen.getByRole('button', { name: 'Valeur & réglages' }))
     expect(document.querySelector('input[type="date"]')).not.toHaveValue('2020-01-01')
     fireEvent.click(screen.getByRole('button', { name: 'Fermer' }))
 
@@ -511,13 +511,13 @@ describe('App', () => {
 
     // Définit un pas d'incrément uniquement sur le premier.
     fireEvent.click(within(firstCard).getByRole('button', { name: 'Personnaliser le compteur' }))
-    fireEvent.click(screen.getByRole('button', { name: 'Comportement' }))
+    fireEvent.click(screen.getByRole('button', { name: 'Valeur & réglages' }))
     fireEvent.change(screen.getByPlaceholderText('1'), { target: { value: '5' } })
     fireEvent.keyDown(screen.getByPlaceholderText('1'), { key: 'Enter' })
     fireEvent.click(screen.getByRole('button', { name: 'Fermer' }))
 
     fireEvent.click(within(secondCard).getByRole('button', { name: 'Personnaliser le compteur' }))
-    fireEvent.click(screen.getByRole('button', { name: 'Comportement' }))
+    fireEvent.click(screen.getByRole('button', { name: 'Valeur & réglages' }))
     expect(screen.queryByDisplayValue('5')).not.toBeInTheDocument()
     fireEvent.click(screen.getByRole('button', { name: 'Fermer' }))
 
@@ -530,13 +530,13 @@ describe('App', () => {
 
     // Définit un objectif uniquement sur le premier.
     fireEvent.click(within(firstCard).getByRole('button', { name: 'Personnaliser le compteur' }))
-    fireEvent.click(screen.getByRole('button', { name: 'Comportement' }))
+    fireEvent.click(screen.getByRole('button', { name: 'Valeur & réglages' }))
     fireEvent.change(screen.getByPlaceholderText('ex : 50'), { target: { value: '20' } })
     fireEvent.keyDown(screen.getByPlaceholderText('ex : 50'), { key: 'Enter' })
     fireEvent.click(screen.getByRole('button', { name: 'Fermer' }))
 
     fireEvent.click(within(secondCard).getByRole('button', { name: 'Personnaliser le compteur' }))
-    fireEvent.click(screen.getByRole('button', { name: 'Comportement' }))
+    fireEvent.click(screen.getByRole('button', { name: 'Valeur & réglages' }))
     expect(screen.queryByDisplayValue('20')).not.toBeInTheDocument()
     fireEvent.click(screen.getByRole('button', { name: 'Fermer' }))
 
