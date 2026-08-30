@@ -85,15 +85,13 @@ export function FullscreenIcon(props: IconProps) {
   )
 }
 
-/** Bac de réception ouvert : fait la paire avec ArchiveIcon (boîte fermée,
- * couvercle scellé) — en circulation vs rangé, plutôt qu'un dossier plus
- * abstrait. */
-export function InboxIcon(props: IconProps) {
+/** Actifs = visible/affiché, Archivés = mis de côté (hors de vue) : une paire
+ * différente du contenant ouvert/fermé (dossier, bac) essayés avant. */
+export function EyeIcon(props: IconProps) {
   return (
     <svg {...BASE} {...STROKE} {...props}>
-      <path d="M5 12 6.6 5.3A1 1 0 0 1 7.57 4.5h8.86a1 1 0 0 1 .97.8L19 12" />
-      <path d="M4 12h4.5l1.7 2.5h3.6L15.5 12H20" />
-      <path d="M4 12v6a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-6" />
+      <path d="M2 12S5.5 5.5 12 5.5 22 12 22 12s-3.5 6.5-10 6.5S2 12 2 12z" />
+      <circle cx="12" cy="12" r="2.7" />
     </svg>
   )
 }

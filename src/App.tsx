@@ -6,8 +6,8 @@ import { useSystemDarkMode } from './hooks/useSystemDarkMode'
 import { CounterCard } from './components/CounterCard'
 import {
   ArchiveIcon,
+  EyeIcon,
   FullscreenIcon,
-  InboxIcon,
   MoonIcon,
   MoreIcon,
   SearchIcon,
@@ -40,7 +40,7 @@ type ArchiveView = 'active' | 'archived'
 // Même logique d'icône cyclique que le thème : un seul bouton dont
 // l'icône/le libellé reflètent la vue courante, plutôt qu'une paire d'onglets
 // affichés simultanément.
-const ARCHIVE_VIEW_ICON: Record<ArchiveView, typeof InboxIcon> = { active: InboxIcon, archived: ArchiveIcon }
+const ARCHIVE_VIEW_ICON: Record<ArchiveView, typeof EyeIcon> = { active: EyeIcon, archived: ArchiveIcon }
 const NEXT_ARCHIVE_VIEW: Record<ArchiveView, ArchiveView> = { active: 'archived', archived: 'active' }
 
 // Migration depuis les clés "compteur.*" (nom du projet avant son renommage
