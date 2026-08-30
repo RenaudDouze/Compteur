@@ -1,5 +1,5 @@
 import { beforeEach, describe, expect, it } from 'vitest'
-import worker, { isValidPayload, kvKey, type Env } from './index'
+import worker, { isValidPushRequest, kvKey, type Env } from './index'
 import { generateSyncCode } from './code'
 
 /** Implémentation en mémoire du sous-ensemble de KVNamespace utilisé par le
@@ -30,25 +30,25 @@ function request(method: string, path: string, body?: unknown): Request {
   return new Request(`https://sync.example.com${path}`, init)
 }
 
-describe('isValidPayload', () => {
-  it('accepte updatedAt numérique et counters tableau', () => {
-    expect(isValidPayload({ updatedAt: 1, counters: [] })).toBe(true)
+describe('isValidPushRequest', () => {
+  it('accepte baseVersion numérique et counters tableau', () => {
+    expect(isValidPushRequest({ baseVersion: 1, counters: [] })).toBe(true)
   })
 
   it('refuse une valeur qui n\'est pas un objet', () => {
-    expect(isValidPayload('nope')).toBe(false)
+    expect(isValidPushRequest('nope')).toBe(false)
   })
 
   it('refuse null', () => {
-    expect(isValidPayload(null)).toBe(false)
+    expect(isValidPushRequest(null)).toBe(false)
   })
 
-  it("refuse un updatedAt non numérique", () => {
-    expect(isValidPayload({ updatedAt: '1', counters: [] })).toBe(false)
+  it('refuse un baseVersion non numérique', () => {
+    expect(isValidPushRequest({ baseVersion: '1', counters: [] })).toBe(false)
   })
 
   it("refuse counters qui n'est pas un tableau", () => {
-    expect(isValidPayload({ updatedAt: 1, counters: {} })).toBe(false)
+    expect(isValidPushRequest({ baseVersion: 1, counters: {} })).toBe(false)
   })
 })
 
@@ -100,7 +100,7 @@ describe('routage', () => {
 })
 
 describe('POST /api/sync (création)', () => {
-  it('crée un nouveau code et le stocke avec un état vide', async () => {
+  it('crée un nouveau code et le stocke avec un état vide, version 0', async () => {
     const env = makeEnv()
     const res = await worker.fetch(request('POST', '/api/sync'), env)
     expect(res.status).toBe(201)
@@ -109,13 +109,13 @@ describe('POST /api/sync (création)', () => {
 
     const stored = await env.SYNC_KV.get(kvKey(body.code))
     expect(stored).not.toBeNull()
-    expect(JSON.parse(stored!)).toEqual({ updatedAt: expect.any(Number), counters: [] })
+    expect(JSON.parse(stored!)).toEqual({ version: 0, counters: [] })
   })
 
   it('réessaie sur collision plutôt que de renvoyer un code déjà pris', async () => {
     const env = makeEnv()
     const occupied = 'A'.repeat(8)
-    await env.SYNC_KV.put(kvKey(occupied), JSON.stringify({ updatedAt: 1, counters: [] }))
+    await env.SYNC_KV.put(kvKey(occupied), JSON.stringify({ version: 0, counters: [] }))
 
     // `Math.random() = 0` produit systématiquement le premier caractère de
     // l'alphabet ('A') : forcé pour les 8 caractères de la première tentative
@@ -163,19 +163,19 @@ describe('GET /api/sync/:code (lecture)', () => {
   it('renvoie le contenu stocké pour un code existant', async () => {
     const env = makeEnv()
     const code = generateSyncCode()
-    const payload = { updatedAt: 42, counters: [{ id: 'a' }] }
-    await env.SYNC_KV.put(kvKey(code), JSON.stringify(payload))
+    const state = { version: 42, counters: [{ id: 'a' }] }
+    await env.SYNC_KV.put(kvKey(code), JSON.stringify(state))
 
     const res = await worker.fetch(request('GET', `/api/sync/${code}`), env)
     expect(res.status).toBe(200)
-    expect(await res.json()).toEqual(payload)
+    expect(await res.json()).toEqual(state)
   })
 
   it('normalise le code de la route (tirets, minuscules)', async () => {
     const env = makeEnv()
     const code = generateSyncCode()
-    const payload = { updatedAt: 1, counters: [] }
-    await env.SYNC_KV.put(kvKey(code), JSON.stringify(payload))
+    const state = { version: 0, counters: [] }
+    await env.SYNC_KV.put(kvKey(code), JSON.stringify(state))
 
     const spacedOut = `${code.slice(0, 4)}-${code.slice(4)}`.toLowerCase()
     const res = await worker.fetch(request('GET', `/api/sync/${spacedOut}`), env)
@@ -184,47 +184,56 @@ describe('GET /api/sync/:code (lecture)', () => {
 })
 
 describe('PUT /api/sync/:code (écriture)', () => {
-  it('crée le blob si le code n\'a encore rien stocké', async () => {
+  it("crée le blob si le code n'a encore rien stocké (baseVersion 0)", async () => {
     const env = makeEnv()
     const code = generateSyncCode()
-    const payload = { updatedAt: 100, counters: [{ id: 'a' }] }
+    const push = { baseVersion: 0, counters: [{ id: 'a' }] }
 
-    const res = await worker.fetch(request('PUT', `/api/sync/${code}`, payload), env)
+    const res = await worker.fetch(request('PUT', `/api/sync/${code}`, push), env)
     expect(res.status).toBe(200)
-    expect(await res.json()).toEqual(payload)
+    expect(await res.json()).toEqual({ version: 1, counters: push.counters })
   })
 
-  it('accepte et remplace quand la version envoyée est plus récente', async () => {
+  it('accepte et incrémente la version quand baseVersion correspond à la version stockée', async () => {
     const env = makeEnv()
     const code = generateSyncCode()
-    await env.SYNC_KV.put(kvKey(code), JSON.stringify({ updatedAt: 10, counters: [] }))
+    await env.SYNC_KV.put(kvKey(code), JSON.stringify({ version: 10, counters: [] }))
 
-    const fresher = { updatedAt: 20, counters: [{ id: 'b' }] }
-    const res = await worker.fetch(request('PUT', `/api/sync/${code}`, fresher), env)
+    const push = { baseVersion: 10, counters: [{ id: 'b' }] }
+    const res = await worker.fetch(request('PUT', `/api/sync/${code}`, push), env)
     expect(res.status).toBe(200)
-    expect(JSON.parse((await env.SYNC_KV.get(kvKey(code)))!)).toEqual(fresher)
+    const expected = { version: 11, counters: push.counters }
+    expect(await res.json()).toEqual(expected)
+    expect(JSON.parse((await env.SYNC_KV.get(kvKey(code)))!)).toEqual(expected)
   })
 
-  it('accepte une version dont l\'horodatage est exactement égal (égalité = acceptée)', async () => {
+  it('refuse (409) et renvoie la version serveur quand baseVersion est en retard', async () => {
     const env = makeEnv()
     const code = generateSyncCode()
-    await env.SYNC_KV.put(kvKey(code), JSON.stringify({ updatedAt: 10, counters: [] }))
+    const serverState = { version: 5, counters: [{ id: 'serveur' }] }
+    await env.SYNC_KV.put(kvKey(code), JSON.stringify(serverState))
 
-    const sameStamp = { updatedAt: 10, counters: [{ id: 'c' }] }
-    const res = await worker.fetch(request('PUT', `/api/sync/${code}`, sameStamp), env)
-    expect(res.status).toBe(200)
-  })
-
-  it('refuse (409) et renvoie la version serveur quand elle est plus récente', async () => {
-    const env = makeEnv()
-    const code = generateSyncCode()
-    const serverVersion = { updatedAt: 999, counters: [{ id: 'serveur' }] }
-    await env.SYNC_KV.put(kvKey(code), JSON.stringify(serverVersion))
-
-    const stale = { updatedAt: 1, counters: [{ id: 'périmé' }] }
+    const stale = { baseVersion: 1, counters: [{ id: 'périmé' }] }
     const res = await worker.fetch(request('PUT', `/api/sync/${code}`, stale), env)
     expect(res.status).toBe(409)
-    expect(await res.json()).toEqual(serverVersion)
+    expect(await res.json()).toEqual(serverState)
+    // La tentative refusée ne doit pas avoir modifié le stockage.
+    expect(JSON.parse((await env.SYNC_KV.get(kvKey(code)))!)).toEqual(serverState)
+  })
+
+  it('refuse (409) même quand baseVersion est en avance sur la version stockée', async () => {
+    // Ne devrait normalement pas arriver (le client ne peut pas connaître une
+    // version future), mais confirme que la comparaison est une égalité
+    // stricte et non une simple borne inférieure.
+    const env = makeEnv()
+    const code = generateSyncCode()
+    const serverState = { version: 5, counters: [] }
+    await env.SYNC_KV.put(kvKey(code), JSON.stringify(serverState))
+
+    const ahead = { baseVersion: 6, counters: [{ id: 'x' }] }
+    const res = await worker.fetch(request('PUT', `/api/sync/${code}`, ahead), env)
+    expect(res.status).toBe(409)
+    expect(await res.json()).toEqual(serverState)
   })
 
   it('renvoie 400 pour un JSON invalide', async () => {
@@ -249,10 +258,10 @@ describe('PUT /api/sync/:code (écriture)', () => {
   it("traite l'absence d'en-tête Content-Length comme une taille nulle (accepte le corps)", async () => {
     const env = makeEnv()
     const code = generateSyncCode()
-    const payload = { updatedAt: 1, counters: [] }
+    const push = { baseVersion: 0, counters: [] }
     const req = new Request(`https://sync.example.com/api/sync/${code}`, {
       method: 'PUT',
-      body: JSON.stringify(payload),
+      body: JSON.stringify(push),
     })
     const res = await worker.fetch(req, env)
     expect(res.status).toBe(200)
@@ -263,7 +272,7 @@ describe('PUT /api/sync/:code (écriture)', () => {
     const code = generateSyncCode()
     const req = new Request(`https://sync.example.com/api/sync/${code}`, {
       method: 'PUT',
-      body: JSON.stringify({ updatedAt: 1, counters: [] }),
+      body: JSON.stringify({ baseVersion: 0, counters: [] }),
       headers: { 'Content-Length': String(1024 * 1024) },
     })
     const res = await worker.fetch(req, env)

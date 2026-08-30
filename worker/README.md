@@ -49,7 +49,7 @@ Synchroniser reste masquée.
 
 ```sh
 npm run dev       # démarre le worker en local (wrangler dev)
-npm test          # tests unitaires (routage, code, LWW)
+npm test          # tests unitaires (routage, code, écriture optimiste)
 npm run typecheck
 ```
 
@@ -58,12 +58,18 @@ npm run typecheck
 Une seule valeur par code, sous la clé `sync:<CODE>` :
 
 ```json
-{ "updatedAt": 1735689600000, "counters": [ /* état complet, format sync.ts */ ] }
+{ "version": 3, "counters": [ /* état complet, format sync.ts */ ] }
 ```
 
-- Écriture (`PUT`) : dernier écrit gagne — si une version plus récente a déjà
-  été poussée par un autre appareil entre-temps, le worker répond `409` avec
-  cette version plus récente plutôt que de l'écraser.
+- Écriture (`PUT`) : optimiste façon « compare-and-swap ». Le client envoie
+  `{ baseVersion, counters }` (la version qu'il pensait être la version
+  courante) ; le worker n'accepte que si `baseVersion` correspond exactement
+  à la version stockée, puis l'incrémente. Sinon il répond `409` avec l'état
+  serveur actuel, à adopter côté client plutôt que de l'écraser. `version`
+  est un entier attribué par le serveur, jamais une horloge : contrairement à
+  un horodatage comparé entre appareils, aucun décalage d'horloge client ne
+  peut faire accepter à tort une poussée périmée ou rejeter une poussée
+  légitime.
 - Un code inutilisé pendant 180 jours expire et libère sa place.
 - Aucune donnée personnelle n'est demandée : le code lui-même (8 caractères,
   ~500 milliards de combinaisons) fait office de secret partagé.

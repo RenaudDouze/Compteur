@@ -87,7 +87,7 @@ describe('appels réseau', () => {
 
   describe('fetchSyncState', () => {
     it('renvoie l\'état stocké', async () => {
-      const state = { updatedAt: 42, counters: [makeCounter()] }
+      const state = { version: 42, counters: [makeCounter()] }
       vi.mocked(fetch).mockResolvedValue(jsonResponse(state))
       await expect(fetchSyncState(WORKER_URL, 'ABCDEFGH')).resolves.toEqual(state)
       expect(fetch).toHaveBeenCalledWith(`${WORKER_URL}/api/sync/ABCDEFGH`)
@@ -105,28 +105,29 @@ describe('appels réseau', () => {
   })
 
   describe('pushSyncState', () => {
-    it('envoie l\'état local et confirme son acceptation', async () => {
-      const state = { updatedAt: 100, counters: [makeCounter()] }
+    it('envoie baseVersion/counters et confirme son acceptation', async () => {
+      const push = { baseVersion: 3, counters: [makeCounter()] }
+      const state = { version: 4, counters: push.counters }
       vi.mocked(fetch).mockResolvedValue(jsonResponse(state))
-      const result = await pushSyncState(WORKER_URL, 'ABCDEFGH', state)
+      const result = await pushSyncState(WORKER_URL, 'ABCDEFGH', push)
       expect(result).toEqual({ accepted: true, state })
       expect(fetch).toHaveBeenCalledWith(`${WORKER_URL}/api/sync/ABCDEFGH`, {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(state),
+        body: JSON.stringify(push),
       })
     })
 
-    it('signale un rejet (409) et renvoie la version serveur plus récente', async () => {
-      const serverState = { updatedAt: 999, counters: [makeCounter({ name: 'Serveur' })] }
+    it('signale un rejet (409) et renvoie la version serveur actuelle', async () => {
+      const serverState = { version: 999, counters: [makeCounter({ name: 'Serveur' })] }
       vi.mocked(fetch).mockResolvedValue(jsonResponse(serverState, 409))
-      const result = await pushSyncState(WORKER_URL, 'ABCDEFGH', { updatedAt: 1, counters: [] })
+      const result = await pushSyncState(WORKER_URL, 'ABCDEFGH', { baseVersion: 1, counters: [] })
       expect(result).toEqual({ accepted: false, state: serverState })
     })
 
     it('lève une erreur pour tout autre statut en échec', async () => {
       vi.mocked(fetch).mockResolvedValue(new Response(null, { status: 500 }))
-      await expect(pushSyncState(WORKER_URL, 'ABCDEFGH', { updatedAt: 1, counters: [] })).rejects.toThrow(
+      await expect(pushSyncState(WORKER_URL, 'ABCDEFGH', { baseVersion: 1, counters: [] })).rejects.toThrow(
         'Impossible de synchroniser'
       )
     })

@@ -22,11 +22,11 @@ export interface UseRemoteSyncResult {
 }
 
 /** Synchronise `counters` avec le worker Cloudflare, tant qu'un code est actif
- * (voir worker/README.md pour le mécanisme côté serveur — dernier écrit
- * gagne). Sondage périodique pour récupérer les changements des autres
- * appareils, poussée différée des changements locaux. `workerUrl` absent
- * (fonctionnalité non configurée) désactive silencieusement toute action
- * réseau : le hook reste utilisable sans jamais rien synchroniser. */
+ * (voir worker/README.md pour le mécanisme côté serveur — écriture optimiste
+ * par numéro de version). Sondage périodique pour récupérer les changements
+ * des autres appareils, poussée différée des changements locaux. `workerUrl`
+ * absent (fonctionnalité non configurée) désactive silencieusement toute
+ * action réseau : le hook reste utilisable sans jamais rien synchroniser. */
 export function useRemoteSync(
   workerUrl: string | undefined,
   counters: Counter[],
@@ -36,11 +36,13 @@ export function useRemoteSync(
   const [status, setStatus] = useState<RemoteSyncStatus>(code ? 'syncing' : 'disabled')
   const [errorMessage, setErrorMessage] = useState<string | null>(null)
 
-  // Dernier horodatage connu comme reflétant à la fois l'état local et celui
+  // Dernière version connue comme reflétant à la fois l'état local et celui
   // du serveur : sert à décider si une réponse du sondage apporte vraiment du
-  // neuf. En ref (pas en state) : lu depuis des callbacks différés, sans
-  // avoir besoin de redéclencher un rendu quand il change.
-  const lastSyncedAtRef = useRef(0)
+  // neuf, et de base pour la prochaine poussée (voir worker/README.md — un
+  // entier attribué par le serveur, jamais une horloge cliente). En ref (pas
+  // en state) : lu depuis des callbacks différés, sans avoir besoin de
+  // redéclencher un rendu quand il change.
+  const lastSyncedVersionRef = useRef(0)
   // Vrai le temps d'appliquer un `counters` reçu du serveur : évite que
   // l'effet de poussée ci-dessous ne le retransmette aussitôt comme s'il
   // s'agissait d'une modification locale (boucle infinie).
@@ -70,9 +72,9 @@ export function useRemoteSync(
           setCode(null)
           return
         }
-        if (remote.updatedAt > lastSyncedAtRef.current) {
+        if (remote.version > lastSyncedVersionRef.current) {
           applyingRemoteRef.current = true
-          lastSyncedAtRef.current = remote.updatedAt
+          lastSyncedVersionRef.current = remote.version
           setCounters(remote.counters)
         }
         setStatus('synced')
@@ -102,16 +104,19 @@ export function useRemoteSync(
 
     clearTimeout(pushTimerRef.current)
     pushTimerRef.current = setTimeout(async () => {
-      const updatedAt = Date.now()
       try {
-        const result = await pushSyncState(workerUrl, code, { updatedAt, counters: countersRef.current })
+        const result = await pushSyncState(workerUrl, code, {
+          baseVersion: lastSyncedVersionRef.current,
+          counters: countersRef.current,
+        })
         if (result.accepted) {
-          lastSyncedAtRef.current = updatedAt
+          lastSyncedVersionRef.current = result.state.version
         } else {
-          // Un autre appareil a poussé une version plus récente entre-temps :
-          // on l'adopte plutôt que de perdre ses changements.
+          // Un autre appareil a poussé entre-temps (baseVersion n'est plus la
+          // version courante) : on adopte la sienne plutôt que de perdre ses
+          // changements.
           applyingRemoteRef.current = true
-          lastSyncedAtRef.current = result.state.updatedAt
+          lastSyncedVersionRef.current = result.state.version
           setCounters(result.state.counters)
         }
         setStatus('synced')
@@ -131,19 +136,12 @@ export function useRemoteSync(
     setErrorMessage(null)
     try {
       const newCode = await createSyncCode(workerUrl)
-      let updatedAt = Date.now()
-      let result = await pushSyncState(workerUrl, newCode, { updatedAt, counters: countersRef.current })
-      if (!result.accepted) {
-        // Horloge de l'appareil en retard sur celle du serveur : l'horodatage
-        // de création (posé côté serveur) l'emporterait sinon sur le nôtre, et
-        // le prochain sondage remplacerait nos compteurs par l'état vide créé
-        // par handleCreate. Le code vient d'être créé à l'instant (aucun autre
-        // appareil ne peut encore l'avoir modifié) : on repousse avec un
-        // horodatage garanti postérieur, qui aboutit forcément cette fois.
-        updatedAt = result.state.updatedAt + 1
-        result = await pushSyncState(workerUrl, newCode, { updatedAt, counters: countersRef.current })
-      }
-      lastSyncedAtRef.current = updatedAt
+      // Un code fraîchement créé démarre à la version 0 (voir handleCreate
+      // côté worker) : aucun autre appareil n'a pu le modifier entre-temps,
+      // cette poussée avec baseVersion 0 aboutit donc toujours du premier
+      // coup — pas besoin de retenter avec une autre valeur.
+      const result = await pushSyncState(workerUrl, newCode, { baseVersion: 0, counters: countersRef.current })
+      lastSyncedVersionRef.current = result.state.version
       setCode(newCode)
       setStatus('synced')
       return true
@@ -177,18 +175,25 @@ export function useRemoteSync(
 
       if (shouldReplace) {
         applyingRemoteRef.current = true
-        lastSyncedAtRef.current = remote.updatedAt
+        lastSyncedVersionRef.current = remote.version
         setCounters(remote.counters)
       } else {
         // La fusion crée un état qui n'existe encore nulle part ailleurs :
         // on le pousse explicitement plutôt que d'attendre le prochain
         // changement local.
         const merged = [...current, ...remote.counters]
-        const updatedAt = Date.now()
-        await pushSyncState(workerUrl, normalized, { updatedAt, counters: merged })
+        const result = await pushSyncState(workerUrl, normalized, { baseVersion: remote.version, counters: merged })
         applyingRemoteRef.current = true
-        lastSyncedAtRef.current = updatedAt
-        setCounters(merged)
+        if (result.accepted) {
+          lastSyncedVersionRef.current = result.state.version
+          setCounters(merged)
+        } else {
+          // Un autre appareil a poussé entre la lecture ci-dessus et cette
+          // fusion : on adopte sa version plutôt que d'écraser ses
+          // changements avec une fusion devenue périmée.
+          lastSyncedVersionRef.current = result.state.version
+          setCounters(result.state.counters)
+        }
       }
 
       setCode(normalized)
@@ -203,7 +208,7 @@ export function useRemoteSync(
 
   const disable = () => {
     clearTimeout(pushTimerRef.current)
-    lastSyncedAtRef.current = 0
+    lastSyncedVersionRef.current = 0
     setCode(null)
     setStatus('disabled')
     setErrorMessage(null)
