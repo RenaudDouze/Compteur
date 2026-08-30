@@ -154,6 +154,7 @@ test.describe('Parcours de base', () => {
     await exitBtn.click()
     await expect(page.getByRole('heading', { name: '+1', exact: true })).toBeVisible()
 
+    await openMenu(page)
     await page.getByRole('button', { name: 'Mode plein écran' }).click()
     await page.keyboard.press('Escape')
     await expect(page.getByRole('heading', { name: '+1', exact: true })).toBeVisible()

@@ -44,7 +44,7 @@ test.describe('Archivage de compteurs', () => {
     await page.getByRole('button', { name: 'Actions du compteur' }).click()
     await page.getByText('📤 Désarchiver ce compteur').click()
 
-    await page.getByRole('button', { name: /^Vue : / }).click()
+    await toggleArchiveView(page)
     await expect(page.getByText('Compteur 1', { exact: true })).toBeVisible()
   })
 
@@ -57,6 +57,7 @@ test.describe('Archivage de compteurs', () => {
     await page.getByText('📦 Archiver ce compteur').click()
 
     await toggleArchiveView(page)
+    await openMenu(page)
     await page.getByRole('button', { name: 'Rechercher' }).click()
     await page.getByPlaceholder('Rechercher un compteur…').fill('pom')
     await expect(page.getByText('Pompes', { exact: true })).toBeVisible()

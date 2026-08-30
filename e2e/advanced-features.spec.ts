@@ -1,5 +1,5 @@
 import { expect, test } from '@playwright/test'
-import { addCounter, gotoFresh } from './helpers'
+import { addCounter, gotoFresh, openMenu } from './helpers'
 
 test.describe('Fonctionnalités avancées', () => {
   test.beforeEach(async ({ page }) => {
@@ -323,6 +323,7 @@ test.describe('Fonctionnalités avancées', () => {
       await cards.nth(i).locator('.counter-name-input').press('Enter')
     }
 
+    await openMenu(page)
     await page.getByRole('button', { name: 'Rechercher' }).click()
     await page.getByPlaceholder('Rechercher un compteur…').fill('Pomme')
     await expect(page.locator('.counter-name')).toHaveText(['Pomme1', 'Pomme2', 'Pomme3'])

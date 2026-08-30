@@ -8,6 +8,7 @@
 }
 
 .app-header {
+  position: relative;
   display: flex;
   align-items: center;
   justify-content: space-between;
@@ -30,16 +31,26 @@
   gap: 8px;
 }
 
-/* Menu déroulant horizontal (thème, partage, plein écran, filtre
-   Actifs/Archivés, nouveau compteur) : reprend exactement la rangée de
-   boutons de `.app-header-actions` d'avant son introduction, simplement
-   repliée par défaut derrière le bouton ⋯ de l'en-tête. */
+/* Menu déroulant horizontal (recherche, thème, partage, plein écran, filtre
+   Actifs/Archivés) : replié par défaut derrière le bouton ⋯ de l'en-tête,
+   il s'ouvre en survol (position absolue ancrée sous celui-ci) plutôt qu'en
+   repoussant le reste de la page vers le bas. */
 .app-menu {
+  position: absolute;
+  top: 100%;
+  right: 0;
+  z-index: 20;
   display: flex;
   align-items: center;
   gap: 8px;
   flex-wrap: wrap;
-  margin-bottom: 14px;
+  max-width: min(320px, 100vw - 32px);
+  margin-top: 8px;
+  padding: 10px;
+  border-radius: 16px;
+  background: var(--surface);
+  border: 1px solid var(--surface-border);
+  box-shadow: 0 8px 24px rgba(15, 23, 42, 0.12);
 }
 
 .search-bar {
