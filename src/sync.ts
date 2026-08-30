@@ -1,3 +1,4 @@
+import * as LZString from 'lz-string'
 import { makeId } from './id'
 import type { Counter, CounterAppearance, CounterBehavior, DisplayStyle, HistoryPoint } from './types'
 
@@ -174,20 +175,19 @@ function fromCompact(raw: CompactCounter): Counter {
 export function encodeCountersToParam(counters: Counter[]): string {
   const compact = counters.map(toCompact)
   const json = JSON.stringify(compact)
-  const bytes = new TextEncoder().encode(json)
-  let binary = ''
-  bytes.forEach((b) => (binary += String.fromCharCode(b)))
-  // Les caractères `=` de bourrage base64 n'apparaissent jamais qu'en fin de
-  // chaîne : pas besoin d'ancrer `$` explicitement.
-  return btoa(binary).replace(/\+/g, '-').replace(/\//g, '_').replace(/=+/, '')
+  // Compressé (lz-string) plutôt qu'un simple base64 : un JSON répète
+  // beaucoup les mêmes clés et valeurs (couleur par défaut, styles...), ce
+  // qui compresse bien et réduit nettement la taille du lien/QR partagé, en
+  // particulier avec beaucoup de compteurs.
+  return LZString.compressToEncodedURIComponent(json)
 }
 
-export function decodeCountersFromParam(param: string): Counter[] | null {
+/** Décode un JSON compact déjà extrait (compressé ou legacy) : `null` si le
+ * paramètre est manquant, invalide, ou ne correspond pas à un tableau de
+ * compteurs. */
+function parseCompactJson(json: string | null | undefined): Counter[] | null {
+  if (!json) return null
   try {
-    const base64 = param.replace(/-/g, '+').replace(/_/g, '/')
-    const binary = atob(base64)
-    const bytes = Uint8Array.from(binary, (c) => c.charCodeAt(0))
-    const json = new TextDecoder().decode(bytes)
     const compact = JSON.parse(json) as CompactCounter[]
     // Idem : un `compact` qui n'est pas un tableau fait échouer `.map`,
     // intercepté par le catch ci-dessous (retourne null dans les deux cas).
@@ -195,6 +195,23 @@ export function decodeCountersFromParam(param: string): Counter[] | null {
   } catch {
     return null
   }
+}
+
+/** Décode un lien généré avant l'introduction de la compression lz-string
+ * (base64 URL-safe d'un JSON brut, non compressé). */
+function decodeLegacyParam(param: string): string | null {
+  try {
+    const base64 = param.replace(/-/g, '+').replace(/_/g, '/')
+    const binary = atob(base64)
+    const bytes = Uint8Array.from(binary, (c) => c.charCodeAt(0))
+    return new TextDecoder().decode(bytes)
+  } catch {
+    return null
+  }
+}
+
+export function decodeCountersFromParam(param: string): Counter[] | null {
+  return parseCompactJson(LZString.decompressFromEncodedURIComponent(param)) ?? parseCompactJson(decodeLegacyParam(param))
 }
 
 export function buildShareUrl(counters: Counter[]): string {
