@@ -1,5 +1,6 @@
 import { useEffect } from 'react'
 import { createPortal } from 'react-dom'
+import { CloseIcon } from './icons'
 
 interface ModalProps {
   title: string
@@ -47,7 +48,7 @@ export function Modal({ title, onClose, accentColor, children }: ModalProps) {
         <div className="modal-panel-header">
           <h2>{title}</h2>
           <button className="modal-close" onClick={onClose} aria-label="Fermer" title="Fermer">
-            ✕
+            <CloseIcon />
           </button>
         </div>
 

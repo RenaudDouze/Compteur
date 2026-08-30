@@ -6,6 +6,7 @@ import { useSystemDarkMode } from './hooks/useSystemDarkMode'
 import { CounterCard } from './components/CounterCard'
 import {
   ArchiveIcon,
+  CloseIcon,
   EyeIcon,
   FullscreenIcon,
   MoonIcon,
@@ -371,7 +372,7 @@ export default function App() {
           aria-label="Quitter le mode plein écran"
           title="Quitter le mode plein écran"
         >
-          ✕
+          <CloseIcon />
         </button>
       )}
 
@@ -474,7 +475,7 @@ export default function App() {
                 }}
               />
               <button className="modal-close" onClick={closeSearch} aria-label="Fermer la recherche" title="Fermer la recherche">
-                ✕
+                <CloseIcon />
               </button>
             </div>
           )}
