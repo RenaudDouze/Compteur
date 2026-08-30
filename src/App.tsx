@@ -29,7 +29,7 @@ type ArchiveView = 'active' | 'archived'
 // Même logique d'icône cyclique que le thème : un seul bouton dont
 // l'icône/le libellé reflètent la vue courante, plutôt qu'une paire d'onglets
 // affichés simultanément.
-const ARCHIVE_VIEW_ICON: Record<ArchiveView, string> = { active: '📋', archived: '📦' }
+const ARCHIVE_VIEW_ICON: Record<ArchiveView, string> = { active: '📂', archived: '📦' }
 const NEXT_ARCHIVE_VIEW: Record<ArchiveView, ArchiveView> = { active: 'archived', archived: 'active' }
 
 // Migration depuis les clés "compteur.*" (nom du projet avant son renommage
