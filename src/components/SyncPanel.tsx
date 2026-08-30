@@ -25,6 +25,12 @@ const JOIN_OUTCOME_ERROR: Record<'invalid' | 'not-found' | 'error', string> = {
   error: 'Impossible de rejoindre ce code, réessaie.',
 }
 
+// Repère "ça devient long à coller dans un message" (bien avant la capacité
+// maximale d'un QR code, ~2,9 Ko) : au-delà, le code de synchro — un simple
+// code à 8 caractères, sans lien à recopier — reste pratique là où le lien ne
+// l'est déjà plus.
+const SHARE_URL_LONG_THRESHOLD = 300
+
 export function SyncPanel({ counters, onClose, onImport, remoteSync }: SyncPanelProps) {
   const fileInputRef = useRef<HTMLInputElement>(null)
   const [qrDataUrl, setQrDataUrl] = useState<string | null>(null)
@@ -185,6 +191,14 @@ export function SyncPanel({ counters, onClose, onImport, remoteSync }: SyncPanel
               {qrError ?? 'Ajoute au moins un compteur pour générer un QR code.'}
             </p>
           )}
+          {qrDataUrl &&
+            !remoteSync.code &&
+            import.meta.env.VITE_SYNC_WORKER_URL &&
+            shareUrl.length > SHARE_URL_LONG_THRESHOLD && (
+              <p className="modal-hint">
+                Beaucoup de compteurs : le code de synchro (ci-dessus) reste pratique même quand ce lien devient long.
+              </p>
+            )}
           {shareUrl && (
             <button className="modal-btn" onClick={copyLink}>
               {copied ? 'Lien copié ✓' : 'Copier le lien'}
