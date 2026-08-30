@@ -11,6 +11,7 @@ interface CounterBehaviorSettingsPanelProps {
   counter: Counter
   onClose: () => void
   onUpdate: (patch: Partial<Counter>) => void
+  onSetCount: (count: number) => void
   onNavigate: (panel: PanelKind) => void
 }
 
@@ -18,9 +19,25 @@ export function CounterBehaviorSettingsPanel({
   counter,
   onClose,
   onUpdate,
+  onSetCount,
   onNavigate,
 }: CounterBehaviorSettingsPanelProps) {
   const startDate = counter.behavior.startDate ?? toIsoDate(counter.createdAt)
+
+  const [draftCount, setDraftCount] = useState(counter.count.toString())
+  const [countError, setCountError] = useState<string | null>(null)
+
+  const commitCount = () => {
+    const trimmed = draftCount.trim()
+    // N'accepte que des chiffres (et un signe moins optionnel) : une saisie
+    // comme "abd7" doit être rejetée, pas silencieusement réduite à "7".
+    if (!/^-?\d+$/.test(trimmed)) {
+      setCountError('Nombre entier requis.')
+      return
+    }
+    setCountError(null)
+    onSetCount(parseInt(trimmed, 10))
+  }
 
   const stepField = usePositiveIntField(counter.behavior.step, (step) =>
     onUpdate({ behavior: { ...counter.behavior, step } })
@@ -63,6 +80,27 @@ export function CounterBehaviorSettingsPanel({
           🔒 Compteur archivé : lecture seule. Désarchive-le pour le modifier.
         </p>
       )}
+
+      <section className="modal-section">
+        <h3>Valeur actuelle</h3>
+        <input
+          className="modal-input"
+          inputMode="numeric"
+          pattern="-?[0-9]*"
+          disabled={locked}
+          aria-invalid={countError !== null}
+          value={draftCount}
+          onChange={(e) => {
+            setDraftCount(e.target.value)
+            setCountError(null)
+          }}
+          onBlur={commitCount}
+          onKeyDown={(e) => {
+            if (e.key === 'Enter') commitCount()
+          }}
+        />
+        {countError && <p className="modal-error">{countError}</p>}
+      </section>
 
       <section className="modal-section">
         <h3>Pas d'incrément</h3>

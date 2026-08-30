@@ -158,8 +158,7 @@
   font-size: 1.3rem;
 }
 
-.counter-grid--pack .counter-btn.minus,
-.counter-grid--pack .counter-btn.edit {
+.counter-grid--pack .counter-btn.minus {
   flex: 0 0 42px;
   width: 42px;
 }
@@ -187,14 +186,6 @@
   font-size: clamp(4rem, min(36vw, 16vh), 11rem);
 }
 
-.counter-grid--solo .counter-value-input {
-  font-size: clamp(4rem, min(30vw, 24vh), 12rem);
-}
-
-.counter-grid--duo .counter-value-input {
-  font-size: clamp(3rem, min(22vw, 12vh), 7rem);
-}
-
 .counter-grid--solo .counter-btn,
 .counter-grid--duo .counter-btn {
   height: clamp(46px, 6.5vh, 60px);
@@ -203,9 +194,7 @@
 }
 
 .counter-grid--solo .counter-btn.minus,
-.counter-grid--duo .counter-btn.minus,
-.counter-grid--solo .counter-btn.edit,
-.counter-grid--duo .counter-btn.edit {
+.counter-grid--duo .counter-btn.minus {
   flex: 0 0 56px;
   width: 56px;
 }
@@ -219,9 +208,7 @@
   }
 
   .counter-grid--solo .counter-btn.minus,
-  .counter-grid--duo .counter-btn.minus,
-  .counter-grid--solo .counter-btn.edit,
-  .counter-grid--duo .counter-btn.edit {
+  .counter-grid--duo .counter-btn.minus {
     flex: 0 0 48px;
     width: 48px;
   }
@@ -452,21 +439,6 @@
 .counter-color-option:disabled {
   opacity: 0.5;
   cursor: not-allowed;
-}
-
-.counter-value-input {
-  width: 100%;
-  flex: 1;
-  min-height: 80px;
-  text-align: center;
-  font-family: var(--font-mono);
-  font-weight: 700;
-  font-size: clamp(2.5rem, 16vw, 6rem);
-  background: var(--bg-1);
-  border: 2px solid var(--accent, #2563eb);
-  color: var(--accent);
-  border-radius: 16px;
-  padding: 8px;
 }
 
 .counter-name {
@@ -823,21 +795,12 @@
   color: #fff;
 }
 
-.counter-btn.minus,
-.counter-btn.edit {
+.counter-btn.minus {
   flex: 0 0 44px;
   width: 44px;
   font-size: 1.1rem;
-}
-
-.counter-btn.minus {
   background: color-mix(in srgb, var(--accent) 16%, var(--surface));
   color: var(--accent);
-}
-
-.counter-btn.edit {
-  background: var(--bg-2);
-  color: var(--text-dim);
 }
 
 .counter-btn:active {

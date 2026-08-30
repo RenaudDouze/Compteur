@@ -241,32 +241,35 @@ test.describe('Fonctionnalités avancées', () => {
     expect(after).not.toBe(before)
   })
 
-  test('définit directement une valeur via le crayon', async ({ page }) => {
-    await page.getByRole('button', { name: 'Définir la valeur du compteur' }).click()
-    const input = page.locator('.counter-value-input')
+  test('définit directement une valeur depuis la modale Comportement', async ({ page }) => {
+    await page.getByRole('button', { name: 'Régler le comportement du compteur' }).click()
+    const input = page.locator('.modal-section:has-text("Valeur actuelle") input')
     await input.fill('250')
     await input.press('Enter')
+    await page.getByRole('button', { name: 'Fermer' }).click()
     await expect(page.locator('.counter-value')).toHaveText('250')
   })
 
   test('accepte une valeur négative via édition directe', async ({ page }) => {
-    await page.getByRole('button', { name: 'Définir la valeur du compteur' }).click()
-    const input = page.locator('.counter-value-input')
+    await page.getByRole('button', { name: 'Régler le comportement du compteur' }).click()
+    const input = page.locator('.modal-section:has-text("Valeur actuelle") input')
     await input.fill('-42')
     await input.press('Enter')
+    await page.getByRole('button', { name: 'Fermer' }).click()
     await expect(page.locator('.counter-value')).toHaveText('-42')
   })
 
   test('affiche une erreur et ne ferme pas le champ si la saisie directe est invalide', async ({ page }) => {
-    await page.getByRole('button', { name: 'Définir la valeur du compteur' }).click()
-    const input = page.locator('.counter-value-input')
+    await page.getByRole('button', { name: 'Régler le comportement du compteur' }).click()
+    const input = page.locator('.modal-section:has-text("Valeur actuelle") input')
     await input.fill('abc')
     await input.press('Enter')
     await expect(page.getByText('Nombre entier requis.')).toBeVisible()
     await expect(input).toBeVisible()
-    // Corrige la saisie : le champ se ferme et le compteur adopte la valeur.
+    // Corrige la saisie : l'erreur disparaît et le compteur adopte la valeur.
     await input.fill('7')
     await input.press('Enter')
+    await page.getByRole('button', { name: 'Fermer' }).click()
     await expect(page.locator('.counter-value')).toHaveText('7')
   })
 

@@ -92,14 +92,17 @@ describe('App', () => {
     expect(screen.getByText('1')).toBeInTheDocument()
   })
 
-  it('définit directement la valeur via le crayon', () => {
+  it('définit directement la valeur depuis la modale Comportement', async () => {
     render(<App />)
     fireEvent.click(screen.getByRole('button', { name: '+ Nouveau compteur' }))
-    fireEvent.click(screen.getByRole('button', { name: 'Définir la valeur du compteur' }))
+    fireEvent.click(screen.getByRole('button', { name: 'Régler le comportement du compteur' }))
     const input = screen.getByDisplayValue('0')
     fireEvent.change(input, { target: { value: '99' } })
     fireEvent.keyDown(input, { key: 'Enter' })
-    expect(document.querySelector('.counter-value')?.textContent).toBe('99')
+    // Les chiffres qui quittent l'affichage restent brièvement montés le temps
+    // de leur animation de sortie (AnimatePresence) : le texte combiné
+    // ancien/nouveau ne se stabilise qu'une fois celle-ci terminée.
+    await waitFor(() => expect(document.querySelector('.counter-value')).toHaveTextContent('99'))
   })
 
   it('renomme un compteur', () => {
@@ -267,7 +270,7 @@ describe('App', () => {
     it("propose d'annuler après une modification directe de la valeur", async () => {
       render(<App />)
       fireEvent.click(screen.getByRole('button', { name: '+ Nouveau compteur' }))
-      fireEvent.click(screen.getByRole('button', { name: 'Définir la valeur du compteur' }))
+      fireEvent.click(screen.getByRole('button', { name: 'Régler le comportement du compteur' }))
       const input = screen.getByDisplayValue('0')
       fireEvent.change(input, { target: { value: '99' } })
       fireEvent.keyDown(input, { key: 'Enter' })
@@ -283,7 +286,7 @@ describe('App', () => {
     it("ne propose pas d'annuler si la valeur éditée est identique", () => {
       render(<App />)
       fireEvent.click(screen.getByRole('button', { name: '+ Nouveau compteur' }))
-      fireEvent.click(screen.getByRole('button', { name: 'Définir la valeur du compteur' }))
+      fireEvent.click(screen.getByRole('button', { name: 'Régler le comportement du compteur' }))
       const input = screen.getByDisplayValue('0')
       fireEvent.keyDown(input, { key: 'Enter' })
       expect(screen.queryByRole('button', { name: 'Annuler' })).not.toBeInTheDocument()
@@ -538,8 +541,8 @@ describe('App', () => {
     fireEvent.click(screen.getByRole('button', { name: 'Fermer' }))
 
     // Définit directement la valeur uniquement sur le premier.
-    fireEvent.click(within(firstCard).getByRole('button', { name: 'Définir la valeur du compteur' }))
-    const countInput = within(firstCard).getByDisplayValue('1')
+    fireEvent.click(within(firstCard).getByRole('button', { name: 'Régler le comportement du compteur' }))
+    const countInput = screen.getByDisplayValue('1')
     fireEvent.change(countInput, { target: { value: '50' } })
     fireEvent.keyDown(countInput, { key: 'Enter' })
     expect(document.getElementById('a')?.textContent).toContain('50')
