@@ -318,7 +318,7 @@ describe('useRemoteSync', () => {
       })
     })
 
-    it("n'appelle pas onRemoteUpdate pour le rattrapage initial au montage", async () => {
+    it("appelle onRemoteUpdate dès le tout premier sondage au montage (ex : rouvrir l'app sur un appareil déjà relié à un code)", async () => {
       window.localStorage.setItem('+1.sync.code.v1', JSON.stringify('ABCDEFGH'))
       vi.mocked(fetchSyncState).mockResolvedValue({ version: 10, counters: [makeCounter()] })
       const onRemoteUpdate = vi.fn()
@@ -328,10 +328,10 @@ describe('useRemoteSync', () => {
         await vi.runOnlyPendingTimersAsync()
       })
 
-      expect(onRemoteUpdate).not.toHaveBeenCalled()
+      expect(onRemoteUpdate).toHaveBeenCalledTimes(1)
     })
 
-    it('appelle onRemoteUpdate quand un sondage suivant apporte une version plus récente', async () => {
+    it('appelle de nouveau onRemoteUpdate quand un sondage suivant apporte une version plus récente', async () => {
       window.localStorage.setItem('+1.sync.code.v1', JSON.stringify('ABCDEFGH'))
       vi.mocked(fetchSyncState).mockResolvedValue({ version: 10, counters: [] })
       const onRemoteUpdate = vi.fn()
@@ -340,7 +340,7 @@ describe('useRemoteSync', () => {
       await act(async () => {
         await vi.runOnlyPendingTimersAsync()
       })
-      expect(onRemoteUpdate).not.toHaveBeenCalled()
+      expect(onRemoteUpdate).toHaveBeenCalledTimes(1)
 
       const remoteCounters = [makeCounter({ id: 'depuis-un-autre-appareil' })]
       vi.mocked(fetchSyncState).mockResolvedValue({ version: 11, counters: remoteCounters })
@@ -348,10 +348,10 @@ describe('useRemoteSync', () => {
         await vi.advanceTimersByTimeAsync(20_000)
       })
 
-      expect(onRemoteUpdate).toHaveBeenCalledTimes(1)
+      expect(onRemoteUpdate).toHaveBeenCalledTimes(2)
     })
 
-    it("n'appelle pas onRemoteUpdate quand un sondage suivant ne renvoie rien de nouveau", async () => {
+    it("n'appelle plus onRemoteUpdate quand un sondage suivant ne renvoie rien de nouveau", async () => {
       window.localStorage.setItem('+1.sync.code.v1', JSON.stringify('ABCDEFGH'))
       vi.mocked(fetchSyncState).mockResolvedValue({ version: 10, counters: [] })
       const onRemoteUpdate = vi.fn()
@@ -360,11 +360,15 @@ describe('useRemoteSync', () => {
       await act(async () => {
         await vi.runOnlyPendingTimersAsync()
       })
+      expect(onRemoteUpdate).toHaveBeenCalledTimes(1)
+
       await act(async () => {
         await vi.advanceTimersByTimeAsync(20_000)
       })
 
-      expect(onRemoteUpdate).not.toHaveBeenCalled()
+      // Toujours 1 : le sondage suivant renvoie la même version, rien à
+      // signaler de plus.
+      expect(onRemoteUpdate).toHaveBeenCalledTimes(1)
     })
 
     it("n'interroge plus le serveur une fois le composant démonté", async () => {

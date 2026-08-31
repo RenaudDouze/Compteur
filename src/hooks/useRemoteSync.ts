@@ -28,8 +28,10 @@ export interface UseRemoteSyncResult {
  * absent (fonctionnalité non configurée) désactive silencieusement toute
  * action réseau : le hook reste utilisable sans jamais rien synchroniser.
  * `onRemoteUpdate` est appelé quand des compteurs plus récents arrivent
- * depuis un autre appareil (pull ou conflit résolu en adoptant le serveur) —
- * jamais pour le rattrapage initial au montage, qui n'a rien de notable. */
+ * depuis un autre appareil — que ce soit un sondage ultérieur pendant que
+ * l'app est déjà ouverte, un conflit résolu en adoptant le serveur, ou le
+ * tout premier sondage au montage (ex : rouvrir l'app sur un appareil qui a
+ * déjà un code actif doit confirmer que la récupération a bien eu lieu). */
 export function useRemoteSync(
   workerUrl: string | undefined,
   counters: Counter[],
@@ -60,11 +62,6 @@ export function useRemoteSync(
   countersRef.current = counters
   const onRemoteUpdateRef = useRef(onRemoteUpdate)
   onRemoteUpdateRef.current = onRemoteUpdate
-  // Faux jusqu'à la fin du tout premier sondage réussi (rattrapage normal à
-  // l'ouverture de l'app) : sert à ne notifier `onRemoteUpdate` que pour un
-  // changement qui arrive vraiment pendant que l'app est déjà ouverte et à
-  // jour, pas pour la synchronisation initiale.
-  const hasSyncedOnceRef = useRef(false)
 
   useEffect(() => {
     if (!workerUrl || !code) return
@@ -87,9 +84,8 @@ export function useRemoteSync(
           applyingRemoteRef.current = true
           lastSyncedVersionRef.current = remote.version
           setCounters(remote.counters)
-          if (hasSyncedOnceRef.current) onRemoteUpdateRef.current?.()
+          onRemoteUpdateRef.current?.()
         }
-        hasSyncedOnceRef.current = true
         setStatus('synced')
         setErrorMessage(null)
       } catch {
