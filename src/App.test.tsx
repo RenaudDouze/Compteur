@@ -4,6 +4,7 @@ import App from './App'
 import { encodeCountersToParam } from './sync'
 import { COLORS } from './colors'
 import { useRemoteSync } from './hooks/useRemoteSync'
+import { getNotificationPermission, requestNotificationPermission } from './notifications'
 import type { Counter } from './types'
 
 vi.mock('qrcode', () => ({
@@ -22,6 +23,16 @@ vi.mock('./hooks/useRemoteSync', async () => {
   return { ...actual, useRemoteSync: vi.fn(actual.useRemoteSync) }
 })
 const defaultUseRemoteSyncImpl = vi.mocked(useRemoteSync).getMockImplementation()!
+
+// Toujours 'unsupported' par défaut (comme dans jsdom, où `Notification`
+// n'existe pas) : le bouton de notifications reste caché dans tous les
+// autres tests, seul le bloc dédié plus bas le fait apparaître pour couvrir
+// son rendu et son clic.
+vi.mock('./notifications', () => ({
+  getNotificationPermission: vi.fn(() => 'unsupported' as const),
+  requestNotificationPermission: vi.fn(),
+  showLocalNotification: vi.fn(),
+}))
 
 function makeCounter(overrides: Partial<Counter> = {}): Counter {
   return {
@@ -652,6 +663,50 @@ describe('App', () => {
         vi.advanceTimersByTime(4100)
       })
       expect(screen.queryByText('Compteurs mis à jour depuis un autre appareil')).not.toBeInTheDocument()
+    })
+  })
+
+  describe('notifications système', () => {
+    beforeEach(() => {
+      vi.mocked(requestNotificationPermission).mockClear()
+    })
+
+    afterEach(() => {
+      vi.mocked(getNotificationPermission).mockReturnValue('unsupported')
+    })
+
+    it("masque le bouton de notifications quand l'API n'est pas supportée", () => {
+      vi.mocked(getNotificationPermission).mockReturnValue('unsupported')
+      render(<App />)
+      openMenu()
+      expect(screen.queryByRole('button', { name: /notification/i })).not.toBeInTheDocument()
+    })
+
+    it("affiche le bouton et demande la permission au clic quand elle n'a pas encore été tranchée", async () => {
+      vi.mocked(getNotificationPermission).mockReturnValue('default')
+      vi.mocked(requestNotificationPermission).mockResolvedValue('granted')
+      render(<App />)
+      openMenu()
+      const button = screen.getByRole('button', { name: 'Activer les notifications' })
+
+      await act(async () => {
+        fireEvent.click(button)
+      })
+
+      expect(requestNotificationPermission).toHaveBeenCalledTimes(1)
+      // Comme les autres actions du menu (thème, synchro...), cliquer referme
+      // le menu : le rouvrir pour vérifier que le libellé reflète bien le
+      // nouvel état.
+      openMenu()
+      expect(screen.getByRole('button', { name: 'Notifications activées' })).toBeInTheDocument()
+    })
+
+    it('affiche déjà l\'état "activées" sans redemander tant que rien n\'est cliqué', () => {
+      vi.mocked(getNotificationPermission).mockReturnValue('granted')
+      render(<App />)
+      openMenu()
+      expect(screen.getByRole('button', { name: 'Notifications activées' })).toBeInTheDocument()
+      expect(requestNotificationPermission).not.toHaveBeenCalled()
     })
   })
 

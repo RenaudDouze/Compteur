@@ -109,6 +109,15 @@ export function ArchiveIcon(props: IconProps) {
   )
 }
 
+export function BellIcon(props: IconProps) {
+  return (
+    <svg {...BASE} {...STROKE} {...props}>
+      <path d="M6 10.5a6 6 0 0 1 12 0v4.2l1.8 2.8H4.2L6 14.7z" />
+      <path d="M10 20a2 2 0 0 0 4 0" />
+    </svg>
+  )
+}
+
 export function MoreIcon(props: IconProps) {
   return (
     <svg {...BASE} {...props} fill="currentColor" stroke="none">

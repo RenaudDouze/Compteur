@@ -6,6 +6,7 @@ import { useSystemDarkMode } from './hooks/useSystemDarkMode'
 import { CounterCard } from './components/CounterCard'
 import {
   ArchiveIcon,
+  BellIcon,
   CloseIcon,
   EyeIcon,
   FullscreenIcon,
@@ -21,6 +22,8 @@ import { mergeVisibleOrder } from './reorder'
 import { appendHistoryPoint } from './history'
 import { makeId } from './id'
 import { COLORS, pickColor } from './colors'
+import { getNotificationPermission, requestNotificationPermission, showLocalNotification } from './notifications'
+import type { NotificationPermissionState } from './notifications'
 import type { Counter } from './types'
 import './App.css'
 
@@ -36,6 +39,14 @@ type ThemePreference = 'system' | 'light' | 'dark'
 const THEME_ICON: Record<ThemePreference, typeof ThemeAutoIcon> = { system: ThemeAutoIcon, light: SunIcon, dark: MoonIcon }
 const THEME_LABEL: Record<ThemePreference, string> = { system: 'Auto', light: 'Clair', dark: 'Sombre' }
 const NEXT_THEME: Record<ThemePreference, ThemePreference> = { system: 'light', light: 'dark', dark: 'system' }
+
+// 'unsupported' n'a pas de libellé de bouton : le bouton est masqué dans ce
+// cas plutôt que de proposer une action qui ne peut rien faire.
+const NOTIFICATION_LABEL: Record<Exclude<NotificationPermissionState, 'unsupported'>, string> = {
+  default: 'Activer les notifications',
+  granted: 'Notifications activées',
+  denied: "Notifications refusées — à réactiver depuis les réglages du navigateur",
+}
 
 type ArchiveView = 'active' | 'archived'
 
@@ -99,9 +110,14 @@ export default function App() {
   const [syncNotice, setSyncNotice] = useState<string | null>(null)
   const syncNoticeTimer = useRef<ReturnType<typeof setTimeout> | undefined>(undefined)
   const showSyncNotice = () => {
-    setSyncNotice('Compteurs mis à jour depuis un autre appareil')
+    const message = 'Compteurs mis à jour depuis un autre appareil'
+    setSyncNotice(message)
     clearTimeout(syncNoticeTimer.current)
     syncNoticeTimer.current = setTimeout(() => setSyncNotice(null), SYNC_NOTICE_TIMEOUT_MS)
+    // Complète le toast (invisible si l'onglet n'est pas au premier plan) par
+    // une notification système — voir notifications.ts pour les conditions
+    // (permission déjà accordée, onglet effectivement en arrière-plan).
+    void showLocalNotification('+1', { body: message })
   }
   // Absent (fonctionnalité non configurée) tant que le worker de synchro n'a
   // pas été déployé et sa variable d'environnement renseignée au build — voir
@@ -127,6 +143,17 @@ export default function App() {
   // c'est l'action la plus fréquente, elle ne doit pas se cacher derrière un
   // clic supplémentaire.
   const [menuOpen, setMenuOpen] = useState(false)
+
+  // Notifications système (objectif atteint, compteurs mis à jour depuis un
+  // autre appareil) : voir notifications.ts. `getNotificationPermission`
+  // lu une seule fois au montage suffit — la permission ne peut changer que
+  // via `requestNotifications` ci-dessous (jamais en dehors d'une action de
+  // cette app), pas besoin de la re-sonder ailleurs.
+  const [notificationPermission, setNotificationPermission] = useState(getNotificationPermission)
+  const requestNotifications = async () => {
+    setNotificationPermission(await requestNotificationPermission())
+    setMenuOpen(false)
+  }
 
   const [syncOpen, setSyncOpen] = useState(false)
   const [undo, setUndo] = useState<{ label: string; counters: Counter[] } | null>(null)
@@ -445,6 +472,16 @@ export default function App() {
                 >
                   <SyncIcon />
                 </button>
+                {notificationPermission !== 'unsupported' && (
+                  <button
+                    className="add-btn icon-btn"
+                    onClick={requestNotifications}
+                    aria-label={NOTIFICATION_LABEL[notificationPermission]}
+                    title={NOTIFICATION_LABEL[notificationPermission]}
+                  >
+                    <BellIcon />
+                  </button>
+                )}
                 {counters.length > 0 && (
                   <button
                     className="add-btn icon-btn"
