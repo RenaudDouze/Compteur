@@ -45,6 +45,22 @@ au moment du build (voir le `README.md` racine et le workflow de déploiement
 GitHub Pages) — sans elle, la section « Code de synchro » du panneau
 Synchroniser reste masquée.
 
+## Déployer depuis GitHub Actions (optionnel)
+
+Le workflow `.github/workflows/worker-deploy.yml` déploie automatiquement le
+worker à chaque changement poussé sous `worker/` sur `main` (et à la demande
+via l'onglet Actions → "Déploiement du worker de synchronisation" → Run
+workflow). Pour l'activer, ajoute deux secrets au repo (Settings → Secrets
+and variables → Actions → New repository secret) :
+
+- `CLOUDFLARE_API_TOKEN` : un token créé depuis le template "Edit Cloudflare
+  Workers" dans le dashboard Cloudflare (Profil → API Tokens), restreint à ton
+  compte.
+- `CLOUDFLARE_ACCOUNT_ID` : visible dans la barre latérale du dashboard
+  Cloudflare, sur n'importe quelle page Workers.
+
+Sans ces secrets, seul `npm run deploy` en local fonctionne.
+
 ## Développement local
 
 ```sh
