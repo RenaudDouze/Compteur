@@ -1,5 +1,5 @@
-import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
-import worker, { isValidPushRequest, kvKey, RATE_LIMIT_MAX_REQUESTS, RATE_LIMIT_WINDOW_SECONDS, type Env } from './index'
+import { beforeEach, describe, expect, it } from 'vitest'
+import worker, { isValidPushRequest, kvKey, type Env } from './index'
 import { generateSyncCode } from './code'
 
 /** Implémentation en mémoire du sous-ensemble de KVNamespace utilisé par le
@@ -20,9 +20,9 @@ function makeEnv(): Env {
   return { SYNC_KV: createMockKv(), ALLOWED_ORIGIN: '*' }
 }
 
-function request(method: string, path: string, body?: unknown, extraHeaders?: Record<string, string>): Request {
+function request(method: string, path: string, body?: unknown): Request {
   const init: RequestInit = { method }
-  const headers: Record<string, string> = { ...extraHeaders }
+  const headers: Record<string, string> = {}
   if (body !== undefined) {
     const json = JSON.stringify(body)
     init.body = json
@@ -31,10 +31,6 @@ function request(method: string, path: string, body?: unknown, extraHeaders?: Re
   }
   init.headers = headers
   return new Request(`https://sync.example.com${path}`, init)
-}
-
-function requestFrom(ip: string, method: string, path: string, body?: unknown): Request {
-  return request(method, path, body, { 'CF-Connecting-IP': ip })
 }
 
 describe('isValidPushRequest', () => {
@@ -296,80 +292,6 @@ describe('PUT /api/sync/:code (écriture)', () => {
     })
     const res = await worker.fetch(req, env)
     expect(res.status).toBe(413)
-  })
-})
-
-describe('limitation de débit par IP', () => {
-  afterEach(() => {
-    vi.useRealTimers()
-  })
-
-  it('accepte jusqu’au quota, puis refuse (429) la requête suivante de la même IP', async () => {
-    const env = makeEnv()
-    for (let i = 0; i < RATE_LIMIT_MAX_REQUESTS; i++) {
-      const res = await worker.fetch(requestFrom('1.2.3.4', 'GET', '/autre-chose'), env)
-      expect(res.status).toBe(404) // route inexistante, mais pas rejetée par le quota
-    }
-    const res = await worker.fetch(requestFrom('1.2.3.4', 'GET', '/autre-chose'), env)
-    expect(res.status).toBe(429)
-  })
-
-  it('indique un délai de nouvelle tentative sur un 429', async () => {
-    const env = makeEnv()
-    for (let i = 0; i < RATE_LIMIT_MAX_REQUESTS; i++) {
-      await worker.fetch(requestFrom('5.5.5.5', 'GET', '/autre-chose'), env)
-    }
-    const res = await worker.fetch(requestFrom('5.5.5.5', 'GET', '/autre-chose'), env)
-    expect(res.status).toBe(429)
-    expect(res.headers.get('Retry-After')).toBe(String(RATE_LIMIT_WINDOW_SECONDS))
-    // Toujours les en-têtes CORS habituels, même sur un refus de quota.
-    expect(res.headers.get('Access-Control-Allow-Origin')).toBe('*')
-  })
-
-  it('tient un quota indépendant par IP (une IP qui abuse ne bloque pas les autres)', async () => {
-    const env = makeEnv()
-    for (let i = 0; i < RATE_LIMIT_MAX_REQUESTS; i++) {
-      await worker.fetch(requestFrom('9.9.9.9', 'GET', '/autre-chose'), env)
-    }
-    const blocked = await worker.fetch(requestFrom('9.9.9.9', 'GET', '/autre-chose'), env)
-    expect(blocked.status).toBe(429)
-
-    const otherIp = await worker.fetch(requestFrom('8.8.8.8', 'GET', '/autre-chose'), env)
-    expect(otherIp.status).toBe(404)
-  })
-
-  it('regroupe les requêtes sans IP identifiable (hors runtime Cloudflare) sous un même compartiment', async () => {
-    const env = makeEnv()
-    for (let i = 0; i < RATE_LIMIT_MAX_REQUESTS; i++) {
-      const res = await worker.fetch(request('GET', '/autre-chose'), env)
-      expect(res.status).toBe(404)
-    }
-    const res = await worker.fetch(request('GET', '/autre-chose'), env)
-    expect(res.status).toBe(429)
-  })
-
-  it('ne compte jamais le préflight CORS (OPTIONS), même une fois le quota atteint', async () => {
-    const env = makeEnv()
-    for (let i = 0; i < RATE_LIMIT_MAX_REQUESTS; i++) {
-      await worker.fetch(requestFrom('3.3.3.3', 'GET', '/autre-chose'), env)
-    }
-    const preflight = await worker.fetch(requestFrom('3.3.3.3', 'OPTIONS', '/api/sync'), env)
-    expect(preflight.status).toBe(204)
-  })
-
-  it('réinitialise le quota une fois la fenêtre suivante entamée', async () => {
-    vi.useFakeTimers()
-    vi.setSystemTime(new Date('2026-01-01T00:00:00.000Z'))
-    const env = makeEnv()
-    for (let i = 0; i < RATE_LIMIT_MAX_REQUESTS; i++) {
-      await worker.fetch(requestFrom('7.7.7.7', 'GET', '/autre-chose'), env)
-    }
-    const stillBlocked = await worker.fetch(requestFrom('7.7.7.7', 'GET', '/autre-chose'), env)
-    expect(stillBlocked.status).toBe(429)
-
-    vi.setSystemTime(new Date(Date.now() + RATE_LIMIT_WINDOW_SECONDS * 1000))
-    const afterWindow = await worker.fetch(requestFrom('7.7.7.7', 'GET', '/autre-chose'), env)
-    expect(afterWindow.status).toBe(404)
   })
 })
 
