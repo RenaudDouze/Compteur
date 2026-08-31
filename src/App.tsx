@@ -33,6 +33,10 @@ const SyncPanel = lazy(() => import('./components/SyncPanel').then((m) => ({ def
 
 const UNDO_TIMEOUT_MS = 5000
 const SYNC_NOTICE_TIMEOUT_MS = 4000
+// Plafond raisonnable : au-delà, les actions les plus anciennes de la
+// session tombent hors de portée plutôt que de faire grossir indéfiniment
+// l'instantané gardé en mémoire.
+const MAX_UNDO_STACK = 10
 
 type ThemePreference = 'system' | 'light' | 'dark'
 
@@ -156,7 +160,10 @@ export default function App() {
   }
 
   const [syncOpen, setSyncOpen] = useState(false)
-  const [undo, setUndo] = useState<{ label: string; counters: Counter[] } | null>(null)
+  // Pile (dernier entré, premier sorti) : chaque action destructrice
+  // consécutive s'empile plutôt que d'écraser la précédente, pour pouvoir
+  // remonter plusieurs actions d'affilée tant que le délai n'est pas écoulé.
+  const [undoStack, setUndoStack] = useState<Array<{ label: string; counters: Counter[] }>>([])
   const undoTimer = useRef<ReturnType<typeof setTimeout> | undefined>(undefined)
 
   const [searchOpen, setSearchOpen] = useState(false)
@@ -238,19 +245,31 @@ export default function App() {
 
   // Garde un instantané des compteurs avant une action destructrice (ou
   // difficile à corriger à la main), pour permettre de l'annuler pendant
-  // quelques secondes via le message qui apparaît en bas d'écran.
+  // quelques secondes via le message qui apparaît en bas d'écran. Empilé
+  // plutôt qu'écrasé : des actions consécutives (ex : plusieurs suppressions
+  // d'affilée) restent chacune annulable individuellement, dans l'ordre
+  // inverse. Chaque nouvelle action relance le délai pour l'ensemble de la
+  // pile — le temps disponible reflète toujours l'inactivité écoulée, pas le
+  // nombre d'actions en attente.
   const pushUndo = (label: string) => {
-    setUndo({ label, counters })
+    setUndoStack((prev) => [...prev, { label, counters }].slice(-MAX_UNDO_STACK))
     clearTimeout(undoTimer.current)
-    undoTimer.current = setTimeout(() => setUndo(null), UNDO_TIMEOUT_MS)
+    undoTimer.current = setTimeout(() => setUndoStack([]), UNDO_TIMEOUT_MS)
   }
 
   // N'est rendu accessible que via le bouton du message d'annulation, qui
-  // n'existe dans le DOM que lorsque `undo` est déjà défini.
+  // n'existe dans le DOM que lorsque la pile n'est pas vide. Ne restaure que
+  // la dernière action empilée ; s'il en reste d'autres en dessous, le
+  // message reste affiché (avec un délai relancé) pour permettre de
+  // continuer à remonter.
   const handleUndo = () => {
-    setCounters(undo!.counters)
-    setUndo(null)
+    const last = undoStack[undoStack.length - 1]
+    setCounters(last.counters)
+    setUndoStack((prev) => prev.slice(0, -1))
     clearTimeout(undoTimer.current)
+    if (undoStack.length > 1) {
+      undoTimer.current = setTimeout(() => setUndoStack([]), UNDO_TIMEOUT_MS)
+    }
   }
 
   // Import automatique si l'app est ouverte via un lien de partage (?import=...).
@@ -596,10 +615,10 @@ export default function App() {
         </div>
       )}
 
-      {undo && (
+      {undoStack.length > 0 && (
         <div className="undo-toast" role="status">
-          <span>{undo.label}</span>
-          <button onClick={handleUndo}>Annuler</button>
+          <span>{undoStack[undoStack.length - 1].label}</span>
+          <button onClick={handleUndo}>Annuler{undoStack.length > 1 ? ` (${undoStack.length})` : ''}</button>
         </div>
       )}
     </div>
