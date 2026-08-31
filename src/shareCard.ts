@@ -6,10 +6,6 @@ import type { Counter } from './types'
 const CARD_WIDTH = 640
 const CARD_HEIGHT = 800
 const ACCENT_HEIGHT = 10
-const SPARKLINE_WIDTH = CARD_WIDTH - 160
-const SPARKLINE_HEIGHT = 140
-const SPARKLINE_X = 80
-const SPARKLINE_Y = CARD_HEIGHT - 220
 
 /** Échappe le texte inséré dans les nœuds/attributs du SVG généré : `name`
  * vient de l'utilisateur, un caractère `&`/`<` non échappé casserait le
@@ -23,23 +19,6 @@ function escapeXml(text: string): string {
     .replace(/>/g, '&gt;')
     .replace(/"/g, '&quot;')
     .replace(/'/g, '&apos;')
-}
-
-/** Chemin SVG (`<path>` d) d'une ligne brisée reliant `values` (au moins deux
- * points — voir l'appelant), mise à l'échelle dans un cadre `width`×`height`
- * (min → bas, max → haut). Values constantes (min === max) : ligne plate
- * plutôt qu'une division par zéro. */
-function polylinePath(values: number[], width: number, height: number): string {
-  const min = Math.min(...values)
-  const max = Math.max(...values)
-  const range = max - min || 1
-  return values
-    .map((v, i) => {
-      const x = (i / (values.length - 1)) * width
-      const y = height - ((v - min) / range) * height
-      return `${i === 0 ? 'M' : 'L'}${x.toFixed(1)},${y.toFixed(1)}`
-    })
-    .join(' ')
 }
 
 /** Construit le visuel exporté sous forme de balisage SVG autonome (pas de
@@ -56,25 +35,12 @@ export function buildShareCardSvg(counter: Counter): string {
       ? `<text x="${CARD_WIDTH / 2}" y="440" text-anchor="middle" font-family="system-ui, sans-serif" font-size="28" fill="#64748b">objectif ${target.toLocaleString('fr-FR')}</text>`
       : ''
 
-  const history = counter.history ?? []
-  const sparkline =
-    history.length >= 2
-      ? `<g transform="translate(${SPARKLINE_X},${SPARKLINE_Y})">
-           <path d="${polylinePath(
-             history.map((p) => p.v),
-             SPARKLINE_WIDTH,
-             SPARKLINE_HEIGHT
-           )}" fill="none" stroke="${accent}" stroke-width="5" stroke-linecap="round" stroke-linejoin="round" />
-         </g>`
-      : ''
-
   return `<svg xmlns="http://www.w3.org/2000/svg" width="${CARD_WIDTH}" height="${CARD_HEIGHT}" viewBox="0 0 ${CARD_WIDTH} ${CARD_HEIGHT}">
     <rect width="${CARD_WIDTH}" height="${CARD_HEIGHT}" fill="#ffffff" />
     <rect width="${CARD_WIDTH}" height="${ACCENT_HEIGHT}" fill="${accent}" />
     <text x="${CARD_WIDTH / 2}" y="120" text-anchor="middle" font-family="system-ui, sans-serif" font-size="36" font-weight="700" fill="#0f172a">${name}</text>
     <text x="${CARD_WIDTH / 2}" y="330" text-anchor="middle" font-family="system-ui, sans-serif" font-size="220" font-weight="800" fill="${accent}">${value}</text>
     ${targetLine}
-    ${sparkline}
     <text x="${CARD_WIDTH / 2}" y="${CARD_HEIGHT - 40}" text-anchor="middle" font-family="system-ui, sans-serif" font-size="24" fill="#94a3b8">+1</text>
   </svg>`
 }

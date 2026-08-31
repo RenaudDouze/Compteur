@@ -1,8 +1,3 @@
-export interface HistoryPoint {
-  t: number
-  v: number
-}
-
 /** Style d'affichage du chiffre sur la carte. Absent = 'default' (odomètre actuel). */
 export type DisplayStyle = 'default' | 'flap' | 'segment7' | 'ring' | 'editorial' | 'badge'
 
@@ -32,8 +27,6 @@ export interface Counter {
   name: string
   count: number
   createdAt: number
-  /** Historique des valeurs dans le temps, pour l'aperçu (sparkline). Absent = pas encore suivi. */
-  history?: HistoryPoint[]
   /** Compteur archivé : masqué de la liste par défaut. Absent = actif. */
   archived?: boolean
   /** Horodatage de l'archivage, pour figer la durée totale affichée sur la

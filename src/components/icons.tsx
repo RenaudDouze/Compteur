@@ -178,15 +178,6 @@ export function GearIcon(props: IconProps) {
   )
 }
 
-export function TrendingUpIcon(props: IconProps) {
-  return (
-    <svg {...BASE} {...STROKE} {...props}>
-      <polyline points="3,17 9,11 13,15 21,6" />
-      <polyline points="14,6 21,6 21,13" />
-    </svg>
-  )
-}
-
 export function CloseIcon(props: IconProps) {
   return (
     <svg {...BASE} {...STROKE} {...props}>

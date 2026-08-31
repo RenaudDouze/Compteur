@@ -24,12 +24,11 @@ describe('buildShareCardSvg', () => {
     expect(svg).toContain(`>${(1234).toLocaleString('fr-FR')}</text>`)
   })
 
-  it("ne laisse aucun contenu entre la valeur et le pied de carte quand ni objectif ni historique ne sont définis", () => {
-    const svg = buildShareCardSvg(makeCounter({ count: 42, behavior: {}, history: undefined }))
-    // Sans objectif ni historique, les deux emplacements interpolés entre la
-    // valeur et le pied de carte doivent rester vides (pas de contenu
-    // injecté par erreur) — et le pied de carte doit être centré et
-    // positionné à `CARD_HEIGHT - 40`.
+  it("ne laisse aucun contenu entre la valeur et le pied de carte quand aucun objectif n'est défini", () => {
+    const svg = buildShareCardSvg(makeCounter({ count: 42, behavior: {} }))
+    // Sans objectif, l'emplacement interpolé entre la valeur et le pied de
+    // carte doit rester vide (pas de contenu injecté par erreur) — et le
+    // pied de carte doit être centré et positionné à `CARD_HEIGHT - 40`.
     expect(svg).toMatch(/>42<\/text>\s*<text x="320" y="760"[^>]*>\+1<\/text>/)
   })
 
@@ -50,62 +49,6 @@ describe('buildShareCardSvg', () => {
     expect(svg).toContain(`objectif ${(10000).toLocaleString('fr-FR')}</text>`)
   })
 
-  it("n'affiche pas de sparkline sans historique", () => {
-    const svg = buildShareCardSvg(makeCounter({ history: undefined }))
-    expect(svg).not.toContain('<path d="M')
-  })
-
-  it("n'affiche pas de sparkline avec un seul point d'historique", () => {
-    const svg = buildShareCardSvg(makeCounter({ history: [{ t: 0, v: 5 }] }))
-    expect(svg).not.toContain('<path d="M')
-  })
-
-  it('affiche une sparkline avec au moins deux points, positionnée et colorée avec la couleur du compteur', () => {
-    const svg = buildShareCardSvg(
-      makeCounter({
-        appearance: { color: '#123456' },
-        history: [
-          { t: 0, v: 0 },
-          { t: 1, v: 10 },
-          { t: 2, v: 5 },
-        ],
-      })
-    )
-    expect(svg).toContain('translate(80,580)')
-    expect(svg).toContain('<path d="M')
-    expect(svg).toContain('stroke="#123456"')
-  })
-
-  it('trace une ligne plate quand toutes les valeurs sont égales, plutôt qu’une division par zéro', () => {
-    const svg = buildShareCardSvg(
-      makeCounter({
-        history: [
-          { t: 0, v: 7 },
-          { t: 1, v: 7 },
-        ],
-      })
-    )
-    // min === max -> range de secours de 1, (v-min)/range = 0 pour les deux
-    // points -> y = height (bas du cadre) des deux côtés.
-    expect(svg).toContain('d="M0.0,140.0 L480.0,140.0"')
-  })
-
-  it('répartit les points le long de la largeur du cadre en fonction de leur position, mis à l’échelle sur l’amplitude (max - min)', () => {
-    const svg = buildShareCardSvg(
-      makeCounter({
-        // min non nul (100) : distingue explicitement une amplitude
-        // `max - min` (100) d'une somme `max + min` (300), qui donneraient
-        // sinon les mêmes coordonnées avec un min à 0.
-        history: [
-          { t: 0, v: 100 },
-          { t: 1, v: 150 },
-          { t: 2, v: 200 },
-        ],
-      })
-    )
-    // Largeur du cadre = 480, 3 points -> x à 0, 240, 480 ; min -> bas (y=140), max -> haut (y=0).
-    expect(svg).toContain('M0.0,140.0 L240.0,70.0 L480.0,0.0')
-  })
 })
 
 class FakeImage {

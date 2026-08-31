@@ -1,13 +1,5 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
-import {
-  buildHistoryCsv,
-  buildShareUrl,
-  decodeCountersFromParam,
-  downloadBackup,
-  downloadHistoryCsv,
-  encodeCountersToParam,
-  parseBackupJson,
-} from './sync'
+import { buildShareUrl, decodeCountersFromParam, downloadBackup, encodeCountersToParam, parseBackupJson } from './sync'
 import type { Counter, CounterAppearance, CounterBehavior } from './types'
 
 /** Générateur déterministe (même seed = même résultat) à forte entropie. */
@@ -107,107 +99,6 @@ describe('downloadBackup', () => {
   it('retire le lien du document après le téléchargement', () => {
     downloadBackup([makeCounter()])
     expect(lastAnchor?.isConnected).toBe(false)
-  })
-})
-
-describe('buildHistoryCsv', () => {
-  it("ne génère que l'en-tête pour un compteur sans historique", () => {
-    expect(buildHistoryCsv(makeCounter({ history: undefined }))).toBe('Horodatage,Valeur')
-  })
-
-  it("ne génère que l'en-tête pour un historique vide", () => {
-    expect(buildHistoryCsv(makeCounter({ history: [] }))).toBe('Horodatage,Valeur')
-  })
-
-  it('formate chaque point en horodatage ISO et valeur, dans l\'ordre', () => {
-    const csv = buildHistoryCsv(
-      makeCounter({
-        history: [
-          { t: Date.UTC(2026, 7, 1, 10, 0, 0), v: 0 },
-          { t: Date.UTC(2026, 7, 2, 15, 30, 0), v: 3 },
-        ],
-      })
-    )
-    expect(csv).toBe(
-      ['Horodatage,Valeur', '2026-08-01T10:00:00.000Z,0', '2026-08-02T15:30:00.000Z,3'].join('\n')
-    )
-  })
-})
-
-describe('downloadHistoryCsv', () => {
-  let createElementSpy: ReturnType<typeof vi.spyOn>
-  let clickSpy: ReturnType<typeof vi.fn<() => void>>
-  let createObjectURLSpy: ReturnType<typeof vi.spyOn>
-  let revokeObjectURLSpy: ReturnType<typeof vi.spyOn>
-  let lastAnchor: HTMLAnchorElement | null
-
-  beforeEach(() => {
-    vi.useFakeTimers()
-    vi.setSystemTime(new Date(2026, 7, 22))
-    clickSpy = vi.fn()
-    lastAnchor = null
-    const originalCreateElement = document.createElement.bind(document)
-    createElementSpy = vi.spyOn(document, 'createElement').mockImplementation((tag: string) => {
-      const el = originalCreateElement(tag)
-      if (tag === 'a') {
-        const anchor = el as HTMLAnchorElement
-        anchor.click = clickSpy
-        lastAnchor = anchor
-      }
-      return el
-    })
-    createObjectURLSpy = vi.spyOn(URL, 'createObjectURL').mockReturnValue('blob:mock-url')
-    revokeObjectURLSpy = vi.spyOn(URL, 'revokeObjectURL').mockImplementation(() => {})
-  })
-
-  afterEach(() => {
-    vi.useRealTimers()
-    createElementSpy.mockRestore()
-    createObjectURLSpy.mockRestore()
-    revokeObjectURLSpy.mockRestore()
-  })
-
-  it("crée un blob CSV contenant l'historique du compteur", async () => {
-    const counter = makeCounter({ history: [{ t: Date.UTC(2026, 7, 1), v: 2 }] })
-    downloadHistoryCsv(counter)
-
-    expect(createObjectURLSpy).toHaveBeenCalledTimes(1)
-    const blob = createObjectURLSpy.mock.calls[0][0] as Blob
-    expect(blob.type).toBe('text/csv')
-    expect(await blob.text()).toBe(buildHistoryCsv(counter))
-  })
-
-  it('déclenche le téléchargement', () => {
-    downloadHistoryCsv(makeCounter())
-    expect(clickSpy).toHaveBeenCalledTimes(1)
-  })
-
-  it('nomme le fichier avec le nom du compteur et la date du jour', () => {
-    downloadHistoryCsv(makeCounter({ name: 'Pompes' }))
-    expect(lastAnchor?.download).toBe('+1-historique-Pompes-2026-08-22.csv')
-  })
-
-  it('remplace les caractères non alphanumériques du nom par des tirets', () => {
-    downloadHistoryCsv(makeCounter({ name: 'Écrémé 🎲 / café' }))
-    expect(lastAnchor?.download).toBe('+1-historique--cr-m-caf--2026-08-22.csv')
-  })
-
-  it("utilise 'compteur' comme nom de secours si le nom est vide", () => {
-    downloadHistoryCsv(makeCounter({ name: '' }))
-    expect(lastAnchor?.download).toBe('+1-historique-compteur-2026-08-22.csv')
-  })
-
-  it("révoque l'URL objet après le téléchargement", () => {
-    downloadHistoryCsv(makeCounter())
-    expect(revokeObjectURLSpy).toHaveBeenCalledWith('blob:mock-url')
-  })
-
-  it('attache le lien au document avant de déclencher le téléchargement, puis le retire', () => {
-    const appendChildSpy = vi.spyOn(document.body, 'appendChild')
-    downloadHistoryCsv(makeCounter())
-    expect(appendChildSpy).toHaveBeenCalledWith(lastAnchor)
-    expect(lastAnchor?.isConnected).toBe(false)
-    appendChildSpy.mockRestore()
   })
 })
 
@@ -353,21 +244,6 @@ describe('parseBackupJson', () => {
     expect(result?.[0].appearance.displayStyle).toBeUndefined()
   })
 
-  it('conserve history optionnel', () => {
-    const result = parseBackupJson(
-      JSON.stringify([{ name: 'A', count: 1, history: [{ t: 1000, v: 0 }, { t: 2000, v: 1 }] }])
-    )
-    expect(result?.[0].history).toEqual([
-      { t: 1000, v: 0 },
-      { t: 2000, v: 1 },
-    ])
-  })
-
-  it('laisse history indéfini si absent', () => {
-    const result = parseBackupJson(JSON.stringify([{ name: 'A', count: 1 }]))
-    expect(result?.[0].history).toBeUndefined()
-  })
-
   it('conserve archived optionnel', () => {
     const result = parseBackupJson(JSON.stringify([{ name: 'A', count: 1, archived: true }]))
     expect(result?.[0].archived).toBe(true)
@@ -405,13 +281,6 @@ describe('parseBackupJson', () => {
 })
 
 describe('encodeCountersToParam / decodeCountersFromParam', () => {
-  it("n'inclut pas l'historique dans le lien/QR (garde le format compact)", () => {
-    const counters = [makeCounter({ history: [{ t: 1000, v: 0 }, { t: 2000, v: 1 }] })]
-    const encoded = encodeCountersToParam(counters)
-    const decoded = decodeCountersFromParam(encoded)
-    expect(decoded?.[0].history).toBeUndefined()
-  })
-
   it('fait un aller-retour fidèle avec un tableau vide', () => {
     const encoded = encodeCountersToParam([])
     expect(decodeCountersFromParam(encoded)).toEqual([])

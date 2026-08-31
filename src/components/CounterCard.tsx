@@ -4,9 +4,8 @@ import { motion, Reorder, useAnimationControls, useDragControls } from 'framer-m
 import { CounterValueDisplay } from './CounterValueDisplay'
 import { CounterSettingsPanel } from './CounterSettingsPanel'
 import { CounterBehaviorSettingsPanel } from './CounterBehaviorSettingsPanel'
-import { CounterHistoryPanel } from './CounterHistoryPanel'
 import { CounterActionsPanel } from './CounterActionsPanel'
-import { DragHandleIcon, GearIcon, MoreIcon, SlidersIcon, TrendingUpIcon } from './icons'
+import { DragHandleIcon, GearIcon, MoreIcon, SlidersIcon } from './icons'
 import type { IconProps } from './icons'
 import type { PanelKind } from './PanelNav'
 import { useHoldToRepeat } from '../hooks/useHoldToRepeat'
@@ -25,7 +24,7 @@ import type { Counter } from '../types'
 const CONFETTI_ANGLES = [-90, -65, -40, -15, 15, 40, 65, 90, -110, 110]
 const CONFETTI_COLORS = ['#f43f5e', '#f59e0b', '#10b981', '#3b82f6', '#8b5cf6', '#ec4899']
 
-// Icônes d'accès direct aux 4 modales, dans leur ordre d'affichage.
+// Icônes d'accès direct aux 3 modales, dans leur ordre d'affichage.
 const PANEL_BUTTONS: { panel: PanelKind; className: string; label: string; title: string; icon: ComponentType<IconProps> }[] = [
   {
     panel: 'comportement',
@@ -40,13 +39,6 @@ const PANEL_BUTTONS: { panel: PanelKind; className: string; label: string; title
     label: 'Personnaliser le compteur',
     title: "Nom, couleur, style d'affichage, image de fond",
     icon: GearIcon,
-  },
-  {
-    panel: 'historique',
-    className: 'counter-history-btn',
-    label: "Voir l'historique du compteur",
-    title: 'Historique des valeurs',
-    icon: TrendingUpIcon,
   },
   {
     panel: 'actions',
@@ -92,11 +84,10 @@ export function CounterCard({
 }: CounterCardProps) {
   const [editing, setEditing] = useState(autoEdit)
   const [draftName, setDraftName] = useState(counter.name)
-  // 4 modales distinctes : la personnalisation de l'apparence (couleur,
+  // 3 modales distinctes : la personnalisation de l'apparence (couleur,
   // style, image de fond), le comportement du compteur (pas d'incrément,
-  // objectif, probabilité, date de début, valeur actuelle), son historique,
-  // et les actions (partage, duplication). Chacune peut naviguer vers les 3
-  // autres.
+  // objectif, probabilité, date de début, valeur actuelle), et les actions
+  // (partage, duplication). Chacune peut naviguer vers les 2 autres.
   const [openPanel, setOpenPanel] = useState<PanelKind | null>(null)
   const [direction, setDirection] = useState<1 | -1>(1)
   const pulseControls = useAnimationControls()
@@ -457,10 +448,6 @@ export function CounterCard({
           onSetCount={handleSetCount}
           onNavigate={setOpenPanel}
         />
-      )}
-
-      {openPanel === 'historique' && (
-        <CounterHistoryPanel counter={counter} onClose={() => setOpenPanel(null)} onNavigate={setOpenPanel} />
       )}
 
       {openPanel === 'actions' && (

@@ -1,6 +1,6 @@
 import * as LZString from 'lz-string'
 import { makeId } from './id'
-import type { Counter, CounterAppearance, CounterBehavior, DisplayStyle, HistoryPoint } from './types'
+import type { Counter, CounterAppearance, CounterBehavior, DisplayStyle } from './types'
 
 /** Déclenche le téléchargement d'un blob sous le nom de fichier donné. */
 export function triggerDownload(blob: Blob, filename: string) {
@@ -19,21 +19,6 @@ export function downloadBackup(counters: Counter[]) {
   const blob = new Blob([JSON.stringify(counters, null, 2)], { type: 'application/json' })
   const date = new Date().toISOString().slice(0, 10)
   triggerDownload(blob, `+1-sauvegarde-${date}.json`)
-}
-
-/** Formate l'historique d'un compteur en CSV (horodatage ISO, valeur), pour
- * une analyse dans un tableur. */
-export function buildHistoryCsv(counter: Counter): string {
-  const rows = (counter.history ?? []).map((p) => `${new Date(p.t).toISOString()},${p.v}`)
-  return ['Horodatage,Valeur', ...rows].join('\n')
-}
-
-/** Déclenche le téléchargement de l'historique d'un compteur au format CSV. */
-export function downloadHistoryCsv(counter: Counter) {
-  const blob = new Blob([buildHistoryCsv(counter)], { type: 'text/csv' })
-  const date = new Date().toISOString().slice(0, 10)
-  const safeName = counter.name.replace(/[^a-zA-Z0-9-_]+/g, '-') || 'compteur'
-  triggerDownload(blob, `+1-historique-${safeName}-${date}.csv`)
 }
 
 function isValidCounter(value: unknown): value is Record<string, unknown> {
@@ -74,7 +59,6 @@ function normalizeCounter(raw: Record<string, unknown>): Counter {
     name: (raw.name as string) || 'Sans nom',
     count: typeof raw.count === 'number' ? raw.count : 0,
     createdAt: typeof raw.createdAt === 'number' ? raw.createdAt : Date.now(),
-    history: raw.history as HistoryPoint[] | undefined,
     archived: raw.archived as boolean | undefined,
     pinned: raw.pinned as boolean | undefined,
     archivedAt: typeof raw.archivedAt === 'number' ? raw.archivedAt : undefined,
@@ -95,7 +79,6 @@ export function migrateStoredCounter(raw: Record<string, unknown>): Counter {
     name: raw.name as string,
     count: raw.count as number,
     createdAt: raw.createdAt as number,
-    history: raw.history as HistoryPoint[] | undefined,
     archived: raw.archived as boolean | undefined,
     pinned: raw.pinned as boolean | undefined,
     archivedAt: raw.archivedAt as number | undefined,
