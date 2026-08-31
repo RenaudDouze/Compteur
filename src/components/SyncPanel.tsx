@@ -118,7 +118,7 @@ export function SyncPanel({ counters, onClose, onImport, remoteSync }: SyncPanel
       setJoinInput('')
       return
     }
-    setJoinError(JOIN_OUTCOME_ERROR[outcome])
+    setJoinError(outcome === 'error' && remoteSync.errorMessage ? remoteSync.errorMessage : JOIN_OUTCOME_ERROR[outcome])
   }
 
   return (
@@ -185,6 +185,9 @@ export function SyncPanel({ counters, onClose, onImport, remoteSync }: SyncPanel
                     Saisir un code
                   </button>
                 </div>
+                {remoteSync.status === 'error' && (
+                  <p className="modal-error">{remoteSync.errorMessage ?? REMOTE_STATUS_LABEL.error}</p>
+                )}
               </>
             )}
             {joinError && <p className="modal-error">{joinError}</p>}

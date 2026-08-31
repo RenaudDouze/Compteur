@@ -177,9 +177,9 @@ export function useRemoteSync(
       setCode(newCode)
       setStatus('synced')
       return true
-    } catch {
+    } catch (err) {
       setStatus('error')
-      setErrorMessage('Impossible de créer un code de synchronisation.')
+      setErrorMessage(err instanceof Error ? err.message : 'Impossible de créer un code de synchronisation.')
       return false
     }
   }
@@ -231,9 +231,9 @@ export function useRemoteSync(
       setCode(normalized)
       setStatus('synced')
       return 'joined'
-    } catch {
+    } catch (err) {
       setStatus('error')
-      setErrorMessage('Impossible de rejoindre ce code.')
+      setErrorMessage(err instanceof Error ? err.message : 'Impossible de rejoindre ce code.')
       return 'error'
     }
   }
