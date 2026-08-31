@@ -15,7 +15,7 @@ import { useFillFontSize } from '../hooks/useFillFontSize'
 import { useCelebration } from '../hooks/useCelebration'
 import { cumulativeOdds, formatOdds, progressRatio } from '../odds'
 import { daysBetween, formatAveragePerDay, formatDuration, toIsoDate } from '../date'
-import { playIncrementSound } from '../sound'
+import { playDecrementSound, playIncrementSound } from '../sound'
 import type { Counter } from '../types'
 
 // Angles (en degrés) des particules du confetti, réparties en éventail sur
@@ -164,15 +164,16 @@ export function CounterCard({
   // est volontairement absent des dépendances : un changement de style seul
   // (sans changement de compteur) ne doit pas déclencher de rebond.
   //
-  // Le son d'incrémentation, lui, se joue quel que soit le style : cet
-  // effet ne se déclenche qu'après que React a posé la nouvelle valeur à
-  // l'écran (jamais au clic lui-même), et uniquement en incrémentant.
+  // Le son, lui, se joue quel que soit le style : cet effet ne se déclenche
+  // qu'après que React a posé la nouvelle valeur à l'écran (jamais au clic
+  // lui-même).
   useEffect(() => {
     if (isFirstCount.current) {
       isFirstCount.current = false
       return
     }
     if (direction === 1) playIncrementSound()
+    else playDecrementSound()
     if (!isDefaultStyle) return
     pulseControls.start({
       scale: [1, 1.16, 0.97, 1],

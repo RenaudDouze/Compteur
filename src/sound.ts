@@ -16,12 +16,12 @@ function getAudioContext(): AudioContext {
   return audioContext
 }
 
-/** Joue un bref "tock" mécanique (comme un compteur à main), à hauteur fixe
- * — pas de montée de fréquence, pour ne pas évoquer un bip de notification.
- * Échoue silencieusement si l'API Web Audio est indisponible ou bloquée
- * (ex: contexte encore suspendu faute d'interaction utilisateur) : le son
- * est un agrément, jamais un pré-requis. */
-export function playIncrementSound() {
+/** Joue un bref "tock" mécanique (comme un compteur à main) à une hauteur
+ * fixe — pas de montée de fréquence, pour ne pas évoquer un bip de
+ * notification. Échoue silencieusement si l'API Web Audio est indisponible
+ * ou bloquée (ex: contexte encore suspendu faute d'interaction
+ * utilisateur) : le son est un agrément, jamais un pré-requis. */
+function playTone(frequency: number) {
   try {
     const ctx = getAudioContext()
     if (ctx.state === 'suspended') void ctx.resume()
@@ -30,7 +30,7 @@ export function playIncrementSound() {
     const oscillator = ctx.createOscillator()
     const gain = ctx.createGain()
     oscillator.type = 'triangle'
-    oscillator.frequency.setValueAtTime(220, now)
+    oscillator.frequency.setValueAtTime(frequency, now)
     gain.gain.setValueAtTime(0.0001, now)
     gain.gain.exponentialRampToValueAtTime(0.6, now + 0.002)
     gain.gain.exponentialRampToValueAtTime(0.0001, now + 0.05)
@@ -41,4 +41,15 @@ export function playIncrementSound() {
   } catch {
     // API Web Audio indisponible/bloquée : pas de son, pas d'erreur bloquante.
   }
+}
+
+export function playIncrementSound() {
+  playTone(220)
+}
+
+/** Une quarte juste plus bas que l'incrément (220 * 3/4 = 165) : un
+ * intervalle musical net, assez distinct à l'oreille pour se reconnaître
+ * comme "l'inverse" du tock d'incrément plutôt qu'une simple redite. */
+export function playDecrementSound() {
+  playTone(165)
 }
