@@ -3,6 +3,7 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import App from './App'
 import { encodeCountersToParam } from './sync'
 import { COLORS } from './colors'
+import { useRemoteSync } from './hooks/useRemoteSync'
 import type { Counter } from './types'
 
 vi.mock('qrcode', () => ({
@@ -10,6 +11,17 @@ vi.mock('qrcode', () => ({
     toDataURL: vi.fn().mockResolvedValue('data:image/png;base64,fake'),
   },
 }))
+
+// Enveloppe l'implémentation réelle (délègue à elle par défaut, donc n'affecte
+// aucun autre test) : sert uniquement à intercepter le callback
+// `onRemoteUpdate` passé par App.tsx, pour le déclencher directement plutôt
+// que de simuler un aller-retour réseau complet (déjà couvert au niveau du
+// hook dans useRemoteSync.test.ts, et bout en bout en e2e).
+vi.mock('./hooks/useRemoteSync', async () => {
+  const actual = await vi.importActual<typeof import('./hooks/useRemoteSync')>('./hooks/useRemoteSync')
+  return { ...actual, useRemoteSync: vi.fn(actual.useRemoteSync) }
+})
+const defaultUseRemoteSyncImpl = vi.mocked(useRemoteSync).getMockImplementation()!
 
 function makeCounter(overrides: Partial<Counter> = {}): Counter {
   return {
@@ -614,6 +626,32 @@ describe('App', () => {
       })
       expect(screen.getByText('Déjà là')).toBeInTheDocument()
       expect(screen.getByText('Ajouté')).toBeInTheDocument()
+    })
+  })
+
+  describe('notification de mise à jour à distance', () => {
+    afterEach(() => {
+      vi.mocked(useRemoteSync).mockImplementation(defaultUseRemoteSyncImpl)
+    })
+
+    it("affiche un message quand useRemoteSync signale une mise à jour reçue d'un autre appareil, qui disparaît après le délai", () => {
+      vi.useFakeTimers({ shouldAdvanceTime: true })
+      let triggerRemoteUpdate: (() => void) | undefined
+      vi.mocked(useRemoteSync).mockImplementation((_workerUrl, _counters, _setCounters, onRemoteUpdate) => {
+        triggerRemoteUpdate = onRemoteUpdate
+        return { code: null, status: 'disabled', errorMessage: null, createCode: async () => false, joinCode: async () => 'error', disable: () => {} }
+      })
+
+      render(<App />)
+      act(() => {
+        triggerRemoteUpdate?.()
+      })
+      expect(screen.getByText('Compteurs mis à jour depuis un autre appareil')).toBeInTheDocument()
+
+      act(() => {
+        vi.advanceTimersByTime(4100)
+      })
+      expect(screen.queryByText('Compteurs mis à jour depuis un autre appareil')).not.toBeInTheDocument()
     })
   })
 
