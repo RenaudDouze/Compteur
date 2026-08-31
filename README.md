@@ -1,20 +1,50 @@
 # +1
 
 Application web (PWA) pour gérer plusieurs compteurs indépendants, à installer sur
-téléphone ou tablette et utiliser 100% en local (aucun serveur, aucune donnée envoyée
-en ligne — tout est stocké dans le `localStorage` de l'appareil).
+téléphone ou tablette. Fonctionne 100% hors-ligne : les compteurs vivent dans le
+`localStorage` de l'appareil, sans compte ni serveur — la synchronisation entre
+appareils (optionnelle) est le seul point qui parle au réseau.
 
 ## Fonctionnalités
 
-- Plusieurs compteurs distincts, affichés en même temps dans une grille.
-- Incrément (`+`) et décrément (`−`) de 1.
-- Renommage d'un compteur (toucher son nom).
-- Suppression avec confirmation (toucher deux fois le bouton `✕`).
-- Effet de défilement façon odomètre sur les chiffres à chaque changement.
-- Persistance locale : les compteurs restent après fermeture de l'app.
-- Installable comme application (PWA), utilisable hors-ligne.
-- Panneau « ⚙ Personnaliser » par compteur (couleur, image de fond, probabilité,
-  date de début, partage), pour garder la carte épurée.
+**Compteurs**
+- Plusieurs compteurs distincts, affichés en même temps dans une grille, réordonnables
+  par glisser-déposer.
+- Incrément/décrément, avec un pas personnalisable (pas seulement ±1) et un appui long
+  pour incrémenter en rafale.
+- Objectif optionnel avec petite animation de célébration une fois atteint.
+- Probabilité de réussite : suit combien de tentatives ont réussi, avec la statistique
+  affichée sur la carte.
+- Épingler un compteur pour le faire remonter en tête de liste.
+- Renommage (toucher le nom), duplication, suppression avec confirmation.
+- 6 styles d'affichage du chiffre au choix : odomètre, volets, 7 segments, anneau,
+  éditorial, pastille — chacun avec sa propre animation.
+- Couleur et image de fond personnalisables par compteur.
+- Mode plein écran pour se concentrer sur un seul compteur.
+
+**Historique**
+- Mini-graphique (sparkline) et historique détaillé des valeurs dans le temps.
+- Export de l'historique en CSV.
+
+**Organisation**
+- Recherche/filtre discret des compteurs par nom.
+- Archivage (masque un compteur sans le supprimer, avec sa propre vue dédiée) ;
+  verrouillage optionnel des compteurs archivés contre les modifications accidentelles.
+
+**Partage et synchronisation entre appareils**
+- Lien ou QR code de partage (compressé) pour transférer l'état de tes compteurs vers
+  un autre appareil, ou fichier de sauvegarde JSON à importer/exporter.
+- Code de synchronisation à 8 caractères (optionnel, nécessite un petit worker
+  Cloudflare — voir `worker/README.md`) : synchronise automatiquement l'état entre
+  plusieurs appareils en tâche de fond, avec notification quand des changements
+  arrivent d'un autre appareil.
+
+**Autres**
+- Effet de défilement façon odomètre et son à l'incrément, retour visuel type toast
+  pour les actions annulables et les événements de synchronisation.
+- Thème clair/sombre/automatique.
+- Installable comme application (PWA), avec raccourcis d'app et fonctionnement garanti
+  hors-ligne.
 
 ## Développement
 
@@ -55,9 +85,11 @@ npm run preview
   sur l'ensemble du code source.
 - **Mutation testing** : seuil 100%, mais scopé volontairement aux modules de
   logique pure sans JSX/animation (`src/odds.ts`, `src/date.ts`, `src/sync.ts`,
-  `src/share.ts`, `src/id.ts`, `src/url.ts`, `src/colors.ts`) — un score de 100% strict sur les composants
-  React (drag & drop, animations, QR code...) n'est pas un objectif réaliste
-  (mutants équivalents, contenu visuel difficile à mutation-tester utilement).
+  `src/remoteSync.ts`, `src/share.ts`, `src/id.ts`, `src/url.ts`, `src/colors.ts`,
+  `src/history.ts`, `src/sound.ts`, `src/reorder.ts`) — un score de 100% strict sur
+  les composants React (drag & drop, animations, QR code...) n'est pas un objectif
+  réaliste (mutants équivalents, contenu visuel difficile à mutation-tester
+  utilement).
 - **Tests fonctionnels** : `e2e/` couvre les parcours de base, les
   fonctionnalités avancées (probabilité, date, glisser-déposer), la
   synchronisation/partage, et le fonctionnement PWA/hors-ligne.
@@ -74,3 +106,11 @@ sont pas au vert, active les *required status checks* du dépôt :
 `Linter`, `Vérification des types`, `Tests unitaires + couverture`, `Tests
 fonctionnels (Playwright)`, `Mutation testing (logique pure)` et `Build de
 production`.
+
+## Déploiement
+
+- `.github/workflows/deploy.yml` construit et publie l'app sur GitHub Pages à
+  chaque push sur `main`.
+- `.github/workflows/worker-deploy.yml` déploie le worker de synchro Cloudflare à
+  chaque changement sous `worker/` poussé sur `main` (voir `worker/README.md` pour
+  la configuration initiale et les secrets requis).
