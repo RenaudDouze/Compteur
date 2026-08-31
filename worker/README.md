@@ -89,3 +89,15 @@ Une seule valeur par code, sous la clé `sync:<CODE>` :
 - Un code inutilisé pendant 180 jours expire et libère sa place.
 - Aucune donnée personnelle n'est demandée : le code lui-même (8 caractères,
   ~500 milliards de combinaisons) fait office de secret partagé.
+
+## Limitation de débit
+
+Chaque IP est plafonnée à 60 requêtes par minute (tous types confondus :
+création, lecture, écriture), au-delà le worker répond `429` avec un en-tête
+`Retry-After`. Le préflight CORS (`OPTIONS`) n'est jamais compté. Ce quota est
+largement suffisant pour un usage normal — le sondage côté app tourne toutes
+les 20s — mais dissuade un script qui bouclerait sur `POST /api/sync` (création
+de codes en masse) ou sur `PUT /api/sync/:code` (poussées en boucle). Compteur
+tenu dans le même espace KV (`SYNC_KV`), par fenêtre fixe d'une minute : pas de
+garantie stricte sous forte concurrence, mais suffisant pour dissuader un abus
+scripté sans dépendre d'un Object Durable.
