@@ -195,4 +195,26 @@ test.describe('Synchronisation via code (worker)', () => {
     await expect(page.getByText('Depuis le cloud', { exact: true })).toBeVisible()
     expect(worker.current?.version).toBe(3)
   })
+
+  test("ne réaffiche pas la notification en rechargeant la page sur l'appareil qui vient lui-même de pousser en dernier", async ({
+    page,
+  }) => {
+    await mockWorker(page)
+    await addCounter(page)
+    await openMenu(page)
+    await page.getByRole('button', { name: 'Synchroniser', exact: true }).click()
+    await page.getByRole('button', { name: 'Nouveau code' }).click()
+    await expect(page.getByText('Synchronisé ✓')).toBeVisible()
+    await page.getByRole('button', { name: 'Fermer' }).click()
+
+    // Recharge sans qu'aucun autre appareil n'ait rien poussé entre-temps :
+    // la version distante au premier sondage après rechargement est
+    // exactement celle que cet appareil a lui-même écrite en dernier.
+    await page.reload()
+    // Laisse le temps au premier sondage après rechargement de se terminer
+    // (réponse quasi instantanée, simulée) avant de vérifier l'absence de
+    // notification.
+    await page.waitForTimeout(500)
+    await expect(page.getByText('Compteurs mis à jour depuis un autre appareil')).not.toBeVisible()
+  })
 })
