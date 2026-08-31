@@ -1,5 +1,7 @@
 import { useRef, useState } from 'react'
 import { buildShareText } from '../share'
+import { counterShareImageBlob } from '../shareCard'
+import { triggerDownload } from '../sync'
 import { Modal } from './Modal'
 import { PanelNav } from './PanelNav'
 import type { PanelKind } from './PanelNav'
@@ -28,6 +30,9 @@ export function CounterActionsPanel({
   const shareTimer = useRef<ReturnType<typeof setTimeout> | undefined>(undefined)
   const [confirmDelete, setConfirmDelete] = useState(false)
   const confirmTimer = useRef<ReturnType<typeof setTimeout> | undefined>(undefined)
+  const [sharingImage, setSharingImage] = useState(false)
+  const [imageShareError, setImageShareError] = useState(false)
+  const imageShareErrorTimer = useRef<ReturnType<typeof setTimeout> | undefined>(undefined)
 
   const handleShare = async () => {
     const text = buildShareText(counter)
@@ -46,6 +51,32 @@ export function CounterActionsPanel({
       shareTimer.current = setTimeout(() => setShared(false), 2000)
     } catch {
       // copie impossible (permissions navigateur) : on ignore silencieusement
+    }
+  }
+
+  const handleShareImage = async () => {
+    setSharingImage(true)
+    try {
+      const blob = await counterShareImageBlob(counter)
+      if (!blob) {
+        setImageShareError(true)
+        clearTimeout(imageShareErrorTimer.current)
+        imageShareErrorTimer.current = setTimeout(() => setImageShareError(false), 2500)
+        return
+      }
+      const filename = `${counter.name.replace(/[^a-zA-Z0-9-_]+/g, '-') || 'compteur'}.png`
+      const file = new File([blob], filename, { type: 'image/png' })
+      if (navigator.canShare?.({ files: [file] })) {
+        try {
+          await navigator.share({ files: [file] })
+        } catch {
+          // partage annulé par l'utilisateur : rien à faire
+        }
+        return
+      }
+      triggerDownload(blob, filename)
+    } finally {
+      setSharingImage(false)
     }
   }
 
@@ -79,6 +110,9 @@ export function CounterActionsPanel({
       <section className="modal-section">
         <button className="modal-btn" onClick={handleShare}>
           {shared ? 'Copié ✓' : '⇪ Partager ce compteur'}
+        </button>
+        <button className="modal-btn" onClick={handleShareImage} disabled={sharingImage}>
+          {imageShareError ? 'Erreur ✗' : sharingImage ? 'Génération…' : '🖼 Partager en image'}
         </button>
         <button className="modal-btn" onClick={handleDuplicate}>
           ⧉ Dupliquer ce compteur

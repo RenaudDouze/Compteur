@@ -3,7 +3,7 @@ import { makeId } from './id'
 import type { Counter, CounterAppearance, CounterBehavior, DisplayStyle, HistoryPoint } from './types'
 
 /** Déclenche le téléchargement d'un blob sous le nom de fichier donné. */
-function triggerDownload(blob: Blob, filename: string) {
+export function triggerDownload(blob: Blob, filename: string) {
   const url = URL.createObjectURL(blob)
   const a = document.createElement('a')
   a.href = url
