@@ -337,6 +337,114 @@ describe('App', () => {
       })
       expect(screen.queryByRole('button', { name: 'Annuler' })).not.toBeInTheDocument()
     })
+
+    // Cible une carte précise par son nom plutôt que par position, et scope
+    // la modale à son titre (« Actions « Nom » ») : une carte tout juste
+    // supprimée reste montée le temps de son animation de sortie
+    // (AnimatePresence), avec sa propre modale « Actions » toujours ouverte
+    // (fermée uniquement via le bouton dédié, jamais par la suppression
+    // elle-même) — un index ou une recherche non scopée seraient ambigus
+    // entre cette carte/modale fantôme et celle qui reste.
+    function actionsButtonFor(name: string) {
+      const card = screen.getByText(name).closest('.counter-card')
+      return within(card as HTMLElement).getByRole('button', { name: 'Actions du compteur' })
+    }
+
+    function deleteCounterNamed(name: string) {
+      fireEvent.click(actionsButtonFor(name))
+      const modal = screen.getByRole('heading', { name: `Actions « ${name} »` }).closest('.modal-panel') as HTMLElement
+      fireEvent.click(within(modal).getByText('🗑 Supprimer ce compteur'))
+      fireEvent.click(within(modal).getByText('✓ Confirmer la suppression'))
+    }
+
+    it('empile plusieurs suppressions consécutives, annulables une à une dans l’ordre inverse', () => {
+      render(<App />)
+      fireEvent.click(screen.getByRole('button', { name: '+ Nouveau compteur' }))
+      fireEvent.change(screen.getByDisplayValue('Compteur 1'), { target: { value: 'Premier' } })
+      fireEvent.keyDown(screen.getByDisplayValue('Premier'), { key: 'Enter' })
+      fireEvent.click(screen.getByRole('button', { name: '+ Nouveau compteur' }))
+      fireEvent.change(screen.getByDisplayValue('Compteur 2'), { target: { value: 'Second' } })
+      fireEvent.keyDown(screen.getByDisplayValue('Second'), { key: 'Enter' })
+
+      deleteCounterNamed('Premier')
+      expect(screen.getByText('Compteur « Premier » supprimé')).toBeInTheDocument()
+
+      deleteCounterNamed('Second')
+      // La pile contient deux actions : le libellé affiché est celui de la
+      // plus récente, et le bouton indique le nombre d'actions empilées.
+      expect(screen.getByText('Compteur « Second » supprimé')).toBeInTheDocument()
+      expect(screen.getByRole('button', { name: 'Annuler (2)' })).toBeInTheDocument()
+
+      fireEvent.click(screen.getByRole('button', { name: 'Annuler (2)' }))
+      expect(screen.getByText('Second')).toBeInTheDocument()
+      expect(screen.queryByText('Premier')).not.toBeInTheDocument()
+      // Il reste une action à annuler : le message ne disparaît pas.
+      expect(screen.getByText('Compteur « Premier » supprimé')).toBeInTheDocument()
+      expect(screen.getByRole('button', { name: 'Annuler' })).toBeInTheDocument()
+
+      fireEvent.click(screen.getByRole('button', { name: 'Annuler' }))
+      expect(screen.getByText('Premier')).toBeInTheDocument()
+      expect(screen.getByText('Second')).toBeInTheDocument()
+      expect(screen.queryByRole('button', { name: /Annuler/ })).not.toBeInTheDocument()
+    })
+
+    it('relance le délai à chaque nouvelle action empilée, plutôt que de le laisser filer depuis la première', () => {
+      vi.useFakeTimers({ shouldAdvanceTime: true })
+      render(<App />)
+      fireEvent.click(screen.getByRole('button', { name: '+ Nouveau compteur' }))
+      fireEvent.change(screen.getByDisplayValue('Compteur 1'), { target: { value: 'Premier' } })
+      fireEvent.keyDown(screen.getByDisplayValue('Premier'), { key: 'Enter' })
+      fireEvent.click(screen.getByRole('button', { name: '+ Nouveau compteur' }))
+      fireEvent.change(screen.getByDisplayValue('Compteur 2'), { target: { value: 'Second' } })
+      fireEvent.keyDown(screen.getByDisplayValue('Second'), { key: 'Enter' })
+
+      deleteCounterNamed('Premier')
+
+      act(() => {
+        vi.advanceTimersByTime(4000)
+      })
+      // Toujours dans les 5s de la première suppression : une seconde
+      // relance le délai plutôt que d'expirer avec elle.
+      deleteCounterNamed('Second')
+      expect(screen.getByRole('button', { name: 'Annuler (2)' })).toBeInTheDocument()
+
+      act(() => {
+        vi.advanceTimersByTime(4000)
+      })
+      // 8s après la première action mais seulement 4s après la seconde :
+      // le message reste affiché, le délai a bien été relancé.
+      expect(screen.getByRole('button', { name: 'Annuler (2)' })).toBeInTheDocument()
+
+      act(() => {
+        vi.advanceTimersByTime(1100)
+      })
+      expect(screen.queryByRole('button', { name: /Annuler/ })).not.toBeInTheDocument()
+    })
+
+    it("expire aussi la dernière action restante, une fois le reste de la pile annulé", () => {
+      vi.useFakeTimers({ shouldAdvanceTime: true })
+      render(<App />)
+      fireEvent.click(screen.getByRole('button', { name: '+ Nouveau compteur' }))
+      fireEvent.change(screen.getByDisplayValue('Compteur 1'), { target: { value: 'Premier' } })
+      fireEvent.keyDown(screen.getByDisplayValue('Premier'), { key: 'Enter' })
+      fireEvent.click(screen.getByRole('button', { name: '+ Nouveau compteur' }))
+      fireEvent.change(screen.getByDisplayValue('Compteur 2'), { target: { value: 'Second' } })
+      fireEvent.keyDown(screen.getByDisplayValue('Second'), { key: 'Enter' })
+
+      deleteCounterNamed('Premier')
+      deleteCounterNamed('Second')
+      expect(screen.getByRole('button', { name: 'Annuler (2)' })).toBeInTheDocument()
+
+      // Il ne reste qu'une action après ce clic : le délai est relancé pour
+      // elle aussi, pas seulement pour un empilement de plusieurs actions.
+      fireEvent.click(screen.getByRole('button', { name: 'Annuler (2)' }))
+      expect(screen.getByRole('button', { name: 'Annuler' })).toBeInTheDocument()
+
+      act(() => {
+        vi.advanceTimersByTime(5100)
+      })
+      expect(screen.queryByRole('button', { name: /Annuler/ })).not.toBeInTheDocument()
+    })
   })
 
   describe('thème', () => {
