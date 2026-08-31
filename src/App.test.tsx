@@ -51,7 +51,9 @@ function makeCounter(overrides: Partial<Counter> = {}): Counter {
 // défaut : chaque test qui les exerce doit d'abord l'ouvrir. « + Nouveau
 // compteur » reste hors menu, toujours visible : inutile de l'ouvrir pour lui.
 function openMenu() {
-  const trigger = screen.queryByRole('button', { name: 'Ouvrir le menu' })
+  // Préfixe seul (regex) : le libellé complet gagne un suffixe quand la
+  // synchro est en erreur (voir "indicateur d'erreur de synchro...").
+  const trigger = screen.queryByRole('button', { name: /^Ouvrir le menu/ })
   if (trigger) fireEvent.click(trigger)
 }
 
@@ -774,6 +776,63 @@ describe('App', () => {
         vi.advanceTimersByTime(4100)
       })
       expect(screen.queryByText('Compteurs mis à jour depuis un autre appareil')).not.toBeInTheDocument()
+    })
+  })
+
+  describe('indicateur d\'erreur de synchro visible en dehors de la modale', () => {
+    afterEach(() => {
+      vi.mocked(useRemoteSync).mockImplementation(defaultUseRemoteSyncImpl)
+    })
+
+    it("marque le bouton du menu quand la synchro est en erreur, sans avoir à ouvrir la modale Synchroniser", () => {
+      vi.mocked(useRemoteSync).mockReturnValue({
+        code: 'ABCDEFGH',
+        status: 'error',
+        errorMessage: 'Failed to fetch',
+        createCode: async () => false,
+        joinCode: async () => 'error',
+        disable: () => {},
+      })
+
+      render(<App />)
+
+      const menuBtn = screen.getByRole('button', { name: 'Ouvrir le menu (erreur de synchronisation)' })
+      expect(menuBtn).toHaveClass('icon-btn--alert')
+    })
+
+    it("marque aussi le bouton Synchroniser du menu déroulant quand la synchro est en erreur", () => {
+      vi.mocked(useRemoteSync).mockReturnValue({
+        code: 'ABCDEFGH',
+        status: 'error',
+        errorMessage: 'Failed to fetch',
+        createCode: async () => false,
+        joinCode: async () => 'error',
+        disable: () => {},
+      })
+
+      render(<App />)
+      openMenu()
+
+      const syncBtn = screen.getByRole('button', { name: 'Synchroniser (erreur de synchronisation)' })
+      expect(syncBtn).toHaveClass('icon-btn--alert')
+    })
+
+    it("n'affiche aucun indicateur quand la synchro n'est pas en erreur", () => {
+      vi.mocked(useRemoteSync).mockReturnValue({
+        code: 'ABCDEFGH',
+        status: 'synced',
+        errorMessage: null,
+        createCode: async () => false,
+        joinCode: async () => 'error',
+        disable: () => {},
+      })
+
+      render(<App />)
+      openMenu()
+
+      expect(screen.getByRole('button', { name: 'Masquer le menu' })).not.toHaveClass('icon-btn--alert')
+      expect(screen.getByRole('button', { name: 'Synchroniser' })).not.toHaveClass('icon-btn--alert')
+      expect(screen.queryByRole('button', { name: /erreur de synchronisation/ })).not.toBeInTheDocument()
     })
   })
 

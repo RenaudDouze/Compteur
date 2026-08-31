@@ -65,10 +65,25 @@
 }
 
 .icon-btn {
+  position: relative;
   display: inline-flex;
   align-items: center;
   justify-content: center;
   padding: 10px 14px;
+}
+
+/* Signale une erreur de synchro sans avoir à ouvrir le menu puis la modale
+   Synchroniser pour s'en apercevoir (visible dès l'en-tête). */
+.icon-btn--alert::after {
+  content: '';
+  position: absolute;
+  top: 6px;
+  right: 8px;
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: #dc2626;
+  border: 1.5px solid var(--surface);
 }
 
 /* Seul point de sortie du mode plein écran : reste donc toujours visible
