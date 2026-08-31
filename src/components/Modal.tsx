@@ -1,6 +1,7 @@
-import { useEffect } from 'react'
+import { useEffect, useId } from 'react'
 import { createPortal } from 'react-dom'
 import { CloseIcon } from './icons'
+import { useFocusTrap } from '../hooks/useFocusTrap'
 
 interface ModalProps {
   title: string
@@ -10,8 +11,12 @@ interface ModalProps {
 }
 
 /** Coquille commune à toutes les modales de la carte (portail, superposition,
- * fermeture au clic hors panneau/à Échap, en-tête avec titre + croix). */
+ * fermeture au clic hors panneau/à Échap, en-tête avec titre + croix, focus
+ * piégé dans le panneau tant qu'elle reste ouverte). */
 export function Modal({ title, onClose, accentColor, children }: ModalProps) {
+  const titleId = useId()
+  const panelRef = useFocusTrap<HTMLDivElement>()
+
   useEffect(() => {
     const onKeyDown = (e: KeyboardEvent) => {
       if (e.key === 'Escape') onClose()
@@ -36,7 +41,12 @@ export function Modal({ title, onClose, accentColor, children }: ModalProps) {
           "Fermer") atteindrait quand même le suivi de tap de la carte et
           l'incrémenterait à tort. */}
       <div
+        ref={panelRef}
         className="modal-panel"
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby={titleId}
+        tabIndex={-1}
         // Le panneau est un portail hors de la carte : il n'hérite pas de la
         // variable --accent posée sur `.counter-card`. Les aperçus de style
         // (anneau, pastille) et le pourcentage en dépendent pour refléter la
@@ -46,7 +56,7 @@ export function Modal({ title, onClose, accentColor, children }: ModalProps) {
         onPointerDown={(e) => e.stopPropagation()}
       >
         <div className="modal-panel-header">
-          <h2>{title}</h2>
+          <h2 id={titleId}>{title}</h2>
           <button className="modal-close" onClick={onClose} aria-label="Fermer" title="Fermer">
             <CloseIcon />
           </button>

@@ -483,4 +483,31 @@ describe('SyncPanel', () => {
       expect(screen.queryByText(/reste pratique même quand ce lien devient long/)).not.toBeInTheDocument()
     })
   })
+
+  describe('accessibilité', () => {
+    it('expose le panneau comme une boîte de dialogue modale, nommée par son titre', () => {
+      render(<SyncPanel counters={[]} onClose={vi.fn()} onImport={vi.fn()} remoteSync={makeRemoteSync()} />)
+      const panel = screen.getByRole('dialog', { name: 'Synchroniser mes compteurs' })
+      expect(panel).toHaveAttribute('aria-modal', 'true')
+    })
+
+    it('déplace le focus dans le panneau à l’ouverture (sur son premier élément focusable)', () => {
+      render(<SyncPanel counters={[]} onClose={vi.fn()} onImport={vi.fn()} remoteSync={makeRemoteSync()} />)
+      expect(screen.getByRole('button', { name: 'Fermer' })).toHaveFocus()
+    })
+
+    it('rend le focus à l’élément qui l’avait avant l’ouverture, une fois la modale fermée', () => {
+      const trigger = document.createElement('button')
+      trigger.textContent = 'Ouvrir'
+      document.body.appendChild(trigger)
+      trigger.focus()
+
+      const { unmount } = render(<SyncPanel counters={[]} onClose={vi.fn()} onImport={vi.fn()} remoteSync={makeRemoteSync()} />)
+      expect(trigger).not.toHaveFocus()
+
+      unmount()
+      expect(trigger).toHaveFocus()
+      trigger.remove()
+    })
+  })
 })
