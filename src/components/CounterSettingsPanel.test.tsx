@@ -54,12 +54,6 @@ describe('CounterSettingsPanel', () => {
     expect(onNavigate).toHaveBeenCalledWith('comportement')
   })
 
-  it('navigue vers le panneau "Historique" au clic sur le lien dédié', () => {
-    const { onNavigate } = renderPanel()
-    fireEvent.click(screen.getByRole('button', { name: 'Historique' }))
-    expect(onNavigate).toHaveBeenCalledWith('historique')
-  })
-
   it('navigue vers le panneau "Actions" au clic sur le lien dédié', () => {
     const { onNavigate } = renderPanel()
     fireEvent.click(screen.getByRole('button', { name: 'Actions' }))

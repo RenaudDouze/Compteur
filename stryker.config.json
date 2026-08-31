@@ -20,7 +20,6 @@
     "src/id.ts",
     "src/url.ts",
     "src/colors.ts",
-    "src/history.ts",
     "src/sound.ts",
     "src/reorder.ts",
     "src/notifications.ts",

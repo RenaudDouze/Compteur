@@ -495,17 +495,9 @@ describe('CounterCard', () => {
       expect(screen.getByText('Valeur & réglages « Mon compteur »')).toBeInTheDocument()
     })
 
-    it('ouvre puis ferme le panneau "Historique" depuis la personnalisation', () => {
-      renderCard({ name: 'Mon compteur' })
-      fireEvent.click(screen.getByRole('button', { name: 'Personnaliser le compteur' }))
-      fireEvent.click(screen.getByRole('button', { name: 'Historique' }))
-      expect(screen.getByText('Historique « Mon compteur »')).toBeInTheDocument()
-      fireEvent.click(screen.getByRole('button', { name: 'Fermer' }))
-      expect(screen.queryByText('Historique « Mon compteur »')).not.toBeInTheDocument()
-    })
   })
 
-  describe('icônes d\'accès direct (comportement, historique, actions)', () => {
+  describe('icônes d\'accès direct (comportement, actions)', () => {
     it('ouvre directement le panneau "Valeur & réglages" au clic sur ±', () => {
       renderCard({ name: 'Mon compteur' })
       fireEvent.click(screen.getByRole('button', { name: 'Régler le comportement du compteur' }))
@@ -521,24 +513,6 @@ describe('CounterCard', () => {
     it("pointerdown sur ± n'incrémente pas le compteur", () => {
       const { onChange } = renderCard()
       fireEvent.pointerDown(screen.getByRole('button', { name: 'Régler le comportement du compteur' }))
-      expect(onChange).not.toHaveBeenCalled()
-    })
-
-    it('ouvre directement le panneau "Historique" au clic sur ↗', () => {
-      renderCard({ name: 'Mon compteur' })
-      fireEvent.click(screen.getByRole('button', { name: "Voir l'historique du compteur" }))
-      expect(screen.getByText('Historique « Mon compteur »')).toBeInTheDocument()
-    })
-
-    it("le clic sur ↗ n'incrémente pas le compteur", () => {
-      const { onChange } = renderCard()
-      fireEvent.click(screen.getByRole('button', { name: "Voir l'historique du compteur" }))
-      expect(onChange).not.toHaveBeenCalled()
-    })
-
-    it("pointerdown sur ↗ n'incrémente pas le compteur", () => {
-      const { onChange } = renderCard()
-      fireEvent.pointerDown(screen.getByRole('button', { name: "Voir l'historique du compteur" }))
       expect(onChange).not.toHaveBeenCalled()
     })
 
@@ -1019,7 +993,7 @@ describe('CounterCard', () => {
       expect(screen.getByRole('button', { name: 'Figé, archivé, lecture seule' })).toBeInTheDocument()
     })
 
-    it('laisse les icônes de réglage accessibles (personnalisation, comportement, historique, actions)', () => {
+    it('laisse les icônes de réglage accessibles (personnalisation, comportement, actions)', () => {
       renderCard({ archived: true, name: 'Figé' })
       fireEvent.click(screen.getByRole('button', { name: 'Actions du compteur' }))
       expect(screen.getByText('Actions « Figé »')).toBeInTheDocument()

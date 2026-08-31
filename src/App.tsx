@@ -19,7 +19,6 @@ import {
 } from './components/icons'
 import { decodeCountersFromParam, migrateStoredCounter } from './sync'
 import { mergeVisibleOrder } from './reorder'
-import { appendHistoryPoint } from './history'
 import { makeId } from './id'
 import { COLORS, pickColor } from './colors'
 import { getNotificationPermission, requestNotificationPermission, showLocalNotification } from './notifications'
@@ -301,7 +300,6 @@ export default function App() {
       name: `Compteur ${counters.length + 1}`,
       count: 0,
       createdAt: Date.now(),
-      history: appendHistoryPoint(undefined, 0),
       behavior: {},
       appearance: { color: pickColor(counters.length) },
     }
@@ -338,19 +336,13 @@ export default function App() {
   }
 
   const updateCount = (id: string, delta: number) => {
-    setCounters((prev) =>
-      prev.map((c) =>
-        c.id === id ? { ...c, count: c.count + delta, history: appendHistoryPoint(c.history, c.count + delta) } : c
-      )
-    )
+    setCounters((prev) => prev.map((c) => (c.id === id ? { ...c, count: c.count + delta } : c)))
   }
 
   const setCount = (id: string, count: number) => {
     const target = counters.find((c) => c.id === id)!
     if (target.count !== count) pushUndo(`Valeur de « ${target.name} » modifiée`)
-    setCounters((prev) =>
-      prev.map((c) => (c.id === id ? { ...c, count, history: appendHistoryPoint(c.history, count) } : c))
-    )
+    setCounters((prev) => prev.map((c) => (c.id === id ? { ...c, count } : c)))
   }
 
   const deleteCounter = (id: string) => {
@@ -371,7 +363,6 @@ export default function App() {
       name: `${source.name} (copie)`,
       count: 0,
       createdAt: Date.now(),
-      history: appendHistoryPoint(undefined, 0),
       archived: undefined,
       archivedAt: undefined,
       behavior: { ...source.behavior, startDate: undefined },

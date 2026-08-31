@@ -22,10 +22,6 @@ appareils (optionnelle) est le seul point qui parle au réseau.
 - Couleur et image de fond personnalisables par compteur.
 - Mode plein écran pour se concentrer sur un seul compteur.
 
-**Historique**
-- Mini-graphique (sparkline) et historique détaillé des valeurs dans le temps.
-- Export de l'historique en CSV.
-
 **Organisation**
 - Recherche/filtre discret des compteurs par nom.
 - Archivage (masque un compteur sans le supprimer, avec sa propre vue dédiée) ;
@@ -86,7 +82,7 @@ npm run preview
 - **Mutation testing** : seuil 100%, mais scopé volontairement aux modules de
   logique pure sans JSX/animation (`src/odds.ts`, `src/date.ts`, `src/sync.ts`,
   `src/remoteSync.ts`, `src/share.ts`, `src/id.ts`, `src/url.ts`, `src/colors.ts`,
-  `src/history.ts`, `src/sound.ts`, `src/reorder.ts`) — un score de 100% strict sur
+  `src/sound.ts`, `src/reorder.ts`) — un score de 100% strict sur
   les composants React (drag & drop, animations, QR code...) n'est pas un objectif
   réaliste (mutants équivalents, contenu visuel difficile à mutation-tester
   utilement).

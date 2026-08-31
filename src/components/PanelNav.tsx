@@ -1,12 +1,11 @@
-/** Identifie l'une des 4 modales de personnalisation d'un compteur. */
-export type PanelKind = 'personnalisation' | 'comportement' | 'historique' | 'actions'
+/** Identifie l'une des 3 modales de personnalisation d'un compteur. */
+export type PanelKind = 'personnalisation' | 'comportement' | 'actions'
 
-const PANEL_ORDER: PanelKind[] = ['comportement', 'personnalisation', 'historique', 'actions']
+const PANEL_ORDER: PanelKind[] = ['comportement', 'personnalisation', 'actions']
 
 const PANEL_LABELS: Record<PanelKind, string> = {
   personnalisation: 'Personnalisation',
   comportement: 'Valeur & réglages',
-  historique: 'Historique',
   actions: 'Actions',
 }
 
@@ -15,7 +14,7 @@ interface PanelNavProps {
   onNavigate: (panel: PanelKind) => void
 }
 
-/** Liens discrets vers les 3 autres modales, affichés en bas de chacune sur
+/** Liens discrets vers les 2 autres modales, affichés en bas de chacune sur
  * une seule ligne : permet de passer de l'une à l'autre sans repasser par la
  * carte, sans pour autant rivaliser visuellement avec les actions propres à
  * la modale (volontairement plus sobres que des `.modal-btn`). */
