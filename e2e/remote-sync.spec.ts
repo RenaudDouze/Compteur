@@ -174,7 +174,10 @@ test.describe('Synchronisation via code (worker)', () => {
     })
     await page.locator('.counter-card').click()
 
-    await expect(page.getByText('Compteurs mis à jour depuis un autre appareil')).toBeVisible()
+    // La poussée déclenchée par ce changement local attend le délai de
+    // regroupement (5s, voir PUSH_DEBOUNCE_MS) avant de partir : le délai
+    // d'attente par défaut de Playwright (5s) ne laisserait aucune marge.
+    await expect(page.getByText('Compteurs mis à jour depuis un autre appareil')).toBeVisible({ timeout: 10_000 })
     await expect(page.getByText('Depuis un autre appareil', { exact: true })).toBeVisible()
     expect(worker.current?.version).toBe(2)
   })
