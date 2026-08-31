@@ -23,7 +23,8 @@
     "src/history.ts",
     "src/sound.ts",
     "src/reorder.ts",
-    "src/notifications.ts"
+    "src/notifications.ts",
+    "src/shareCard.ts"
   ],
   "thresholds": {
     "high": 100,
