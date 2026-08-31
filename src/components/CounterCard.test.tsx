@@ -2,11 +2,12 @@ import { act, fireEvent, render, screen } from '@testing-library/react'
 import { Reorder } from 'framer-motion'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import { CounterCard } from './CounterCard'
-import { playIncrementSound } from '../sound'
+import { playDecrementSound, playIncrementSound } from '../sound'
 import type { Counter, CounterAppearance, CounterBehavior } from '../types'
 
 vi.mock('../sound', () => ({
   playIncrementSound: vi.fn(),
+  playDecrementSound: vi.fn(),
 }))
 
 const TEST_COLORS = ['#2563eb', '#7c3aed', '#0d9488']
@@ -659,14 +660,16 @@ describe('CounterCard', () => {
     })
   })
 
-  describe("son d'incrémentation", () => {
+  describe('son de comptage', () => {
     beforeEach(() => {
       vi.mocked(playIncrementSound).mockClear()
+      vi.mocked(playDecrementSound).mockClear()
     })
 
-    it('ne joue pas de son au montage initial', () => {
+    it('ne joue aucun son au montage initial', () => {
       renderCard({ count: 3 })
       expect(playIncrementSound).not.toHaveBeenCalled()
+      expect(playDecrementSound).not.toHaveBeenCalled()
     })
 
     it("joue un son après l'incrémentation, une fois la nouvelle valeur affichée (pas au clic)", () => {
@@ -710,7 +713,7 @@ describe('CounterCard', () => {
       expect(playIncrementSound).toHaveBeenCalledTimes(1)
     })
 
-    it('ne joue pas de son après une décrémentation', () => {
+    it("joue le son de décrémentation (pas celui d'incrémentation) après une décrémentation", () => {
       const counter = makeCounter({ count: 2 })
       const { rerender } = render(
         <Reorder.Group as="div" values={[counter]} onReorder={() => {}}>
@@ -744,6 +747,7 @@ describe('CounterCard', () => {
           />
         </Reorder.Group>
       )
+      expect(playDecrementSound).toHaveBeenCalledTimes(1)
       expect(playIncrementSound).not.toHaveBeenCalled()
     })
 
@@ -825,7 +829,7 @@ describe('CounterCard', () => {
       expect(playIncrementSound).toHaveBeenCalledTimes(1)
     })
 
-    it('déduit le sens depuis une nouvelle valeur définie via la modale Valeur & réglages (diminution → pas de son)', () => {
+    it('déduit le sens depuis une nouvelle valeur définie via la modale Valeur & réglages (diminution → son de décrémentation)', () => {
       const counter = makeCounter({ count: 5 })
       const { rerender } = render(
         <Reorder.Group as="div" values={[counter]} onReorder={() => {}}>
@@ -863,6 +867,7 @@ describe('CounterCard', () => {
           />
         </Reorder.Group>
       )
+      expect(playDecrementSound).toHaveBeenCalledTimes(1)
       expect(playIncrementSound).not.toHaveBeenCalled()
     })
   })

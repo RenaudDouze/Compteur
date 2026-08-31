@@ -193,3 +193,28 @@ describe('playIncrementSound', () => {
     }
   })
 })
+
+describe('playDecrementSound', () => {
+  beforeEach(() => {
+    vi.resetModules()
+    FakeAudioContext.instances = []
+  })
+
+  afterEach(() => {
+    vi.unstubAllGlobals()
+  })
+
+  it("joue une hauteur plus basse que l'incrément (une quarte en dessous), pour se distinguer à l'oreille", async () => {
+    vi.stubGlobal('AudioContext', FakeAudioContext)
+    const mod = await import('./sound')
+    mod.playDecrementSound()
+    const fake = FakeAudioContext.instances[0]
+    expect(fake.oscillators[0].frequency.calls).toEqual([{ method: 'setValueAtTime', value: 165, time: 0 }])
+  })
+
+  it('ne plante pas si Web Audio est indisponible', async () => {
+    vi.stubGlobal('AudioContext', undefined)
+    const mod = await import('./sound')
+    expect(() => mod.playDecrementSound()).not.toThrow()
+  })
+})
