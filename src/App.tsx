@@ -29,6 +29,7 @@ import './App.css'
 const SyncPanel = lazy(() => import('./components/SyncPanel').then((m) => ({ default: m.SyncPanel })))
 
 const UNDO_TIMEOUT_MS = 5000
+const SYNC_NOTICE_TIMEOUT_MS = 4000
 
 type ThemePreference = 'system' | 'light' | 'dark'
 
@@ -91,10 +92,21 @@ export default function App() {
   migrateCounterShape('+1.counters.v1')
 
   const [counters, setCounters] = useLocalStorage<Counter[]>('+1.counters.v1', [])
+  // Message éphémère affiché quand des compteurs arrivent d'un autre appareil
+  // pendant que l'app est déjà ouverte (voir `useRemoteSync`, `onRemoteUpdate`) :
+  // seul indice visible en dehors du panneau Synchroniser qu'une mise à jour
+  // vient d'être reçue.
+  const [syncNotice, setSyncNotice] = useState<string | null>(null)
+  const syncNoticeTimer = useRef<ReturnType<typeof setTimeout> | undefined>(undefined)
+  const showSyncNotice = () => {
+    setSyncNotice('Compteurs mis à jour depuis un autre appareil')
+    clearTimeout(syncNoticeTimer.current)
+    syncNoticeTimer.current = setTimeout(() => setSyncNotice(null), SYNC_NOTICE_TIMEOUT_MS)
+  }
   // Absent (fonctionnalité non configurée) tant que le worker de synchro n'a
   // pas été déployé et sa variable d'environnement renseignée au build — voir
   // worker/README.md. `useRemoteSync` reste alors inerte (aucun appel réseau).
-  const remoteSync = useRemoteSync(import.meta.env.VITE_SYNC_WORKER_URL, counters, setCounters)
+  const remoteSync = useRemoteSync(import.meta.env.VITE_SYNC_WORKER_URL, counters, setCounters, showSyncNotice)
   // Id du compteur qui vient d'être créé, pour ouvrir directement son champ
   // de nom en édition (voir `addCounter`). Remis à `null` juste après le
   // montage de la carte concernée : sans ça, un futur remontage de la même
@@ -538,6 +550,13 @@ export default function App() {
         <Suspense fallback={null}>
           <SyncPanel counters={counters} onClose={() => setSyncOpen(false)} onImport={handleImport} remoteSync={remoteSync} />
         </Suspense>
+      )}
+
+      {syncNotice && (
+        <div className="sync-toast" role="status">
+          <SyncIcon width={16} height={16} />
+          <span>{syncNotice}</span>
+        </div>
       )}
 
       {undo && (
