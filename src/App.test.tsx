@@ -262,7 +262,10 @@ describe('App', () => {
     fireEvent.click(screen.getByRole('button', { name: 'Actions' }))
     fireEvent.click(screen.getByRole('button', { name: '⧉ Dupliquer ce compteur' }))
 
-    expect(screen.getByDisplayValue('Compteur 1')).toBeInTheDocument()
+    // Le champ de nom du premier compteur s'était ouvert en édition à sa
+    // création (autoEdit) : l'ouverture de la modale Personnalisation juste
+    // après lui fait perdre le focus, ce qui valide/ferme cette édition.
+    expect(screen.getByText('Compteur 1')).toBeInTheDocument()
     expect(screen.getByText('Compteur 1 (copie)')).toBeInTheDocument()
     expect(document.querySelectorAll('.counter-value--flap')).toHaveLength(2)
     expect(document.querySelectorAll('.counter-value')[1]).toHaveTextContent('0')

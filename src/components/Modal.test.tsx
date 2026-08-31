@@ -75,4 +75,31 @@ describe('Modal', () => {
     fireEvent.keyDown(document, { key: 'Escape' })
     expect(onClose).not.toHaveBeenCalled()
   })
+
+  describe('accessibilité', () => {
+    it('expose le panneau comme une boîte de dialogue modale, nommée par son titre', () => {
+      renderModal({ title: 'Un titre précis' })
+      const panel = screen.getByRole('dialog', { name: 'Un titre précis' })
+      expect(panel).toHaveAttribute('aria-modal', 'true')
+    })
+
+    it('déplace le focus dans le panneau à l’ouverture (sur son premier élément focusable)', () => {
+      renderModal()
+      expect(screen.getByRole('button', { name: 'Fermer' })).toHaveFocus()
+    })
+
+    it('rend le focus à l’élément qui l’avait avant l’ouverture, une fois la modale fermée', () => {
+      const trigger = document.createElement('button')
+      trigger.textContent = 'Ouvrir'
+      document.body.appendChild(trigger)
+      trigger.focus()
+
+      const { unmount } = renderModal()
+      expect(trigger).not.toHaveFocus()
+
+      unmount()
+      expect(trigger).toHaveFocus()
+      trigger.remove()
+    })
+  })
 })

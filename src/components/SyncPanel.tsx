@@ -1,8 +1,9 @@
-import { useEffect, useRef, useState } from 'react'
+import { useEffect, useId, useRef, useState } from 'react'
 import QRCode from 'qrcode'
 import { buildShareUrl, downloadBackup, parseBackupJson } from '../sync'
 import { formatSyncCode } from '../remoteSync'
 import { CloseIcon } from './icons'
+import { useFocusTrap } from '../hooks/useFocusTrap'
 import type { UseRemoteSyncResult } from '../hooks/useRemoteSync'
 import type { Counter } from '../types'
 
@@ -33,6 +34,8 @@ const JOIN_OUTCOME_ERROR: Record<'invalid' | 'not-found' | 'error', string> = {
 const SHARE_URL_LONG_THRESHOLD = 300
 
 export function SyncPanel({ counters, onClose, onImport, remoteSync }: SyncPanelProps) {
+  const titleId = useId()
+  const panelRef = useFocusTrap<HTMLDivElement>()
   const fileInputRef = useRef<HTMLInputElement>(null)
   const [qrDataUrl, setQrDataUrl] = useState<string | null>(null)
   const [qrError, setQrError] = useState<string | null>(null)
@@ -120,9 +123,17 @@ export function SyncPanel({ counters, onClose, onImport, remoteSync }: SyncPanel
 
   return (
     <div className="modal-overlay" onClick={onClose}>
-      <div className="modal-panel" onClick={(e) => e.stopPropagation()}>
+      <div
+        ref={panelRef}
+        className="modal-panel"
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby={titleId}
+        tabIndex={-1}
+        onClick={(e) => e.stopPropagation()}
+      >
         <div className="modal-panel-header">
-          <h2>Synchroniser mes compteurs</h2>
+          <h2 id={titleId}>Synchroniser mes compteurs</h2>
           <button className="modal-close" onClick={onClose} aria-label="Fermer" title="Fermer">
             <CloseIcon />
           </button>
