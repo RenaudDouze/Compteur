@@ -484,7 +484,7 @@ describe('useRemoteSync', () => {
         result.current.setCounters(edited)
       })
       await act(async () => {
-        await vi.advanceTimersByTimeAsync(1_500)
+        await vi.advanceTimersByTimeAsync(5_000)
       })
 
       expect(pushSyncState).toHaveBeenCalledWith(WORKER_URL, 'ABCDEFGH', {
@@ -516,7 +516,7 @@ describe('useRemoteSync', () => {
         result.current.setCounters([makeCounter({ count: 2 })])
       })
       await act(async () => {
-        await vi.advanceTimersByTimeAsync(1_500)
+        await vi.advanceTimersByTimeAsync(5_000)
       })
 
       expect(pushSyncState).toHaveBeenCalledTimes(1)
@@ -539,7 +539,7 @@ describe('useRemoteSync', () => {
         result.current.setCounters([makeCounter({ count: 1 })])
       })
       await act(async () => {
-        await vi.advanceTimersByTimeAsync(1_500)
+        await vi.advanceTimersByTimeAsync(5_000)
       })
 
       expect(result.current.counters).toEqual(serverCounters)
@@ -566,7 +566,7 @@ describe('useRemoteSync', () => {
         result.current.setCounters([makeCounter({ count: 1 })])
       })
       await act(async () => {
-        await vi.advanceTimersByTimeAsync(1_500)
+        await vi.advanceTimersByTimeAsync(5_000)
       })
 
       expect(onRemoteUpdate).toHaveBeenCalledTimes(1)
@@ -585,7 +585,7 @@ describe('useRemoteSync', () => {
         result.current.setCounters([makeCounter({ count: 1 })])
       })
       await act(async () => {
-        await vi.advanceTimersByTimeAsync(1_500)
+        await vi.advanceTimersByTimeAsync(5_000)
       })
 
       expect(result.current.sync.status).toBe('error')

@@ -8,9 +8,13 @@ export type JoinSyncCodeOutcome = 'invalid' | 'not-found' | 'error' | 'joined'
 
 const POLL_INTERVAL_MS = 20_000
 // Laisse le temps à plusieurs changements rapprochés (ex: quelques taps de
-// suite) de se regrouper en une seule requête, plutôt que d'en envoyer une
-// par changement.
-const PUSH_DEBOUNCE_MS = 1_500
+// suite, ou une session de comptage manuel étalée sur quelques secondes) de
+// se regrouper en une seule requête, plutôt que d'en envoyer une par
+// changement — le plan gratuit de Cloudflare KV plafonne à 1000 écritures/
+// jour pour tout le worker (voir worker/README.md), un usage actif avec des
+// changements espacés de plus de quelques secondes peut sinon s'en
+// approcher.
+const PUSH_DEBOUNCE_MS = 5_000
 
 export interface UseRemoteSyncResult {
   code: string | null
