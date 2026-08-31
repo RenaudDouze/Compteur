@@ -43,9 +43,24 @@ export function isValidPushRequest(value: unknown): value is PushRequest {
   return typeof v.baseVersion === 'number' && Array.isArray(v.counters)
 }
 
+/** Ramène `ALLOWED_ORIGIN` à un schéma+hôte nu (jamais de chemin ni de slash
+ * final) : c'est tout ce qu'un en-tête `Access-Control-Allow-Origin` accepte,
+ * un navigateur rejette silencieusement toute valeur qui contient un chemin
+ * (ex : collé depuis l'URL complète du site plutôt que juste son origine) —
+ * bloquant alors *toutes* les requêtes vers le worker sans qu'aucune erreur
+ * ne s'affiche côté app. Une valeur absente ou mal formée retombe sur '*'. */
+function normalizedAllowedOrigin(env: Env): string {
+  if (!env.ALLOWED_ORIGIN || env.ALLOWED_ORIGIN === '*') return '*'
+  try {
+    return new URL(env.ALLOWED_ORIGIN).origin
+  } catch {
+    return '*'
+  }
+}
+
 function corsHeaders(env: Env): HeadersInit {
   return {
-    'Access-Control-Allow-Origin': env.ALLOWED_ORIGIN || '*',
+    'Access-Control-Allow-Origin': normalizedAllowedOrigin(env),
     'Access-Control-Allow-Methods': 'GET, PUT, POST, OPTIONS',
     'Access-Control-Allow-Headers': 'Content-Type',
   }

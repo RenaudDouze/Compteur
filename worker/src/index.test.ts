@@ -71,6 +71,18 @@ describe('routage', () => {
     expect(res.headers.get('Access-Control-Allow-Origin')).toBe('*')
   })
 
+  it('ignore un chemin collé dans ALLOWED_ORIGIN (ne garde que schéma+hôte)', async () => {
+    const withPath: Env = { SYNC_KV: env.SYNC_KV, ALLOWED_ORIGIN: 'https://exemple.github.io/mon-repo' }
+    const res = await worker.fetch(request('OPTIONS', '/api/sync'), withPath)
+    expect(res.headers.get('Access-Control-Allow-Origin')).toBe('https://exemple.github.io')
+  })
+
+  it("retombe sur '*' quand ALLOWED_ORIGIN n'est pas une URL valide", async () => {
+    const malformed: Env = { SYNC_KV: env.SYNC_KV, ALLOWED_ORIGIN: 'pas-une-url' }
+    const res = await worker.fetch(request('OPTIONS', '/api/sync'), malformed)
+    expect(res.headers.get('Access-Control-Allow-Origin')).toBe('*')
+  })
+
   it('renvoie 404 hors du préfixe /api/sync', async () => {
     const res = await worker.fetch(request('GET', '/autre-chose'), env)
     expect(res.status).toBe(404)
