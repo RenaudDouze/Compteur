@@ -178,4 +178,21 @@ test.describe('Synchronisation via code (worker)', () => {
     await expect(page.getByText('Depuis un autre appareil', { exact: true })).toBeVisible()
     expect(worker.current?.version).toBe(2)
   })
+
+  test('affiche aussi la notification dès l’ouverture, sur un appareil déjà relié à un code', async ({ page }) => {
+    const worker = await mockWorker(page, {
+      version: 3,
+      counters: [{ id: 'a', name: 'Depuis le cloud', count: 7, createdAt: Date.now(), behavior: {}, appearance: { color: '#2563eb' } }],
+    })
+    // Simule un appareil déjà configuré (code enregistré depuis une session
+    // précédente), rouvert : le tout premier sondage au montage doit lui
+    // aussi être signalé, pas seulement les sondages suivants — sinon
+    // rouvrir l'app ne confirme jamais que la récupération a bien eu lieu.
+    await page.evaluate((code) => window.localStorage.setItem('+1.sync.code.v1', JSON.stringify(code)), CODE)
+    await page.reload()
+
+    await expect(page.getByText('Compteurs mis à jour depuis un autre appareil')).toBeVisible()
+    await expect(page.getByText('Depuis le cloud', { exact: true })).toBeVisible()
+    expect(worker.current?.version).toBe(3)
+  })
 })
