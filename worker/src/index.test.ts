@@ -372,3 +372,42 @@ describe('limitation de débit par IP', () => {
     expect(afterWindow.status).toBe(404)
   })
 })
+
+describe('exception non rattrapée (ex : liaison KV mal configurée)', () => {
+  it('répond en JSON avec les en-têtes CORS plutôt que de laisser passer une page d\'erreur du runtime', async () => {
+    // Sans ce filet, une exception ici laisserait le runtime Cloudflare
+    // renvoyer sa propre page d'erreur générique (code 1101), sans en-tête
+    // CORS : le navigateur la rejette côté client comme une simple erreur
+    // réseau, sans qu'aucun détail n'atteigne jamais l'app.
+    const brokenKv = {
+      get: () => {
+        throw new Error("Cannot read properties of undefined (reading 'get')")
+      },
+    } as unknown as KVNamespace
+    const env: Env = { SYNC_KV: brokenKv, ALLOWED_ORIGIN: '*' }
+
+    const res = await worker.fetch(request('GET', '/api/sync/ABCDEFGH'), env)
+
+    expect(res.status).toBe(500)
+    expect(res.headers.get('Access-Control-Allow-Origin')).toBe('*')
+    const body = (await res.json()) as { error: string; detail: string }
+    expect(body.error).toBe('Erreur interne du serveur.')
+    expect(body.detail).toBe("Cannot read properties of undefined (reading 'get')")
+  })
+
+  it("retombe sur la représentation textuelle si l'exception n'est pas une Error", async () => {
+    const brokenKv = {
+      get: () => {
+        // eslint-disable-next-line @typescript-eslint/no-throw-literal
+        throw 'panne KV'
+      },
+    } as unknown as KVNamespace
+    const env: Env = { SYNC_KV: brokenKv, ALLOWED_ORIGIN: '*' }
+
+    const res = await worker.fetch(request('GET', '/api/sync/ABCDEFGH'), env)
+
+    expect(res.status).toBe(500)
+    const body = (await res.json()) as { detail: string }
+    expect(body.detail).toBe('panne KV')
+  })
+})

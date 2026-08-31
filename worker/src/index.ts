@@ -167,40 +167,60 @@ async function handlePut(request: Request, env: Env, code: string): Promise<Resp
   return json(next, { status: 200 }, env)
 }
 
+async function route(request: Request, env: Env): Promise<Response> {
+  if (request.method === 'OPTIONS') {
+    return new Response(null, { status: 204, headers: corsHeaders(env) })
+  }
+
+  if (await isRateLimited(env, clientIp(request))) {
+    return json(
+      { error: 'Trop de requêtes, réessaie dans un instant.' },
+      { status: 429, headers: { 'Retry-After': String(RATE_LIMIT_WINDOW_SECONDS) } },
+      env
+    )
+  }
+
+  const url = new URL(request.url)
+  const segments = url.pathname.split('/').filter(Boolean)
+
+  if (segments[0] !== 'api' || segments[1] !== 'sync') {
+    return json({ error: 'Not found' }, { status: 404 }, env)
+  }
+
+  if (segments.length === 2) {
+    if (request.method !== 'POST') return json({ error: 'Method not allowed' }, { status: 405 }, env)
+    return handleCreate(env)
+  }
+
+  if (segments.length === 3) {
+    const code = normalizeSyncCode(segments[2])
+    if (!isValidSyncCode(code)) return json({ error: 'Code invalide.' }, { status: 400 }, env)
+    if (request.method === 'GET') return handleGet(env, code)
+    if (request.method === 'PUT') return handlePut(request, env, code)
+    return json({ error: 'Method not allowed' }, { status: 405 }, env)
+  }
+
+  return json({ error: 'Not found' }, { status: 404 }, env)
+}
+
 export default {
   async fetch(request: Request, env: Env): Promise<Response> {
-    if (request.method === 'OPTIONS') {
-      return new Response(null, { status: 204, headers: corsHeaders(env) })
-    }
-
-    if (await isRateLimited(env, clientIp(request))) {
+    try {
+      return await route(request, env)
+    } catch (err) {
+      // Une exception non rattrapée ici (ex : liaison KV mal configurée)
+      // laisserait le runtime Cloudflare renvoyer sa propre page d'erreur
+      // générique (code 1101), sans les en-têtes CORS posés par `json()` —
+      // un navigateur rejette alors la réponse comme une simple erreur
+      // réseau côté client ("NetworkError"/"Failed to fetch"), sans aucun
+      // détail exploitable. Répondre nous-mêmes garde les en-têtes CORS et
+      // expose la vraie cause, seule information de diagnostic disponible
+      // sur un appareil sans accès à la console (ex : mobile).
       return json(
-        { error: 'Trop de requêtes, réessaie dans un instant.' },
-        { status: 429, headers: { 'Retry-After': String(RATE_LIMIT_WINDOW_SECONDS) } },
+        { error: 'Erreur interne du serveur.', detail: err instanceof Error ? err.message : String(err) },
+        { status: 500 },
         env
       )
     }
-
-    const url = new URL(request.url)
-    const segments = url.pathname.split('/').filter(Boolean)
-
-    if (segments[0] !== 'api' || segments[1] !== 'sync') {
-      return json({ error: 'Not found' }, { status: 404 }, env)
-    }
-
-    if (segments.length === 2) {
-      if (request.method !== 'POST') return json({ error: 'Method not allowed' }, { status: 405 }, env)
-      return handleCreate(env)
-    }
-
-    if (segments.length === 3) {
-      const code = normalizeSyncCode(segments[2])
-      if (!isValidSyncCode(code)) return json({ error: 'Code invalide.' }, { status: 400 }, env)
-      if (request.method === 'GET') return handleGet(env, code)
-      if (request.method === 'PUT') return handlePut(request, env, code)
-      return json({ error: 'Method not allowed' }, { status: 405 }, env)
-    }
-
-    return json({ error: 'Not found' }, { status: 404 }, env)
   },
 }
