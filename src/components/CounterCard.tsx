@@ -16,6 +16,7 @@ import { useCelebration } from '../hooks/useCelebration'
 import { cumulativeOdds, formatOdds, progressRatio } from '../odds'
 import { daysBetween, formatAveragePerDay, formatDuration, toIsoDate } from '../date'
 import { playDecrementSound, playIncrementSound } from '../sound'
+import { showLocalNotification } from '../notifications'
 import type { Counter } from '../types'
 
 // Angles (en degrés) des particules du confetti, réparties en éventail sur
@@ -183,6 +184,14 @@ export function CounterCard({
   }, [counter.count, pulseControls])
 
   const celebrating = useCelebration(counter.count, counter.behavior.target)
+  // Complète les confettis (invisibles si l'onglet n'est pas au premier
+  // plan) par une notification système — voir notifications.ts pour les
+  // conditions (permission déjà accordée, onglet effectivement en
+  // arrière-plan).
+  useEffect(() => {
+    if (celebrating) void showLocalNotification('+1', { body: `Objectif atteint pour « ${counter.name} » 🎉` })
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [celebrating])
 
   const odds = counter.behavior.oddsDenominator ? cumulativeOdds(counter.behavior.oddsDenominator, counter.count) : null
   // Durée figée et moyenne d'incrément par jour entre le début du comptage

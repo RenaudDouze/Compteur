@@ -22,7 +22,8 @@
     "src/colors.ts",
     "src/history.ts",
     "src/sound.ts",
-    "src/reorder.ts"
+    "src/reorder.ts",
+    "src/notifications.ts"
   ],
   "thresholds": {
     "high": 100,
