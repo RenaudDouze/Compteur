@@ -400,9 +400,16 @@ export default function App() {
     setCounters((prev) => mergeVisibleOrder(prev, newOrder))
   }
 
+  // Signale une erreur de synchro dès l'en-tête (bouton menu) et sur le
+  // bouton Synchroniser dans le menu déroulant : sans ça, rien ne
+  // l'indiquait en dehors de la modale Synchroniser elle-même, qu'il faut
+  // donc ouvrir "à l'aveugle" pour découvrir qu'un souci existe.
+  const hasSyncError = remoteSync.status === 'error'
+
   // Calculés une fois pour servir à la fois d'aria-label et d'infobulle
   // (`title`) sur leur bouton respectif.
-  const menuButtonLabel = menuOpen ? 'Masquer le menu' : 'Ouvrir le menu'
+  const menuButtonLabel = `${menuOpen ? 'Masquer le menu' : 'Ouvrir le menu'}${hasSyncError ? ' (erreur de synchronisation)' : ''}`
+  const syncButtonLabel = `Synchroniser${hasSyncError ? ' (erreur de synchronisation)' : ''}`
   const archiveViewLabel =
     archiveView === 'archived'
       ? `Vue : Archivés (${archivedCount})`
@@ -434,7 +441,7 @@ export default function App() {
                 + Nouveau compteur
               </button>
               <button
-                className="add-btn icon-btn"
+                className={`add-btn icon-btn${hasSyncError ? ' icon-btn--alert' : ''}`}
                 onClick={() => setMenuOpen((v) => !v)}
                 aria-haspopup="true"
                 aria-expanded={menuOpen}
@@ -472,13 +479,13 @@ export default function App() {
                   <ThemeIcon />
                 </button>
                 <button
-                  className="add-btn icon-btn"
+                  className={`add-btn icon-btn${hasSyncError ? ' icon-btn--alert' : ''}`}
                   onClick={() => {
                     setSyncOpen(true)
                     setMenuOpen(false)
                   }}
-                  aria-label="Synchroniser"
-                  title="Synchroniser"
+                  aria-label={syncButtonLabel}
+                  title={syncButtonLabel}
                 >
                   <SyncIcon />
                 </button>
