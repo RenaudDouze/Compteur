@@ -1193,3 +1193,32 @@
   padding: 0;
   pointer-events: auto;
 }
+
+/* En haut plutôt qu'en bas (contrairement à .undo-toast) : purement
+   informatif, sans action requise, ça évite aussi tout risque de
+   chevauchement avec le toast d'annulation si les deux apparaissaient en
+   même temps. */
+.sync-toast {
+  position: fixed;
+  left: 50%;
+  top: max(12px, env(safe-area-inset-top));
+  transform: translateX(-50%);
+  z-index: 60;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  max-width: calc(100% - 32px);
+  background: var(--text);
+  color: var(--surface);
+  padding: 10px 16px;
+  border-radius: 999px;
+  box-shadow: 0 8px 24px rgba(15, 23, 42, 0.25);
+  font-size: 0.85rem;
+  pointer-events: none;
+}
+
+.sync-toast span {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}

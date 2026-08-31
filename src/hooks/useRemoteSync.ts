@@ -26,11 +26,15 @@ export interface UseRemoteSyncResult {
  * par numéro de version). Sondage périodique pour récupérer les changements
  * des autres appareils, poussée différée des changements locaux. `workerUrl`
  * absent (fonctionnalité non configurée) désactive silencieusement toute
- * action réseau : le hook reste utilisable sans jamais rien synchroniser. */
+ * action réseau : le hook reste utilisable sans jamais rien synchroniser.
+ * `onRemoteUpdate` est appelé quand des compteurs plus récents arrivent
+ * depuis un autre appareil (pull ou conflit résolu en adoptant le serveur) —
+ * jamais pour le rattrapage initial au montage, qui n'a rien de notable. */
 export function useRemoteSync(
   workerUrl: string | undefined,
   counters: Counter[],
-  setCounters: (updater: Counter[] | ((prev: Counter[]) => Counter[])) => void
+  setCounters: (updater: Counter[] | ((prev: Counter[]) => Counter[])) => void,
+  onRemoteUpdate?: () => void
 ): UseRemoteSyncResult {
   const [code, setCode] = useLocalStorage<string | null>('+1.sync.code.v1', null)
   const [status, setStatus] = useState<RemoteSyncStatus>(code ? 'syncing' : 'disabled')
@@ -54,6 +58,13 @@ export function useRemoteSync(
   const pushTimerRef = useRef<ReturnType<typeof setTimeout> | undefined>(undefined)
   const countersRef = useRef(counters)
   countersRef.current = counters
+  const onRemoteUpdateRef = useRef(onRemoteUpdate)
+  onRemoteUpdateRef.current = onRemoteUpdate
+  // Faux jusqu'à la fin du tout premier sondage réussi (rattrapage normal à
+  // l'ouverture de l'app) : sert à ne notifier `onRemoteUpdate` que pour un
+  // changement qui arrive vraiment pendant que l'app est déjà ouverte et à
+  // jour, pas pour la synchronisation initiale.
+  const hasSyncedOnceRef = useRef(false)
 
   useEffect(() => {
     if (!workerUrl || !code) return
@@ -76,7 +87,9 @@ export function useRemoteSync(
           applyingRemoteRef.current = true
           lastSyncedVersionRef.current = remote.version
           setCounters(remote.counters)
+          if (hasSyncedOnceRef.current) onRemoteUpdateRef.current?.()
         }
+        hasSyncedOnceRef.current = true
         setStatus('synced')
         setErrorMessage(null)
       } catch {
@@ -118,6 +131,7 @@ export function useRemoteSync(
           applyingRemoteRef.current = true
           lastSyncedVersionRef.current = result.state.version
           setCounters(result.state.counters)
+          onRemoteUpdateRef.current?.()
         }
         setStatus('synced')
         setErrorMessage(null)

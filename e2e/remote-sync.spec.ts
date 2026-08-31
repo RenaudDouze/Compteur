@@ -50,6 +50,11 @@ async function mockWorker(page: Page, initial: { version: number; counters: unkn
     setOffline(value: boolean) {
       offline = value
     },
+    /** Simule une écriture faite par un autre appareil, en dehors de toute
+     * requête de la page testée (contourne le routage `page.route`). */
+    setStored(value: { version: number; counters: unknown[] } | null) {
+      stored = value
+    },
   }
 }
 
@@ -145,5 +150,32 @@ test.describe('Synchronisation via code (worker)', () => {
     await openMenu(page)
     await page.getByRole('button', { name: 'Synchroniser', exact: true }).click()
     await expect(page.getByText('Synchronisé ✓')).toBeVisible({ timeout: 10_000 })
+  })
+
+  test('affiche une notification quand des compteurs arrivent d’un autre appareil', async ({ page }) => {
+    const worker = await mockWorker(page, {
+      version: 1,
+      counters: [{ id: 'a', name: 'Compteur 1', count: 0, createdAt: Date.now(), behavior: {}, appearance: { color: '#2563eb' } }],
+    })
+    await openMenu(page)
+    await page.getByRole('button', { name: 'Synchroniser', exact: true }).click()
+    await page.getByRole('button', { name: 'Saisir un code' }).click()
+    await page.getByPlaceholder('XXXX XXXX').fill(CODE)
+    await page.getByRole('button', { name: 'Rejoindre' }).click()
+    await expect(page.getByText('ABCD EFGH')).toBeVisible()
+    await page.getByRole('button', { name: 'Fermer' }).click()
+
+    // Simule un autre appareil qui pousse une modification pendant que cette
+    // page est déjà synchronisée : la prochaine modification locale se fera
+    // rejeter (baseVersion périmé) et adoptera cette version-ci.
+    worker.setStored({
+      version: 2,
+      counters: [{ id: 'a', name: 'Depuis un autre appareil', count: 5, createdAt: Date.now(), behavior: {}, appearance: { color: '#2563eb' } }],
+    })
+    await page.locator('.counter-card').click()
+
+    await expect(page.getByText('Compteurs mis à jour depuis un autre appareil')).toBeVisible()
+    await expect(page.getByText('Depuis un autre appareil', { exact: true })).toBeVisible()
+    expect(worker.current?.version).toBe(2)
   })
 })

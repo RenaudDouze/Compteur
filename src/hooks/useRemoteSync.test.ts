@@ -32,9 +32,9 @@ function makeCounter(overrides: Partial<Counter> = {}): Counter {
 /** Composant hôte minimal : un hook seul ne peut pas gérer son propre état
  * `counters` entre les rendus (`renderHook` ne le fait pas à sa place), donc
  * on le porte ici comme le ferait App.tsx. */
-function useHost(workerUrl: string | undefined, initial: Counter[]) {
+function useHost(workerUrl: string | undefined, initial: Counter[], onRemoteUpdate?: () => void) {
   const [counters, setCounters] = useState(initial)
-  const sync = useRemoteSync(workerUrl, counters, setCounters)
+  const sync = useRemoteSync(workerUrl, counters, setCounters, onRemoteUpdate)
   return { counters, setCounters, sync }
 }
 
@@ -318,6 +318,55 @@ describe('useRemoteSync', () => {
       })
     })
 
+    it("n'appelle pas onRemoteUpdate pour le rattrapage initial au montage", async () => {
+      window.localStorage.setItem('+1.sync.code.v1', JSON.stringify('ABCDEFGH'))
+      vi.mocked(fetchSyncState).mockResolvedValue({ version: 10, counters: [makeCounter()] })
+      const onRemoteUpdate = vi.fn()
+
+      renderHook(() => useHost(WORKER_URL, [], onRemoteUpdate))
+      await act(async () => {
+        await vi.runOnlyPendingTimersAsync()
+      })
+
+      expect(onRemoteUpdate).not.toHaveBeenCalled()
+    })
+
+    it('appelle onRemoteUpdate quand un sondage suivant apporte une version plus récente', async () => {
+      window.localStorage.setItem('+1.sync.code.v1', JSON.stringify('ABCDEFGH'))
+      vi.mocked(fetchSyncState).mockResolvedValue({ version: 10, counters: [] })
+      const onRemoteUpdate = vi.fn()
+
+      renderHook(() => useHost(WORKER_URL, [], onRemoteUpdate))
+      await act(async () => {
+        await vi.runOnlyPendingTimersAsync()
+      })
+      expect(onRemoteUpdate).not.toHaveBeenCalled()
+
+      const remoteCounters = [makeCounter({ id: 'depuis-un-autre-appareil' })]
+      vi.mocked(fetchSyncState).mockResolvedValue({ version: 11, counters: remoteCounters })
+      await act(async () => {
+        await vi.advanceTimersByTimeAsync(20_000)
+      })
+
+      expect(onRemoteUpdate).toHaveBeenCalledTimes(1)
+    })
+
+    it("n'appelle pas onRemoteUpdate quand un sondage suivant ne renvoie rien de nouveau", async () => {
+      window.localStorage.setItem('+1.sync.code.v1', JSON.stringify('ABCDEFGH'))
+      vi.mocked(fetchSyncState).mockResolvedValue({ version: 10, counters: [] })
+      const onRemoteUpdate = vi.fn()
+
+      renderHook(() => useHost(WORKER_URL, [], onRemoteUpdate))
+      await act(async () => {
+        await vi.runOnlyPendingTimersAsync()
+      })
+      await act(async () => {
+        await vi.advanceTimersByTimeAsync(20_000)
+      })
+
+      expect(onRemoteUpdate).not.toHaveBeenCalled()
+    })
+
     it("n'interroge plus le serveur une fois le composant démonté", async () => {
       window.localStorage.setItem('+1.sync.code.v1', JSON.stringify('ABCDEFGH'))
       vi.mocked(fetchSyncState).mockResolvedValue({ version: 1, counters: [] })
@@ -422,6 +471,30 @@ describe('useRemoteSync', () => {
       // L'application de la version serveur ne doit pas elle-même redéclencher
       // une poussée (boucle infinie) : une seule requête au total.
       expect(pushSyncState).toHaveBeenCalledTimes(1)
+    })
+
+    it('appelle onRemoteUpdate quand la poussée est refusée et que la version serveur est adoptée', async () => {
+      window.localStorage.setItem('+1.sync.code.v1', JSON.stringify('ABCDEFGH'))
+      vi.mocked(fetchSyncState).mockResolvedValue({ version: 0, counters: [] })
+      vi.mocked(pushSyncState).mockResolvedValue({
+        accepted: false,
+        state: { version: 999, counters: [makeCounter({ id: 'depuis-un-autre-appareil' })] },
+      })
+      const onRemoteUpdate = vi.fn()
+      const { result } = renderHook(() => useHost(WORKER_URL, [], onRemoteUpdate))
+      await act(async () => {
+        await vi.runOnlyPendingTimersAsync()
+      })
+      expect(onRemoteUpdate).not.toHaveBeenCalled()
+
+      act(() => {
+        result.current.setCounters([makeCounter({ count: 1 })])
+      })
+      await act(async () => {
+        await vi.advanceTimersByTimeAsync(1_500)
+      })
+
+      expect(onRemoteUpdate).toHaveBeenCalledTimes(1)
     })
 
     it('signale une erreur si la poussée échoue', async () => {
