@@ -392,6 +392,51 @@ describe('SyncPanel', () => {
         expect(screen.getByPlaceholderText('XXXX XXXX')).toBeInTheDocument()
       })
 
+      it("préfère le message d'erreur précis du hook au message générique quand il est disponible", async () => {
+        const joinCode = vi.fn().mockResolvedValue('error')
+        render(
+          <SyncPanel
+            counters={[]}
+            onClose={vi.fn()}
+            onImport={vi.fn()}
+            remoteSync={makeRemoteSync({ joinCode, errorMessage: 'Failed to fetch' })}
+          />
+        )
+        fireEvent.click(screen.getByRole('button', { name: 'Saisir un code' }))
+        fireEvent.change(screen.getByPlaceholderText('XXXX XXXX'), { target: { value: 'ABCDEFGH' } })
+        await act(async () => {
+          fireEvent.click(screen.getByRole('button', { name: 'Rejoindre' }))
+        })
+        expect(screen.getByText('Failed to fetch')).toBeInTheDocument()
+        expect(screen.queryByText('Impossible de rejoindre ce code, réessaie.')).not.toBeInTheDocument()
+      })
+
+      it('affiche l\'échec de "Nouveau code" alors qu\'aucun code n\'est encore actif', () => {
+        render(
+          <SyncPanel
+            counters={[]}
+            onClose={vi.fn()}
+            onImport={vi.fn()}
+            remoteSync={makeRemoteSync({ status: 'error', errorMessage: 'Impossible de créer un code de synchronisation.' })}
+          />
+        )
+        expect(screen.getByText('Impossible de créer un code de synchronisation.')).toBeInTheDocument()
+        // Toujours proposé pour réessayer.
+        expect(screen.getByRole('button', { name: 'Nouveau code' })).toBeInTheDocument()
+      })
+
+      it('retombe sur le message générique si "Nouveau code" échoue sans détail', () => {
+        render(
+          <SyncPanel
+            counters={[]}
+            onClose={vi.fn()}
+            onImport={vi.fn()}
+            remoteSync={makeRemoteSync({ status: 'error', errorMessage: null })}
+          />
+        )
+        expect(screen.getByText('Erreur de synchronisation')).toBeInTheDocument()
+      })
+
       it('affiche le code actif, son état "en cours" et permet de se déconnecter', () => {
         const disable = vi.fn()
         render(
