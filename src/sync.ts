@@ -19,8 +19,13 @@ export function downloadBackup(counters: Counter[]) {
   const blob = new Blob([JSON.stringify(counters, null, 2)], { type: 'application/json' })
   // Horodatage complet (pas seulement la date) : plusieurs sauvegardes le même
   // jour ne s'écrasent plus entre elles dans le dossier de téléchargements.
-  // ':' n'est pas valide dans un nom de fichier sous Windows, d'où le tiret.
-  const timestamp = new Date().toISOString().slice(0, 19).replace('T', '_').replace(/:/g, '-')
+  // Composants locaux (getFullYear/getHours...), pas toISOString() : celle-ci
+  // convertit en UTC, décalant l'heure affichée par rapport à l'heure de
+  // l'appareil. ':' n'est pas valide dans un nom de fichier sous Windows,
+  // d'où le tiret.
+  const now = new Date()
+  const pad = (n: number) => String(n).padStart(2, '0')
+  const timestamp = `${now.getFullYear()}-${pad(now.getMonth() + 1)}-${pad(now.getDate())}_${pad(now.getHours())}-${pad(now.getMinutes())}-${pad(now.getSeconds())}`
   triggerDownload(blob, `+1-sauvegarde-${timestamp}.json`)
 }
 
