@@ -17,8 +17,11 @@ export function triggerDownload(blob: Blob, filename: string) {
 /** Déclenche le téléchargement d'un fichier JSON contenant tous les compteurs. */
 export function downloadBackup(counters: Counter[]) {
   const blob = new Blob([JSON.stringify(counters, null, 2)], { type: 'application/json' })
-  const date = new Date().toISOString().slice(0, 10)
-  triggerDownload(blob, `+1-sauvegarde-${date}.json`)
+  // Horodatage complet (pas seulement la date) : plusieurs sauvegardes le même
+  // jour ne s'écrasent plus entre elles dans le dossier de téléchargements.
+  // ':' n'est pas valide dans un nom de fichier sous Windows, d'où le tiret.
+  const timestamp = new Date().toISOString().slice(0, 19).replace('T', '_').replace(/:/g, '-')
+  triggerDownload(blob, `+1-sauvegarde-${timestamp}.json`)
 }
 
 function isValidCounter(value: unknown): value is Record<string, unknown> {
