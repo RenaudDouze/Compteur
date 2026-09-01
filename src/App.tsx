@@ -4,6 +4,7 @@ import { useLocalStorage } from './hooks/useLocalStorage'
 import { useRemoteSync } from './hooks/useRemoteSync'
 import { useSystemDarkMode } from './hooks/useSystemDarkMode'
 import { CounterCard } from './components/CounterCard'
+import { ErrorBoundary } from './components/ErrorBoundary'
 import {
   ArchiveIcon,
   BellIcon,
@@ -601,9 +602,37 @@ export default function App() {
       )}
 
       {syncOpen && (
-        <Suspense fallback={null}>
-          <SyncPanel counters={counters} onClose={() => setSyncOpen(false)} onImport={handleImport} remoteSync={remoteSync} />
-        </Suspense>
+        <ErrorBoundary
+          fallback={(retry) => (
+            // Suspense seul ne rattrape que l'attente du chunk, pas son
+            // échec (ex : fichier disparu après un déploiement pendant que
+            // cet onglet restait ouvert) — voir ErrorBoundary.tsx. Sans ce
+            // filet, cet échec démonterait toute l'app en page blanche.
+            <div className="modal-overlay" onClick={() => setSyncOpen(false)}>
+              <div className="modal-panel" role="alertdialog" aria-modal="true" onClick={(e) => e.stopPropagation()}>
+                <div className="modal-panel-header">
+                  <h2>Synchroniser mes compteurs</h2>
+                </div>
+                <p className="modal-hint">
+                  Le panneau de synchronisation n'a pas pu se charger — une nouvelle version de l'app est
+                  probablement disponible. Recharge la page pour la récupérer.
+                </p>
+                <div className="modal-row">
+                  <button className="modal-btn" onClick={retry}>
+                    Recharger la page
+                  </button>
+                  <button className="modal-btn" onClick={() => setSyncOpen(false)}>
+                    Fermer
+                  </button>
+                </div>
+              </div>
+            </div>
+          )}
+        >
+          <Suspense fallback={null}>
+            <SyncPanel counters={counters} onClose={() => setSyncOpen(false)} onImport={handleImport} remoteSync={remoteSync} />
+          </Suspense>
+        </ErrorBoundary>
       )}
 
       {syncNotice && (
