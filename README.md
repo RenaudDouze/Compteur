@@ -30,14 +30,25 @@ appareils (optionnelle) est le seul point qui parle au réseau.
 **Partage et synchronisation entre appareils**
 - Lien ou QR code de partage (compressé) pour transférer l'état de tes compteurs vers
   un autre appareil, ou fichier de sauvegarde JSON à importer/exporter.
+- Carte visuelle partageable (image PNG) pour un compteur, générée localement.
 - Code de synchronisation à 8 caractères (optionnel, nécessite un petit worker
   Cloudflare — voir `worker/README.md`) : synchronise automatiquement l'état entre
-  plusieurs appareils en tâche de fond, avec notification quand des changements
-  arrivent d'un autre appareil.
+  plusieurs appareils en tâche de fond (les changements rapprochés sont regroupés,
+  jusqu'à 5s, pour limiter le nombre de requêtes), avec notification quand des
+  changements arrivent d'un autre appareil. Une erreur de synchro (worker
+  injoignable, code expiré...) reste visible dès l'en-tête de l'app, sans avoir à
+  ouvrir la modale Synchroniser pour la découvrir.
 
 **Autres**
-- Effet de défilement façon odomètre et son à l'incrément, retour visuel type toast
-  pour les actions annulables et les événements de synchronisation.
+- Effet de défilement façon odomètre, son et retour haptique à l'incrément/
+  décrément, retour visuel type toast pour les actions annulables et les
+  événements de synchronisation.
+- Annulation multi-niveaux (empile les dernières actions destructrices ou
+  modifications de valeur, dans l'ordre inverse, tant que le délai n'est pas
+  écoulé).
+- Notifications système optionnelles (objectif atteint, compteurs mis à jour
+  depuis un autre appareil) en complément du toast in-app.
+- Accessibilité : focus piégé et restauré dans les modales, navigation clavier.
 - Thème clair/sombre/automatique.
 - Installable comme application (PWA), avec raccourcis d'app et fonctionnement garanti
   hors-ligne.
@@ -80,11 +91,13 @@ npm run preview
 - **Couverture de code** : seuil 100% (lignes, branches, fonctions, statements)
   sur l'ensemble du code source.
 - **Mutation testing** : seuil 100%, mais scopé volontairement aux modules de
-  logique pure sans JSX/animation (`src/odds.ts`, `src/date.ts`, `src/sync.ts`,
-  `src/remoteSync.ts`, `src/share.ts`, `src/id.ts`, `src/url.ts`, `src/colors.ts`,
-  `src/sound.ts`, `src/reorder.ts`) — un score de 100% strict sur
-  les composants React (drag & drop, animations, QR code...) n'est pas un objectif
-  réaliste (mutants équivalents, contenu visuel difficile à mutation-tester
+  logique pure sans JSX/animation (voir la liste `mutate` dans
+  `stryker.config.json` — actuellement `src/odds.ts`, `src/date.ts`,
+  `src/sync.ts`, `src/remoteSync.ts`, `src/share.ts`, `src/id.ts`, `src/url.ts`,
+  `src/colors.ts`, `src/sound.ts`, `src/reorder.ts`, `src/notifications.ts`,
+  `src/shareCard.ts`) — un score de 100% strict sur les composants React
+  (drag & drop, animations, QR code...) n'est pas un objectif réaliste
+  (mutants équivalents, contenu visuel difficile à mutation-tester
   utilement).
 - **Tests fonctionnels** : `e2e/` couvre les parcours de base, les
   fonctionnalités avancées (probabilité, date, glisser-déposer), la
