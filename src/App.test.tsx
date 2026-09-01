@@ -1,11 +1,23 @@
 import { act, fireEvent, render, screen, waitFor, within } from '@testing-library/react'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
+import type { ComponentProps } from 'react'
 import App from './App'
 import { encodeCountersToParam } from './sync'
 import { COLORS } from './colors'
 import { useRemoteSync } from './hooks/useRemoteSync'
+import { ErrorBoundary } from './components/ErrorBoundary'
 import { getNotificationPermission, requestNotificationPermission } from './notifications'
 import type { Counter } from './types'
+
+// Enveloppe la vraie classe dans un composant fonction (délègue à elle par
+// défaut, donc n'affecte aucun autre test) : sert uniquement à simuler
+// directement le chemin "chunk introuvable" (voir le test dédié plus bas)
+// sans avoir à faire réellement échouer l'import() paresseux de SyncPanel.
+vi.mock('./components/ErrorBoundary', async () => {
+  const actual = await vi.importActual<typeof import('./components/ErrorBoundary')>('./components/ErrorBoundary')
+  return { ErrorBoundary: vi.fn((props: ComponentProps<typeof actual.ErrorBoundary>) => <actual.ErrorBoundary {...props} />) }
+})
+const defaultErrorBoundaryImpl = vi.mocked(ErrorBoundary).getMockImplementation()!
 
 vi.mock('qrcode', () => ({
   default: {
@@ -717,6 +729,59 @@ describe('App', () => {
       expect(await screen.findByText('Synchroniser mes compteurs')).toBeInTheDocument()
       fireEvent.click(screen.getByRole('button', { name: 'Fermer' }))
       expect(screen.queryByText('Synchroniser mes compteurs')).not.toBeInTheDocument()
+    })
+
+    describe("secours si le panneau n'a pas pu se charger (chunk introuvable après un déploiement)", () => {
+      afterEach(() => {
+        vi.mocked(ErrorBoundary).mockImplementation(defaultErrorBoundaryImpl)
+      })
+
+      it('propose de recharger la page plutôt que de laisser une page blanche', async () => {
+        vi.mocked(ErrorBoundary).mockImplementation(({ fallback }) => fallback(() => {}))
+        render(<App />)
+        openMenu()
+        fireEvent.click(screen.getByRole('button', { name: 'Synchroniser' }))
+
+        expect(
+          screen.getByText(
+            "Le panneau de synchronisation n'a pas pu se charger — une nouvelle version de l'app est probablement disponible. Recharge la page pour la récupérer."
+          )
+        ).toBeInTheDocument()
+      })
+
+      it('recharge la page au clic sur "Recharger la page"', async () => {
+        const reloadSpy = vi.fn()
+        vi.mocked(ErrorBoundary).mockImplementation(({ fallback }) => fallback(reloadSpy))
+        render(<App />)
+        openMenu()
+        fireEvent.click(screen.getByRole('button', { name: 'Synchroniser' }))
+
+        fireEvent.click(screen.getByRole('button', { name: 'Recharger la page' }))
+        expect(reloadSpy).toHaveBeenCalledTimes(1)
+      })
+
+      it('referme le secours sans recharger au clic sur "Fermer"', async () => {
+        vi.mocked(ErrorBoundary).mockImplementation(({ fallback }) => fallback(() => {}))
+        render(<App />)
+        openMenu()
+        fireEvent.click(screen.getByRole('button', { name: 'Synchroniser' }))
+
+        fireEvent.click(screen.getByRole('button', { name: 'Fermer' }))
+        expect(screen.queryByText('Synchroniser mes compteurs')).not.toBeInTheDocument()
+      })
+
+      it("referme le secours au clic sur l'arrière-plan, sans que le clic sur le panneau lui-même ne le ferme", async () => {
+        vi.mocked(ErrorBoundary).mockImplementation(({ fallback }) => fallback(() => {}))
+        const { container } = render(<App />)
+        openMenu()
+        fireEvent.click(screen.getByRole('button', { name: 'Synchroniser' }))
+
+        fireEvent.click(container.querySelector('.modal-panel')!)
+        expect(screen.getByText('Synchroniser mes compteurs')).toBeInTheDocument()
+
+        fireEvent.click(container.querySelector('.modal-overlay')!)
+        expect(screen.queryByText('Synchroniser mes compteurs')).not.toBeInTheDocument()
+      })
     })
 
     it('importe des compteurs partagés (remplacement quand la liste est vide)', async () => {
