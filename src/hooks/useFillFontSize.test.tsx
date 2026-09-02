@@ -44,4 +44,32 @@ describe('useFillFontSize', () => {
     const { unmount } = render(<Harness active digitsSource={12} />)
     expect(() => unmount()).not.toThrow()
   })
+
+  it("ne réattache pas le ResizeObserver (ni ne remesure) quand la valeur change sans changer le nombre de chiffres", () => {
+    // Sans ça, chaque incrément (donc chaque tap sur +/-) réattacherait un
+    // nouveau ResizeObserver et forcerait une lecture de layout synchrone
+    // même quand le nombre de chiffres affichés n'a pas changé — un coût
+    // superflu à chaque appui, plus sensible sur du matériel ancien.
+    vi.spyOn(HTMLElement.prototype, 'offsetWidth', 'get').mockReturnValue(320)
+    vi.spyOn(HTMLElement.prototype, 'offsetHeight', 'get').mockReturnValue(480)
+    let instantiations = 0
+    class TrackedResizeObserver {
+      observe = vi.fn()
+      unobserve = vi.fn()
+      disconnect = vi.fn()
+      constructor() {
+        instantiations++
+      }
+    }
+    vi.stubGlobal('ResizeObserver', TrackedResizeObserver)
+
+    const { rerender } = render(<Harness active digitsSource={12} />)
+    expect(instantiations).toBe(1)
+
+    rerender(<Harness active digitsSource={34} />) // toujours 2 chiffres
+    expect(instantiations).toBe(1)
+
+    rerender(<Harness active digitsSource={345} />) // 3 chiffres désormais
+    expect(instantiations).toBe(2)
+  })
 })
