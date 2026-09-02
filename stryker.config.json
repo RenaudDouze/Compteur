@@ -23,7 +23,8 @@
     "src/sound.ts",
     "src/reorder.ts",
     "src/notifications.ts",
-    "src/shareCard.ts"
+    "src/shareCard.ts",
+    "src/counterName.ts"
   ],
   "thresholds": {
     "high": 100,

@@ -4,11 +4,22 @@
 const ALPHABET = 'ABCDEFGHJKMNPQRSTWXYZ23456789'
 const CODE_LENGTH = 8
 
-/** Génère un code de synchronisation aléatoire (8 caractères, sans tiret). */
+// Plus grand multiple de la taille de l'alphabet sous 256 : rejeter les
+// octets au-delà (échantillonnage par rejet) évite le léger biais qu'un
+// simple modulo introduirait (256 n'est pas un multiple de 29).
+const REJECTION_THRESHOLD = 256 - (256 % ALPHABET.length)
+
+/** Génère un code de synchronisation aléatoire (8 caractères, sans tiret).
+ * Ce code est le seul secret protégeant les compteurs d'un utilisateur
+ * (aucune autre authentification, voir index.ts) : `crypto.getRandomValues`
+ * plutôt que `Math.random`, qui n'offre aucune garantie cryptographique. */
 export function generateSyncCode(): string {
   let code = ''
-  for (let i = 0; i < CODE_LENGTH; i++) {
-    code += ALPHABET[Math.floor(Math.random() * ALPHABET.length)]
+  const byte = new Uint8Array(1)
+  while (code.length < CODE_LENGTH) {
+    crypto.getRandomValues(byte)
+    if (byte[0] >= REJECTION_THRESHOLD) continue
+    code += ALPHABET[byte[0] % ALPHABET.length]
   }
   return code
 }

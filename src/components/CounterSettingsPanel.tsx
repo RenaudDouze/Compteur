@@ -1,5 +1,6 @@
 import { useState } from 'react'
 import { isValidImageUrl } from '../url'
+import { sanitizeCounterName } from '../counterName'
 import { CounterValueDisplay } from './CounterValueDisplay'
 import { DISPLAY_STYLES } from '../displayStyles'
 import { Modal } from './Modal'
@@ -22,7 +23,7 @@ export function CounterSettingsPanel({ counter, colors, onClose, onUpdate, onNav
   const [backgroundError, setBackgroundError] = useState<string | null>(null)
 
   const commitName = () => {
-    const trimmed = draftName.trim() || 'Sans nom'
+    const trimmed = sanitizeCounterName(draftName)
     setDraftName(trimmed)
     onUpdate({ name: trimmed })
   }
