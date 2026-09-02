@@ -205,6 +205,13 @@ describe('parseBackupJson', () => {
     expect(result?.[0].behavior.startDate).toBeUndefined()
   })
 
+  it('préfère behavior imbriqué à un champ à plat du même nom (format le plus récent gagne)', () => {
+    const result = parseBackupJson(
+      JSON.stringify([{ name: 'A', count: 1, step: 999, behavior: { step: 5 } }])
+    )
+    expect(result?.[0].behavior.step).toBe(5)
+  })
+
   it('conserve backgroundImageUrl optionnel', () => {
     const result = parseBackupJson(
       JSON.stringify([{ name: 'A', count: 1, backgroundImageUrl: 'https://exemple.com/x.jpg' }])
@@ -215,6 +222,20 @@ describe('parseBackupJson', () => {
   it('laisse backgroundImageUrl indéfini si absent', () => {
     const result = parseBackupJson(JSON.stringify([{ name: 'A', count: 1 }]))
     expect(result?.[0].appearance.backgroundImageUrl).toBeUndefined()
+  })
+
+  it("rejette un backgroundImageUrl qui n'est pas http(s) (ex: sauvegarde forgée à la main)", () => {
+    const result = parseBackupJson(
+      JSON.stringify([{ name: 'A', count: 1, backgroundImageUrl: 'javascript:alert(1)' }])
+    )
+    expect(result?.[0].appearance.backgroundImageUrl).toBeUndefined()
+  })
+
+  it('préfère appearance imbriqué à un champ à plat du même nom (format le plus récent gagne)', () => {
+    const result = parseBackupJson(
+      JSON.stringify([{ name: 'A', count: 1, color: '#000000', appearance: { color: '#16a34a' } }])
+    )
+    expect(result?.[0].appearance.color).toBe('#16a34a')
   })
 
   it('conserve step optionnel', () => {

@@ -1,5 +1,6 @@
 import * as LZString from 'lz-string'
 import { makeId } from './id'
+import { isValidImageUrl } from './url'
 import type { Counter, CounterAppearance, CounterBehavior, DisplayStyle } from './types'
 
 /** Déclenche le téléchargement d'un blob sous le nom de fichier donné. */
@@ -41,8 +42,16 @@ function isValidCounter(value: unknown): value is Record<string, unknown> {
 // les présente donc sous cette forme. `readBehavior`/`readAppearance` lisent
 // l'un ou l'autre format indifféremment, pour que l'import reste transparent
 // quelle que soit l'origine des données.
+/** Lit `raw[key]` s'il s'agit bien d'un objet imbriqué, sinon retombe sur
+ * `raw` lui-même — factorise la lecture "imbriqué ou à plat" partagée par
+ * `readBehavior`/`readAppearance` (voir leur commentaire ci-dessus). */
+function readNestedOrFlat(raw: Record<string, unknown>, key: string): Record<string, unknown> {
+  const nested = raw[key]
+  return (nested && typeof nested === 'object' ? nested : raw) as Record<string, unknown>
+}
+
 function readBehavior(raw: Record<string, unknown>): CounterBehavior {
-  const src = (raw.behavior && typeof raw.behavior === 'object' ? raw.behavior : raw) as Record<string, unknown>
+  const src = readNestedOrFlat(raw, 'behavior')
   return {
     oddsDenominator: typeof src.oddsDenominator === 'number' ? src.oddsDenominator : undefined,
     startDate: typeof src.startDate === 'string' ? src.startDate : undefined,
@@ -52,11 +61,17 @@ function readBehavior(raw: Record<string, unknown>): CounterBehavior {
 }
 
 function readAppearance(raw: Record<string, unknown>): CounterAppearance {
-  const src = (raw.appearance && typeof raw.appearance === 'object' ? raw.appearance : raw) as Record<string, unknown>
+  const src = readNestedOrFlat(raw, 'appearance')
+  // Même validation que la saisie manuelle d'une image de fond (voir
+  // CounterSettingsPanel.tsx) : sans elle, un lien de partage ou une
+  // sauvegarde JSON forgés pourraient glisser une URL non http(s) (data:,
+  // javascript:...) directement dans un `background-image` CSS, en
+  // contournant complètement la validation appliquée à la saisie manuelle.
+  const backgroundImageUrl = typeof src.backgroundImageUrl === 'string' ? src.backgroundImageUrl : undefined
   return {
     color: (typeof src.color === 'string' && src.color) || '#2563eb',
     displayStyle: typeof src.displayStyle === 'string' ? (src.displayStyle as DisplayStyle) : undefined,
-    backgroundImageUrl: typeof src.backgroundImageUrl === 'string' ? src.backgroundImageUrl : undefined,
+    backgroundImageUrl: backgroundImageUrl && isValidImageUrl(backgroundImageUrl) ? backgroundImageUrl : undefined,
   }
 }
 

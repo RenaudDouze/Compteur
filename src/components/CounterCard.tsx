@@ -16,6 +16,7 @@ import { cumulativeOdds, formatOdds, progressRatio } from '../odds'
 import { daysBetween, formatAveragePerDay, formatDuration, toIsoDate } from '../date'
 import { playDecrementSound, playIncrementSound } from '../sound'
 import { showLocalNotification } from '../notifications'
+import { sanitizeCounterName } from '../counterName'
 import type { Counter } from '../types'
 
 // Angles (en degrés) des particules du confetti, réparties en éventail sur
@@ -122,8 +123,7 @@ export function CounterCard({
   } = useTapGesture(bump)
 
   const commitName = () => {
-    const trimmed = draftName.trim()
-    onUpdate({ name: trimmed || 'Sans nom' })
+    onUpdate({ name: sanitizeCounterName(draftName) })
     setEditing(false)
   }
 

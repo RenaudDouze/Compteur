@@ -1,4 +1,4 @@
-import { beforeEach, describe, expect, it } from 'vitest'
+import { beforeEach, describe, expect, it, vi } from 'vitest'
 import worker, { isValidPushRequest, kvKey, type Env } from './index'
 import { generateSyncCode } from './code'
 
@@ -132,16 +132,16 @@ describe('POST /api/sync (création)', () => {
     const occupied = 'A'.repeat(8)
     await env.SYNC_KV.put(kvKey(occupied), JSON.stringify({ version: 0, counters: [] }))
 
-    // `Math.random() = 0` produit systématiquement le premier caractère de
-    // l'alphabet ('A') : forcé pour les 8 caractères de la première tentative
-    // (code == 'AAAAAAAA', déjà occupé), puis relâché pour que la deuxième
-    // tentative génère un code différent et réussisse.
-    const originalRandom = Math.random
+    // Un octet 0 (-> 'A', premier caractère de l'alphabet) forcé pour les 8
+    // premiers appels (première tentative : code == 'AAAAAAAA', déjà occupé),
+    // puis un octet différent par appel pour que la deuxième tentative
+    // génère un code différent et réussisse.
     let calls = 0
-    Math.random = () => {
+    const getRandomValuesSpy = vi.spyOn(crypto, 'getRandomValues').mockImplementation(((array: Uint8Array) => {
       calls++
-      return calls <= 8 ? 0 : originalRandom()
-    }
+      array[0] = calls <= 8 ? 0 : calls % 29
+      return array
+    }) as typeof crypto.getRandomValues)
     try {
       const res = await worker.fetch(request('POST', '/api/sync'), env)
       expect(res.status).toBe(201)
@@ -149,20 +149,23 @@ describe('POST /api/sync (création)', () => {
       expect(body.code).not.toBe(occupied)
       expect(calls).toBeGreaterThan(8)
     } finally {
-      Math.random = originalRandom
+      getRandomValuesSpy.mockRestore()
     }
   })
 
   it('renvoie 500 si aucun code libre trouvé après plusieurs essais', async () => {
     const env = makeEnv()
-    const originalRandom = Math.random
-    Math.random = () => 0 // génère toujours le même code -> toujours en collision
+    // Toujours le même octet (-> toujours le même code) : toujours en collision.
+    const getRandomValuesSpy = vi.spyOn(crypto, 'getRandomValues').mockImplementation(((array: Uint8Array) => {
+      array[0] = 0
+      return array
+    }) as typeof crypto.getRandomValues)
     try {
       await env.SYNC_KV.put(kvKey('A'.repeat(8)), 'occupé')
       const res = await worker.fetch(request('POST', '/api/sync'), env)
       expect(res.status).toBe(500)
     } finally {
-      Math.random = originalRandom
+      getRandomValuesSpy.mockRestore()
     }
   })
 })
