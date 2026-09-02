@@ -10,6 +10,15 @@ import { useEffect, useRef, useState } from 'react'
 export function useFillFontSize(active: boolean, digitsSource: number) {
   const ref = useRef<HTMLDivElement>(null)
   const [fontSize, setFontSize] = useState<number | null>(null)
+  // Nombre de chiffres seul (pas `digitsSource` lui-même, qui change à
+  // chaque incrément) : la taille de police ne dépend que de ce nombre, pas
+  // de la valeur exacte. La dépendance d'effet ci-dessous se limite donc à
+  // cette valeur bien plus stable — sans ça, chaque tap sur +/- réattachait
+  // un nouveau ResizeObserver et forçait une lecture de layout synchrone
+  // (offsetWidth/offsetHeight) même quand le nombre de chiffres n'avait pas
+  // changé, un coût superflu à chaque appui bien plus sensible sur du
+  // matériel ancien.
+  const digits = Math.max(digitsSource.toString().length, 1)
 
   useEffect(() => {
     const el = ref.current
@@ -17,8 +26,6 @@ export function useFillFontSize(active: boolean, digitsSource: number) {
       setFontSize(null)
       return
     }
-
-    const digits = Math.max(digitsSource.toString().length, 1)
 
     const compute = () => {
       // offsetWidth/offsetHeight ignorent les transforms CSS (contrairement à
@@ -36,7 +43,7 @@ export function useFillFontSize(active: boolean, digitsSource: number) {
     const ro = new ResizeObserver(compute)
     ro.observe(el)
     return () => ro.disconnect()
-  }, [active, digitsSource])
+  }, [active, digits])
 
   return { ref, fontSize }
 }
