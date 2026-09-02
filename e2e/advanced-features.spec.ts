@@ -93,7 +93,7 @@ test.describe('Fonctionnalités avancées', () => {
     await page.getByRole('button', { name: `Choisir la couleur` }).first().click()
     await page.getByRole('button', { name: 'Choisir le style Volets' }).click()
     await page.getByRole('button', { name: 'Actions', exact: true }).click()
-    await page.getByRole('button', { name: '⧉ Dupliquer ce compteur' }).click()
+    await page.getByRole('button', { name: 'Dupliquer ce compteur' }).click()
 
     await expect(page.getByText('Compteur 1', { exact: true })).toBeVisible()
     await expect(page.getByText('Compteur 1 (copie)').first()).toBeVisible()
@@ -336,12 +336,12 @@ test.describe('Fonctionnalités avancées', () => {
     await expect(page.locator('.counter-name')).toHaveText(['A', 'B', 'C'])
 
     await cards.nth(2).getByRole('button', { name: 'Actions du compteur' }).click()
-    await page.getByText('📌 Épingler en haut').click()
+    await page.getByText('Épingler en haut').click()
     await expect(page.locator('.counter-name')).toHaveText(['C', 'A', 'B'])
     await expect(cards.first().locator('.counter-pin-badge')).toBeVisible()
 
     await cards.first().getByRole('button', { name: 'Actions du compteur' }).click()
-    await page.getByText('📌 Détacher ce compteur').click()
+    await page.getByText('Détacher ce compteur').click()
     await expect(page.locator('.counter-name')).toHaveText(['A', 'B', 'C'])
   })
 

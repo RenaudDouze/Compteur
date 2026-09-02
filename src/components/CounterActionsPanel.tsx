@@ -6,6 +6,7 @@ import { Modal } from './Modal'
 import { PanelNav } from './PanelNav'
 import type { PanelKind } from './PanelNav'
 import type { Counter } from '../types'
+import { ArchiveIcon, CheckIcon, CloseIcon, DuplicateIcon, EyeIcon, ImageIcon, PinIcon, ShareIcon, TrashIcon } from './icons'
 
 interface CounterActionsPanelProps {
   counter: Counter
@@ -109,26 +110,60 @@ export function CounterActionsPanel({
     <Modal title={`Actions « ${counter.name} »`} onClose={onClose} accentColor={counter.appearance.color}>
       <section className="modal-section">
         <button className="modal-btn" onClick={handleShare}>
-          {shared ? 'Copié ✓' : '⇪ Partager ce compteur'}
+          {shared ? (
+            <>
+              <CheckIcon width={16} height={16} /> Copié
+            </>
+          ) : (
+            <>
+              <ShareIcon width={16} height={16} /> Partager ce compteur
+            </>
+          )}
         </button>
         <button className="modal-btn" onClick={handleShareImage} disabled={sharingImage}>
-          {imageShareError ? 'Erreur ✗' : sharingImage ? 'Génération…' : '🖼 Partager en image'}
+          {imageShareError ? (
+            <>
+              <CloseIcon width={16} height={16} /> Erreur
+            </>
+          ) : sharingImage ? (
+            'Génération…'
+          ) : (
+            <>
+              <ImageIcon width={16} height={16} /> Partager en image
+            </>
+          )}
         </button>
         <button className="modal-btn" onClick={handleDuplicate}>
-          ⧉ Dupliquer ce compteur
+          <DuplicateIcon width={16} height={16} /> Dupliquer ce compteur
         </button>
         <button className="modal-btn" onClick={handleTogglePin}>
-          {counter.pinned ? '📌 Détacher ce compteur' : '📌 Épingler en haut'}
+          <PinIcon width={16} height={16} /> {counter.pinned ? 'Détacher ce compteur' : 'Épingler en haut'}
         </button>
         <button className="modal-btn" onClick={handleToggleArchive}>
-          {counter.archived ? '📤 Désarchiver ce compteur' : '📦 Archiver ce compteur'}
+          {counter.archived ? (
+            <>
+              <EyeIcon width={16} height={16} /> Désarchiver ce compteur
+            </>
+          ) : (
+            <>
+              <ArchiveIcon width={16} height={16} /> Archiver ce compteur
+            </>
+          )}
         </button>
       </section>
 
       <section className="modal-section modal-section--danger">
         <h3>Zone de danger</h3>
         <button type="button" className="modal-btn modal-btn--danger" onClick={handleDeleteClick}>
-          {confirmDelete ? '✓ Confirmer la suppression' : '🗑 Supprimer ce compteur'}
+          {confirmDelete ? (
+            <>
+              <CheckIcon width={16} height={16} /> Confirmer la suppression
+            </>
+          ) : (
+            <>
+              <TrashIcon width={16} height={16} /> Supprimer ce compteur
+            </>
+          )}
         </button>
       </section>
 

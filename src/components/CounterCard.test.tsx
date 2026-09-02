@@ -350,8 +350,8 @@ describe('CounterCard', () => {
     it('supprime via la modale Actions après double confirmation', () => {
       const { onDelete } = renderCard()
       fireEvent.click(screen.getByRole('button', { name: 'Actions du compteur' }))
-      fireEvent.click(screen.getByText('🗑 Supprimer ce compteur'))
-      fireEvent.click(screen.getByText('✓ Confirmer la suppression'))
+      fireEvent.click(screen.getByText('Supprimer ce compteur'))
+      fireEvent.click(screen.getByText('Confirmer la suppression'))
       expect(onDelete).toHaveBeenCalledTimes(1)
     })
   })

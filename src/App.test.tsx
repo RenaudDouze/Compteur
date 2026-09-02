@@ -274,7 +274,7 @@ describe('App', () => {
     fireEvent.click(screen.getByRole('button', { name: `Choisir la couleur ${COLORS[1]}` }))
     fireEvent.click(screen.getByRole('button', { name: 'Choisir le style Volets' }))
     fireEvent.click(screen.getByRole('button', { name: 'Actions' }))
-    fireEvent.click(screen.getByRole('button', { name: '⧉ Dupliquer ce compteur' }))
+    fireEvent.click(screen.getByRole('button', { name: 'Dupliquer ce compteur' }))
 
     // Le champ de nom du premier compteur s'était ouvert en édition à sa
     // création (autoEdit) : l'ouverture de la modale Personnalisation juste
@@ -289,8 +289,8 @@ describe('App', () => {
     render(<App />)
     fireEvent.click(screen.getByRole('button', { name: '+ Nouveau compteur' }))
     fireEvent.click(screen.getByRole('button', { name: 'Actions du compteur' }))
-    fireEvent.click(screen.getByText('🗑 Supprimer ce compteur'))
-    fireEvent.click(screen.getByText('✓ Confirmer la suppression'))
+    fireEvent.click(screen.getByText('Supprimer ce compteur'))
+    fireEvent.click(screen.getByText('Confirmer la suppression'))
     expect(screen.getByText("Aucun compteur pour l'instant.")).toBeInTheDocument()
   })
 
@@ -306,8 +306,8 @@ describe('App', () => {
       fireEvent.keyDown(screen.getByDisplayValue('À restaurer'), { key: 'Enter' })
 
       fireEvent.click(screen.getByRole('button', { name: 'Actions du compteur' }))
-      fireEvent.click(screen.getByText('🗑 Supprimer ce compteur'))
-      fireEvent.click(screen.getByText('✓ Confirmer la suppression'))
+      fireEvent.click(screen.getByText('Supprimer ce compteur'))
+      fireEvent.click(screen.getByText('Confirmer la suppression'))
       expect(screen.getByText("Aucun compteur pour l'instant.")).toBeInTheDocument()
       expect(screen.getByText('Compteur « À restaurer » supprimé')).toBeInTheDocument()
 
@@ -346,8 +346,8 @@ describe('App', () => {
       render(<App />)
       fireEvent.click(screen.getByRole('button', { name: '+ Nouveau compteur' }))
       fireEvent.click(screen.getByRole('button', { name: 'Actions du compteur' }))
-      fireEvent.click(screen.getByText('🗑 Supprimer ce compteur'))
-      fireEvent.click(screen.getByText('✓ Confirmer la suppression'))
+      fireEvent.click(screen.getByText('Supprimer ce compteur'))
+      fireEvent.click(screen.getByText('Confirmer la suppression'))
       expect(screen.getByRole('button', { name: 'Annuler' })).toBeInTheDocument()
       act(() => {
         vi.advanceTimersByTime(5100)
@@ -370,8 +370,8 @@ describe('App', () => {
     function deleteCounterNamed(name: string) {
       fireEvent.click(actionsButtonFor(name))
       const modal = screen.getByRole('heading', { name: `Actions « ${name} »` }).closest('.modal-panel') as HTMLElement
-      fireEvent.click(within(modal).getByText('🗑 Supprimer ce compteur'))
-      fireEvent.click(within(modal).getByText('✓ Confirmer la suppression'))
+      fireEvent.click(within(modal).getByText('Supprimer ce compteur'))
+      fireEvent.click(within(modal).getByText('Confirmer la suppression'))
     }
 
     it('empile plusieurs suppressions consécutives, annulables une à une dans l’ordre inverse', () => {
@@ -1111,7 +1111,7 @@ describe('App', () => {
   describe('archivage', () => {
     const archiveCounter = (name: string) => {
       fireEvent.click(within(screen.getByText(name).closest('article')!).getByRole('button', { name: 'Actions du compteur' }))
-      fireEvent.click(screen.getByText('📦 Archiver ce compteur'))
+      fireEvent.click(screen.getByText('Archiver ce compteur'))
     }
 
     // Le filtre Actifs/Archivés est désormais un bouton unique (élément fixe
@@ -1164,7 +1164,7 @@ describe('App', () => {
 
       toggleArchiveView()
       fireEvent.click(screen.getByRole('button', { name: 'Actions du compteur' }))
-      fireEvent.click(screen.getByText('📤 Désarchiver ce compteur'))
+      fireEvent.click(screen.getByText('Désarchiver ce compteur'))
       await waitFor(() => expect(screen.queryByText('À ranger')).not.toBeInTheDocument())
 
       toggleArchiveView()
@@ -1187,7 +1187,7 @@ describe('App', () => {
 
       toggleArchiveView()
       fireEvent.click(screen.getByRole('button', { name: 'Actions du compteur' }))
-      fireEvent.click(screen.getByText('📤 Désarchiver ce compteur'))
+      fireEvent.click(screen.getByText('Désarchiver ce compteur'))
       expect(screen.getByText('Aucun compteur archivé.')).toBeInTheDocument()
     })
 
@@ -1217,7 +1217,7 @@ describe('App', () => {
 
       toggleArchiveView()
       fireEvent.click(screen.getByRole('button', { name: 'Actions du compteur' }))
-      fireEvent.click(screen.getByText('⧉ Dupliquer ce compteur'))
+      fireEvent.click(screen.getByText('Dupliquer ce compteur'))
 
       toggleArchiveView()
       expect(screen.getByText('Source (copie)')).toBeInTheDocument()
@@ -1279,7 +1279,7 @@ describe('App', () => {
         render(<App />)
         toggleArchiveView()
         fireEvent.click(screen.getByRole('button', { name: 'Actions du compteur' }))
-        fireEvent.click(screen.getByText('📤 Désarchiver ce compteur'))
+        fireEvent.click(screen.getByText('Désarchiver ce compteur'))
         await waitFor(() => {
           const stored = JSON.parse(window.localStorage.getItem('+1.counters.v1') ?? '[]')
           expect(stored[0].archivedAt).toBeUndefined()

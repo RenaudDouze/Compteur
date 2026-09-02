@@ -1048,6 +1048,10 @@
 }
 
 .modal-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
   border: 1px solid var(--surface-border);
   background: var(--bg-1);
   color: var(--text);

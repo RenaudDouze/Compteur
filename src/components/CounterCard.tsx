@@ -5,7 +5,7 @@ import { CounterValueDisplay } from './CounterValueDisplay'
 import { CounterSettingsPanel } from './CounterSettingsPanel'
 import { CounterBehaviorSettingsPanel } from './CounterBehaviorSettingsPanel'
 import { CounterActionsPanel } from './CounterActionsPanel'
-import { DragHandleIcon, GearIcon, MoreIcon, SlidersIcon } from './icons'
+import { DragHandleIcon, GearIcon, MoreIcon, PinIcon, SlidersIcon } from './icons'
 import type { IconProps } from './icons'
 import type { PanelKind } from './PanelNav'
 import { useHoldToRepeat } from '../hooks/useHoldToRepeat'
@@ -251,10 +251,7 @@ export function CounterCard({
 
       {counter.pinned && (
         <span className="counter-pin-badge" aria-hidden="true">
-          <svg viewBox="0 0 24 24" width="14" height="14" fill="currentColor">
-            <circle cx="12" cy="7" r="5" />
-            <path d="M10.5 11.5h3L13 22h-2z" />
-          </svg>
+          <PinIcon width={14} height={14} />
         </span>
       )}
 

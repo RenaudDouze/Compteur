@@ -186,3 +186,70 @@ export function CloseIcon(props: IconProps) {
     </svg>
   )
 }
+
+/** Partager (lien/texte) : flèche sortant d'un plateau ouvert, convention
+ * "partager" la plus reconnaissable (proche de celle d'iOS/Android). */
+export function ShareIcon(props: IconProps) {
+  return (
+    <svg {...BASE} {...STROKE} {...props}>
+      <path d="M12 15V4" />
+      <path d="M8 8l4-4 4 4" />
+      <path d="M5 12v6a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2v-6" />
+    </svg>
+  )
+}
+
+/** Partager en image : cadre + horizon/soleil, pictogramme "image" classique. */
+export function ImageIcon(props: IconProps) {
+  return (
+    <svg {...BASE} {...STROKE} {...props}>
+      <rect x="3" y="4" width="18" height="16" rx="2" />
+      <circle cx="8.5" cy="9.5" r="1.4" fill="currentColor" stroke="none" />
+      <path d="M3 16.5l5.5-5.5a1.5 1.5 0 0 1 2.1 0L15 15l2-2a1.5 1.5 0 0 1 2.1 0L21 15.5" />
+    </svg>
+  )
+}
+
+/** Dupliquer : deux rectangles superposés, convention "copier". */
+export function DuplicateIcon(props: IconProps) {
+  return (
+    <svg {...BASE} {...STROKE} {...props}>
+      <rect x="8" y="8" width="13" height="13" rx="2" />
+      <path d="M16 8V5a2 2 0 0 0-2-2H5a2 2 0 0 0-2 2v9a2 2 0 0 0 2 2h3" />
+    </svg>
+  )
+}
+
+/** Épingler/détacher : même silhouette qu'un pied d'épingle réelle (tête
+ * ronde, pointe fine) — aussi utilisée comme repère visuel sur la carte d'un
+ * compteur épinglé (voir CounterCard.tsx). */
+export function PinIcon(props: IconProps) {
+  return (
+    <svg {...BASE} {...props} fill="currentColor" stroke="none">
+      <circle cx="12" cy="7" r="5" />
+      <path d="M10.5 11.5h3L13 22h-2z" />
+    </svg>
+  )
+}
+
+/** Supprimer : corbeille classique (couvercle + corps + stries). */
+export function TrashIcon(props: IconProps) {
+  return (
+    <svg {...BASE} {...STROKE} {...props}>
+      <path d="M4 7h16" />
+      <path d="M9 7V5a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2" />
+      <path d="M6 7l1 13a2 2 0 0 0 2 2h6a2 2 0 0 0 2-2l1-13" />
+      <line x1="10" y1="11" x2="10" y2="17" />
+      <line x1="14" y1="11" x2="14" y2="17" />
+    </svg>
+  )
+}
+
+/** Confirmation (copié, suppression confirmée...) : simple coche. */
+export function CheckIcon(props: IconProps) {
+  return (
+    <svg {...BASE} {...STROKE} {...props}>
+      <path d="M4 12.5l5 5L20 6.5" />
+    </svg>
+  )
+}

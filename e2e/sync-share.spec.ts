@@ -118,7 +118,7 @@ test.describe('Synchronisation et partage', () => {
     })
     await page.getByRole('button', { name: 'Personnaliser le compteur' }).click()
     await page.getByRole('button', { name: 'Actions', exact: true }).click()
-    await page.getByText('⇪ Partager ce compteur').click()
+    await page.getByText('Partager ce compteur').click()
     const shared = await page.evaluate(() => (window as unknown as { __shared: string }).__shared)
     expect(shared).toContain('À partager : 1')
     expect(shared).not.toContain('http')

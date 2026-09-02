@@ -26,7 +26,7 @@ test.describe('Archivage de compteurs', () => {
     await page.locator('.counter-name-input').press('Enter')
 
     await page.getByRole('button', { name: 'Actions du compteur' }).click()
-    await page.getByText('📦 Archiver ce compteur').click()
+    await page.getByText('Archiver ce compteur').click()
     await expect(page.getByText('À ranger', { exact: true })).not.toBeVisible()
     await openMenu(page)
     await expect(page.getByRole('button', { name: 'Vue : Actifs (1 archivé(s))' })).toBeVisible()
@@ -38,11 +38,11 @@ test.describe('Archivage de compteurs', () => {
   test('désarchive un compteur et le fait réapparaître dans les actifs', async ({ page }) => {
     await addCounter(page)
     await page.getByRole('button', { name: 'Actions du compteur' }).click()
-    await page.getByText('📦 Archiver ce compteur').click()
+    await page.getByText('Archiver ce compteur').click()
 
     await toggleArchiveView(page)
     await page.getByRole('button', { name: 'Actions du compteur' }).click()
-    await page.getByText('📤 Désarchiver ce compteur').click()
+    await page.getByText('Désarchiver ce compteur').click()
 
     await toggleArchiveView(page)
     await expect(page.getByText('Compteur 1', { exact: true })).toBeVisible()
@@ -54,7 +54,7 @@ test.describe('Archivage de compteurs', () => {
     await page.locator('.counter-name-input').fill('Pompes')
     await page.locator('.counter-name-input').press('Enter')
     await page.getByRole('button', { name: 'Actions du compteur' }).click()
-    await page.getByText('📦 Archiver ce compteur').click()
+    await page.getByText('Archiver ce compteur').click()
 
     await toggleArchiveView(page)
     await openMenu(page)
@@ -66,7 +66,7 @@ test.describe('Archivage de compteurs', () => {
   test('un compteur archivé est en lecture seule (comptage et réglages bloqués)', async ({ page }) => {
     await addCounter(page)
     await page.getByRole('button', { name: 'Actions du compteur' }).click()
-    await page.getByText('📦 Archiver ce compteur').click()
+    await page.getByText('Archiver ce compteur').click()
     await toggleArchiveView(page)
 
     const card = page.locator('.counter-card')
@@ -93,7 +93,7 @@ test.describe('Archivage de compteurs', () => {
     await page.getByRole('button', { name: 'Incrémenter', exact: true }).click()
     await page.getByRole('button', { name: 'Incrémenter', exact: true }).click()
     await page.getByRole('button', { name: 'Actions du compteur' }).click()
-    await page.getByText('📦 Archiver ce compteur').click()
+    await page.getByText('Archiver ce compteur').click()
     await toggleArchiveView(page)
 
     await expect(page.getByText(/Durée totale : .*→.*aujourd'hui/)).toBeVisible()
