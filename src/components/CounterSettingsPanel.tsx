@@ -85,6 +85,7 @@ export function CounterSettingsPanel({ counter, colors, onClose, onUpdate, onNav
               className={`counter-color-option${c === counter.appearance.color ? ' selected' : ''}`}
               style={{ background: c }}
               aria-label={`Choisir la couleur ${c}`}
+              aria-pressed={c === counter.appearance.color}
               title={`Choisir la couleur ${c}`}
               onClick={() => onUpdate({ appearance: { ...counter.appearance, color: c } })}
             />
@@ -102,6 +103,7 @@ export function CounterSettingsPanel({ counter, colors, onClose, onUpdate, onNav
               disabled={locked}
               className={`display-style-option${opt.id === activeStyle ? ' selected' : ''}`}
               aria-label={`Choisir le style ${opt.label}`}
+              aria-pressed={opt.id === activeStyle}
               onClick={() =>
                 onUpdate({ appearance: { ...counter.appearance, displayStyle: opt.id === 'default' ? undefined : opt.id } })
               }

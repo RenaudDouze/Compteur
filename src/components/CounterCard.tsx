@@ -68,6 +68,9 @@ interface CounterCardProps {
   onToggleArchive: () => void
   onTogglePin: () => void
   onDelete: () => void
+  // Équivalent clavier au glisser-déposer (souris/tactile uniquement) :
+  // échange le compteur avec son voisin dans le sens donné.
+  onMove: (direction: 1 | -1) => void
 }
 
 export function CounterCard({
@@ -82,6 +85,7 @@ export function CounterCard({
   onToggleArchive,
   onTogglePin,
   onDelete,
+  onMove,
 }: CounterCardProps) {
   const [editing, setEditing] = useState(autoEdit)
   const [draftName, setDraftName] = useState(counter.name)
@@ -288,8 +292,21 @@ export function CounterCard({
               dragControls.start(e)
             }}
             onClick={(e) => e.stopPropagation()}
-            aria-label="Réordonner le compteur"
-            title="Glisser pour réordonner"
+            // Flèches Haut/Bas : équivalent clavier du glisser-déposer, pour
+            // les utilisateurs qui ne peuvent pas faire de glisser souris/tactile.
+            onKeyDown={(e) => {
+              if (e.key === 'ArrowUp') {
+                e.preventDefault()
+                e.stopPropagation()
+                onMove(-1)
+              } else if (e.key === 'ArrowDown') {
+                e.preventDefault()
+                e.stopPropagation()
+                onMove(1)
+              }
+            }}
+            aria-label="Réordonner le compteur (flèches Haut/Bas)"
+            title="Glisser, ou flèches Haut/Bas, pour réordonner"
           >
             <DragHandleIcon width={15} height={15} />
           </button>

@@ -109,7 +109,7 @@ export function CounterActionsPanel({
   return (
     <Modal title={`Actions « ${counter.name} »`} onClose={onClose} accentColor={counter.appearance.color}>
       <section className="modal-section">
-        <button className="modal-btn" onClick={handleShare}>
+        <button className="modal-btn" onClick={handleShare} aria-live="polite" aria-atomic="true">
           {shared ? (
             <>
               <CheckIcon width={16} height={16} /> Copié
@@ -120,7 +120,13 @@ export function CounterActionsPanel({
             </>
           )}
         </button>
-        <button className="modal-btn" onClick={handleShareImage} disabled={sharingImage}>
+        <button
+          className="modal-btn"
+          onClick={handleShareImage}
+          disabled={sharingImage}
+          aria-live="polite"
+          aria-atomic="true"
+        >
           {imageShareError ? (
             <>
               <CloseIcon width={16} height={16} /> Erreur
@@ -154,7 +160,13 @@ export function CounterActionsPanel({
 
       <section className="modal-section modal-section--danger">
         <h3>Zone de danger</h3>
-        <button type="button" className="modal-btn modal-btn--danger" onClick={handleDeleteClick}>
+        <button
+          type="button"
+          className="modal-btn modal-btn--danger"
+          onClick={handleDeleteClick}
+          aria-live="polite"
+          aria-atomic="true"
+        >
           {confirmDelete ? (
             <>
               <CheckIcon width={16} height={16} /> Confirmer la suppression
