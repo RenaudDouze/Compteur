@@ -600,58 +600,60 @@ export default function App() {
         </>
       )}
 
-      {filteredCounters.length === 0 ? (
-        <div className="empty-state">
-          {counters.length === 0 ? (
-            <>
-              <p>Aucun compteur pour l'instant.</p>
-              <button className="add-btn large" onClick={addCounter}>
-                Créer mon premier compteur
-              </button>
-            </>
-          ) : searchQuery.trim() !== '' ? (
-            <p>Aucun compteur ne correspond à « {searchQuery.trim()} ».</p>
-          ) : archiveView === 'archived' ? (
-            <p>Aucun compteur archivé.</p>
-          ) : (
-            <p>Tous tes compteurs sont archivés.</p>
-          )}
-        </div>
-      ) : (
-        <Reorder.Group
-          as="div"
-          axis="y"
-          values={sortedCounters}
-          onReorder={reorderVisible}
-          className={`counter-grid ${
-            filteredCounters.length === 1
-              ? 'counter-grid--solo'
-              : filteredCounters.length === 2
-                ? 'counter-grid--duo'
-                : 'counter-grid--pack'
-          }`}
-        >
-          <AnimatePresence mode="popLayout">
-            {sortedCounters.map((counter) => (
-              <CounterCard
-                key={counter.id}
-                counter={counter}
-                fill={filteredCounters.length <= 2}
-                autoEdit={counter.id === autoEditId}
-                colors={COLORS}
-                onChange={(delta) => updateCount(counter.id, delta)}
-                onSetCount={(count) => setCount(counter.id, count)}
-                onUpdate={(patch) => updateCounter(counter.id, patch)}
-                onDuplicate={() => duplicateCounter(counter.id)}
-                onToggleArchive={() => toggleArchive(counter.id)}
-                onTogglePin={() => togglePin(counter.id)}
-                onDelete={() => deleteCounter(counter.id)}
-                onMove={(direction) => moveCounter(counter.id, direction)}
-              />
-            ))}
-          </AnimatePresence>
-        </Reorder.Group>
-      )}
+      <main>
+        {filteredCounters.length === 0 ? (
+          <div className="empty-state">
+            {counters.length === 0 ? (
+              <>
+                <p>Aucun compteur pour l'instant.</p>
+                <button className="add-btn large" onClick={addCounter}>
+                  Créer mon premier compteur
+                </button>
+              </>
+            ) : searchQuery.trim() !== '' ? (
+              <p>Aucun compteur ne correspond à « {searchQuery.trim()} ».</p>
+            ) : archiveView === 'archived' ? (
+              <p>Aucun compteur archivé.</p>
+            ) : (
+              <p>Tous tes compteurs sont archivés.</p>
+            )}
+          </div>
+        ) : (
+          <Reorder.Group
+            as="div"
+            axis="y"
+            values={sortedCounters}
+            onReorder={reorderVisible}
+            className={`counter-grid ${
+              filteredCounters.length === 1
+                ? 'counter-grid--solo'
+                : filteredCounters.length === 2
+                  ? 'counter-grid--duo'
+                  : 'counter-grid--pack'
+            }`}
+          >
+            <AnimatePresence mode="popLayout">
+              {sortedCounters.map((counter) => (
+                <CounterCard
+                  key={counter.id}
+                  counter={counter}
+                  fill={filteredCounters.length <= 2}
+                  autoEdit={counter.id === autoEditId}
+                  colors={COLORS}
+                  onChange={(delta) => updateCount(counter.id, delta)}
+                  onSetCount={(count) => setCount(counter.id, count)}
+                  onUpdate={(patch) => updateCounter(counter.id, patch)}
+                  onDuplicate={() => duplicateCounter(counter.id)}
+                  onToggleArchive={() => toggleArchive(counter.id)}
+                  onTogglePin={() => togglePin(counter.id)}
+                  onDelete={() => deleteCounter(counter.id)}
+                  onMove={(direction) => moveCounter(counter.id, direction)}
+                />
+              ))}
+            </AnimatePresence>
+          </Reorder.Group>
+        )}
+      </main>
 
       {syncOpen && (
         <ErrorBoundary

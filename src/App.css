@@ -7,6 +7,21 @@
   flex-direction: column;
 }
 
+/* `.counter-grid`/`.empty-state` (flex: 1) comptent sur un parent flex qui
+   leur laisse remplir l'espace vertical restant — jusqu'ici `.app`
+   directement. Le landmark <main> ajouté autour d'eux doit donc relayer ce
+   même comportement, sinon il se contente de sa hauteur de contenu (`block`
+   par défaut) : le reste de la mise en page se réduit en conséquence,
+   décalant les cartes pendant leur animation d'entrée — un décalage qui
+   pouvait faire sortir le bouton +/- de sous le pointeur pendant un appui
+   maintenu (rafale) commencé avant la fin de cette animation. */
+.app > main {
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+  min-height: 0;
+}
+
 .app-header {
   position: relative;
   display: flex;
@@ -436,8 +451,12 @@
 }
 
 .counter-color-option {
-  width: 26px;
-  height: 26px;
+  /* 36px, plus proche des 44px recommandés pour une cible tactile (WCAG
+     2.5.5, AAA) : cette grille est en flex-wrap dans la modale (plein
+     largeur disponible), sans la contrainte de place de la rangée d'icônes
+     compactée sur la carte elle-même (voir .counter-options-row). */
+  width: 36px;
+  height: 36px;
   border-radius: 50%;
   border: 2px solid transparent;
   cursor: pointer;
@@ -888,8 +907,12 @@
   border: none;
   background: var(--bg-2);
   color: var(--text-dim);
-  width: 30px;
-  height: 30px;
+  /* 36px : plus proche des 44px recommandés pour une cible tactile (WCAG
+     2.5.5, AAA) sans aller jusqu'à 44 — ce bouton reste aligné à côté d'un
+     champ de saisie ~31px de haut (recherche, image de fond), une taille
+     trop généreuse créerait un déséquilibre visuel avec lui. */
+  width: 36px;
+  height: 36px;
   border-radius: 50%;
 }
 
@@ -1135,9 +1158,12 @@
 .sync-version {
   margin: 4px 0 0;
   font-size: 0.75rem;
+  /* --text-dim seul seul suffit à distinguer ce texte secondaire du reste ;
+     l'opacité en plus (retirée) faisait tomber le contraste sous 3:1
+     (~2.7:1 en clair, ~3.6:1 en sombre), sous le minimum AA de 4.5:1 pour
+     du texte de cette taille. */
   color: var(--text-dim);
   text-align: center;
-  opacity: 0.7;
 }
 
 .sync-code {
