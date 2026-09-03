@@ -159,4 +159,21 @@ test.describe('Parcours de base', () => {
     await page.keyboard.press('Escape')
     await expect(page.getByRole('heading', { name: '+1', exact: true })).toBeVisible()
   })
+
+  test("le plein écran de l'appareil est indépendant du mode focus", async ({ page }) => {
+    await addCounter(page)
+
+    // Seul, il ne masque pas l'en-tête (contrairement au mode focus).
+    await openMenu(page)
+    await page.getByRole('button', { name: 'Plein écran' }).click()
+    await expect(page.getByRole('heading', { name: '+1', exact: true })).toBeVisible()
+
+    // Combiné au mode focus, le bouton de sortie de celui-ci ramène aussi le
+    // libellé "Plein écran" à son état initial (quitte les deux d'un coup).
+    await openMenu(page)
+    await page.getByRole('button', { name: 'Mode focus' }).click()
+    await page.getByRole('button', { name: 'Quitter le mode focus' }).click()
+    await openMenu(page)
+    await expect(page.getByRole('button', { name: 'Plein écran' })).toBeVisible()
+  })
 })

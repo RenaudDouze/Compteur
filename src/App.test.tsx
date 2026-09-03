@@ -1441,4 +1441,103 @@ describe('App', () => {
       expect(screen.queryByRole('heading', { name: '+1' })).not.toBeInTheDocument()
     })
   })
+
+  describe("plein écran de l'appareil", () => {
+    // `document.fullscreenElement` est en lecture seule dans jsdom : on la
+    // redéfinit pour simuler l'état plein écran natif du navigateur.
+    function stubFullscreenElement(value: Element | null) {
+      Object.defineProperty(document, 'fullscreenElement', { value, configurable: true })
+    }
+
+    afterEach(() => {
+      stubFullscreenElement(null)
+    })
+
+    it("n'affiche pas le bouton plein écran sans compteur", () => {
+      render(<App />)
+      openMenu()
+      expect(screen.queryByRole('button', { name: 'Plein écran' })).not.toBeInTheDocument()
+    })
+
+    it("demande le plein écran natif du navigateur à l'activation, et ignore silencieusement un refus", async () => {
+      window.localStorage.setItem('+1.counters.v1', JSON.stringify([makeCounter()]))
+      const requestFullscreen = vi.fn().mockRejectedValue(new Error('refusé'))
+      document.documentElement.requestFullscreen = requestFullscreen
+      render(<App />)
+      openMenu()
+      await act(async () => {
+        fireEvent.click(screen.getByRole('button', { name: 'Plein écran' }))
+      })
+      expect(requestFullscreen).toHaveBeenCalledTimes(1)
+      openMenu()
+      expect(screen.getByRole('button', { name: 'Quitter le plein écran' })).toBeInTheDocument()
+      // @ts-expect-error nettoyage du stub posé pour ce test
+      delete document.documentElement.requestFullscreen
+    })
+
+    it('quitte le plein écran natif du navigateur au reclic, et ignore silencieusement un refus', async () => {
+      window.localStorage.setItem('+1.counters.v1', JSON.stringify([makeCounter()]))
+      const exitFullscreen = vi.fn().mockRejectedValue(new Error('refusé'))
+      document.exitFullscreen = exitFullscreen
+      render(<App />)
+      openMenu()
+      fireEvent.click(screen.getByRole('button', { name: 'Plein écran' }))
+      stubFullscreenElement(document.body)
+      openMenu()
+      await act(async () => {
+        fireEvent.click(screen.getByRole('button', { name: 'Quitter le plein écran' }))
+      })
+      expect(exitFullscreen).toHaveBeenCalledTimes(1)
+      // @ts-expect-error nettoyage du stub posé pour ce test
+      delete document.exitFullscreen
+    })
+
+    it("resynchronise l'état si le plein écran natif est quitté autrement que par notre bouton", () => {
+      window.localStorage.setItem('+1.counters.v1', JSON.stringify([makeCounter()]))
+      render(<App />)
+      openMenu()
+      fireEvent.click(screen.getByRole('button', { name: 'Plein écran' }))
+      stubFullscreenElement(null)
+      fireEvent(document, new Event('fullscreenchange'))
+      openMenu()
+      expect(screen.getByRole('button', { name: 'Plein écran' })).toBeInTheDocument()
+    })
+
+    it('ignore un changement de plein écran natif tant que celui-ci reste actif', () => {
+      window.localStorage.setItem('+1.counters.v1', JSON.stringify([makeCounter()]))
+      render(<App />)
+      openMenu()
+      fireEvent.click(screen.getByRole('button', { name: 'Plein écran' }))
+      stubFullscreenElement(document.body)
+      fireEvent(document, new Event('fullscreenchange'))
+      openMenu()
+      expect(screen.getByRole('button', { name: 'Quitter le plein écran' })).toBeInTheDocument()
+    })
+
+    it('est indépendant du mode focus : activable seul sans masquer l\'en-tête', () => {
+      window.localStorage.setItem('+1.counters.v1', JSON.stringify([makeCounter()]))
+      render(<App />)
+      openMenu()
+      fireEvent.click(screen.getByRole('button', { name: 'Plein écran' }))
+      expect(screen.getByRole('heading', { name: '+1' })).toBeInTheDocument()
+    })
+
+    it("le bouton de sortie du mode focus quitte aussi le plein écran de l'appareil", async () => {
+      window.localStorage.setItem('+1.counters.v1', JSON.stringify([makeCounter()]))
+      const exitFullscreen = vi.fn().mockResolvedValue(undefined)
+      document.exitFullscreen = exitFullscreen
+      render(<App />)
+      openMenu()
+      fireEvent.click(screen.getByRole('button', { name: 'Plein écran' }))
+      stubFullscreenElement(document.body)
+      openMenu()
+      fireEvent.click(screen.getByRole('button', { name: 'Mode focus' }))
+      await act(async () => {
+        fireEvent.click(screen.getByRole('button', { name: 'Quitter le mode focus' }))
+      })
+      expect(exitFullscreen).toHaveBeenCalledTimes(1)
+      // @ts-expect-error nettoyage du stub posé pour ce test
+      delete document.exitFullscreen
+    })
+  })
 })
