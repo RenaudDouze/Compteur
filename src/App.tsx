@@ -10,6 +10,7 @@ import {
   BellIcon,
   CloseIcon,
   EyeIcon,
+  FocusIcon,
   FullscreenIcon,
   MoonIcon,
   MoreIcon,
@@ -137,7 +138,7 @@ export default function App() {
     setAutoEditId(null)
   }, [autoEditId])
 
-  // La recherche, le thème, le partage, le mode focus et le filtre
+  // La recherche, le thème, le partage, le mode focus, le plein écran et le filtre
   // Actifs/Archivés vivent dans ce menu déroulant horizontal, replié par
   // défaut pour ne pas encombrer l'en-tête. Il s'ouvre en survol (position
   // absolue ancrée sous le bouton ⋯, pas en poussant le reste de la page) et
@@ -246,6 +247,32 @@ export default function App() {
     document.addEventListener('keydown', onKeyDown)
     return () => document.removeEventListener('keydown', onKeyDown)
   }, [focusMode])
+
+  // Bascule indépendante vers le plein écran natif de l'appareil
+  // (`requestFullscreen`) : contrairement au mode focus ci-dessus, réclame
+  // vraiment tout l'écran (masque la barre d'adresse/les onglets), pour qui
+  // le souhaite explicitement (ex : poser la tablette en écran dédié). Les
+  // deux modes sont combinables mais indépendants l'un de l'autre.
+  const [deviceFullscreen, setDeviceFullscreen] = useState(false)
+
+  useEffect(() => {
+    if (deviceFullscreen) {
+      document.documentElement.requestFullscreen?.().catch(() => {})
+    } else if (document.fullscreenElement) {
+      document.exitFullscreen?.().catch(() => {})
+    }
+  }, [deviceFullscreen])
+
+  // Resynchronise l'état si le plein écran natif est quitté autrement que
+  // par notre bouton (ex : touche Échap gérée nativement par le navigateur,
+  // ou raccourci système).
+  useEffect(() => {
+    const onFullscreenChange = () => {
+      if (!document.fullscreenElement) setDeviceFullscreen(false)
+    }
+    document.addEventListener('fullscreenchange', onFullscreenChange)
+    return () => document.removeEventListener('fullscreenchange', onFullscreenChange)
+  }, [])
 
   // Applique le thème au document (déjà posé une première fois par le script
   // inline de index.html, pour éviter un flash) et adapte la couleur de la
@@ -440,6 +467,7 @@ export default function App() {
   // (`title`) sur leur bouton respectif.
   const menuButtonLabel = `${menuOpen ? 'Masquer le menu' : 'Ouvrir le menu'}${hasSyncError ? ' (erreur de synchronisation)' : ''}`
   const syncButtonLabel = `Synchroniser${hasSyncError ? ' (erreur de synchronisation)' : ''}`
+  const deviceFullscreenLabel = deviceFullscreen ? 'Quitter le plein écran' : 'Plein écran'
   const archiveViewLabel =
     archiveView === 'archived'
       ? `Vue : Archivés (${archivedCount})`
@@ -458,7 +486,13 @@ export default function App() {
       {focusMode && (
         <button
           className="focus-exit-btn"
-          onClick={() => setFocusMode(false)}
+          onClick={() => {
+            setFocusMode(false)
+            // Un seul bouton de sortie visible dans cet état : il ramène à
+            // l'affichage normal en une fois, y compris si le plein écran
+            // natif de l'appareil était aussi actif.
+            setDeviceFullscreen(false)
+          }}
           aria-label="Quitter le mode focus"
           title="Quitter le mode focus"
         >
@@ -543,6 +577,19 @@ export default function App() {
                     }}
                     aria-label="Mode focus"
                     title="Mode focus"
+                  >
+                    <FocusIcon />
+                  </button>
+                )}
+                {counters.length > 0 && (
+                  <button
+                    className="add-btn icon-btn"
+                    onClick={() => {
+                      setDeviceFullscreen((v) => !v)
+                      setMenuOpen(false)
+                    }}
+                    aria-label={deviceFullscreenLabel}
+                    title={deviceFullscreenLabel}
                   >
                     <FullscreenIcon />
                   </button>

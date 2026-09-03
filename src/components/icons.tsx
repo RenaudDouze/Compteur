@@ -88,6 +88,21 @@ export function FullscreenIcon(props: IconProps) {
   )
 }
 
+/** Réticule de mise au point : masquer l'en-tête pour se concentrer sur les
+ * compteurs (mode focus) plutôt qu'agrandir la fenêtre elle-même — distinct
+ * du plein écran natif de l'appareil (FullscreenIcon ci-dessus). */
+export function FocusIcon(props: IconProps) {
+  return (
+    <svg {...BASE} {...STROKE} {...props}>
+      <circle cx="12" cy="12" r="3" />
+      <path d="M12 3v3" />
+      <path d="M12 18v3" />
+      <path d="M3 12h3" />
+      <path d="M18 12h3" />
+    </svg>
+  )
+}
+
 /** Actifs = visible/affiché, Archivés = mis de côté (hors de vue) : une paire
  * différente du contenant ouvert/fermé (dossier, bac) essayés avant. */
 export function EyeIcon(props: IconProps) {
