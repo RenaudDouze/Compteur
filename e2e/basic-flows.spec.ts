@@ -143,19 +143,19 @@ test.describe('Parcours de base', () => {
     await expect(page.locator('.counter-grid--pack')).toBeVisible()
   })
 
-  test('masque l\'en-tête en mode plein écran, restauré par le bouton de sortie ou Échap', async ({ page }) => {
+  test('masque l\'en-tête en mode focus, restauré par le bouton de sortie ou Échap', async ({ page }) => {
     await addCounter(page)
     await openMenu(page)
-    await page.getByRole('button', { name: 'Mode plein écran' }).click()
+    await page.getByRole('button', { name: 'Mode focus' }).click()
     await expect(page.getByRole('heading', { name: '+1', exact: true })).not.toBeVisible()
-    const exitBtn = page.getByRole('button', { name: 'Quitter le mode plein écran' })
+    const exitBtn = page.getByRole('button', { name: 'Quitter le mode focus' })
     await expect(exitBtn).toBeVisible()
 
     await exitBtn.click()
     await expect(page.getByRole('heading', { name: '+1', exact: true })).toBeVisible()
 
     await openMenu(page)
-    await page.getByRole('button', { name: 'Mode plein écran' }).click()
+    await page.getByRole('button', { name: 'Mode focus' }).click()
     await page.keyboard.press('Escape')
     await expect(page.getByRole('heading', { name: '+1', exact: true })).toBeVisible()
   })

@@ -58,7 +58,7 @@ function makeCounter(overrides: Partial<Counter> = {}): Counter {
   }
 }
 
-// La recherche, le thème, le partage, le plein écran et le filtre
+// La recherche, le thème, le partage, le mode focus et le filtre
 // Actifs/Archivés vivent dans le menu déroulant de l'en-tête, replié par
 // défaut : chaque test qui les exerce doit d'abord l'ouvrir. « + Nouveau
 // compteur » reste hors menu, toujours visible : inutile de l'ouvrir pour lui.
@@ -1397,108 +1397,47 @@ describe('App', () => {
     })
   })
 
-  describe('mode plein écran', () => {
-    // `document.fullscreenElement` est en lecture seule dans jsdom : on la
-    // redéfinit pour simuler l'état plein écran natif du navigateur.
-    function stubFullscreenElement(value: Element | null) {
-      Object.defineProperty(document, 'fullscreenElement', { value, configurable: true })
-    }
-
-    afterEach(() => {
-      stubFullscreenElement(null)
-    })
-
-    it("n'affiche pas le bouton plein écran sans compteur", () => {
+  describe('mode focus', () => {
+    it("n'affiche pas le bouton mode focus sans compteur", () => {
       render(<App />)
       openMenu()
-      expect(screen.queryByRole('button', { name: 'Mode plein écran' })).not.toBeInTheDocument()
+      expect(screen.queryByRole('button', { name: 'Mode focus' })).not.toBeInTheDocument()
     })
 
     it('masque l\'en-tête et affiche le bouton de sortie au clic', () => {
       window.localStorage.setItem('+1.counters.v1', JSON.stringify([makeCounter()]))
       render(<App />)
       openMenu()
-      fireEvent.click(screen.getByRole('button', { name: 'Mode plein écran' }))
+      fireEvent.click(screen.getByRole('button', { name: 'Mode focus' }))
       expect(screen.queryByRole('heading', { name: '+1' })).not.toBeInTheDocument()
-      expect(screen.getByRole('button', { name: 'Quitter le mode plein écran' })).toBeInTheDocument()
+      expect(screen.getByRole('button', { name: 'Quitter le mode focus' })).toBeInTheDocument()
     })
 
-    it('quitte le mode plein écran au clic sur le bouton de sortie', () => {
+    it('quitte le mode focus au clic sur le bouton de sortie', () => {
       window.localStorage.setItem('+1.counters.v1', JSON.stringify([makeCounter()]))
       render(<App />)
       openMenu()
-      fireEvent.click(screen.getByRole('button', { name: 'Mode plein écran' }))
-      fireEvent.click(screen.getByRole('button', { name: 'Quitter le mode plein écran' }))
+      fireEvent.click(screen.getByRole('button', { name: 'Mode focus' }))
+      fireEvent.click(screen.getByRole('button', { name: 'Quitter le mode focus' }))
       expect(screen.getByRole('heading', { name: '+1' })).toBeInTheDocument()
-      expect(screen.queryByRole('button', { name: 'Quitter le mode plein écran' })).not.toBeInTheDocument()
+      expect(screen.queryByRole('button', { name: 'Quitter le mode focus' })).not.toBeInTheDocument()
     })
 
-    it('quitte le mode plein écran avec Échap', () => {
+    it('quitte le mode focus avec Échap', () => {
       window.localStorage.setItem('+1.counters.v1', JSON.stringify([makeCounter()]))
       render(<App />)
       openMenu()
-      fireEvent.click(screen.getByRole('button', { name: 'Mode plein écran' }))
+      fireEvent.click(screen.getByRole('button', { name: 'Mode focus' }))
       fireEvent.keyDown(document, { key: 'Escape' })
       expect(screen.getByRole('heading', { name: '+1' })).toBeInTheDocument()
     })
 
-    it('ignore une autre touche que Échap en mode plein écran', () => {
+    it('ignore une autre touche que Échap en mode focus', () => {
       window.localStorage.setItem('+1.counters.v1', JSON.stringify([makeCounter()]))
       render(<App />)
       openMenu()
-      fireEvent.click(screen.getByRole('button', { name: 'Mode plein écran' }))
+      fireEvent.click(screen.getByRole('button', { name: 'Mode focus' }))
       fireEvent.keyDown(document, { key: 'a' })
-      expect(screen.queryByRole('heading', { name: '+1' })).not.toBeInTheDocument()
-    })
-
-    it("demande le plein écran natif du navigateur à l'activation, et ignore silencieusement un refus", async () => {
-      window.localStorage.setItem('+1.counters.v1', JSON.stringify([makeCounter()]))
-      const requestFullscreen = vi.fn().mockRejectedValue(new Error('refusé'))
-      document.documentElement.requestFullscreen = requestFullscreen
-      render(<App />)
-      openMenu()
-      await act(async () => {
-        fireEvent.click(screen.getByRole('button', { name: 'Mode plein écran' }))
-      })
-      expect(requestFullscreen).toHaveBeenCalledTimes(1)
-      expect(screen.queryByRole('heading', { name: '+1' })).not.toBeInTheDocument()
-      // @ts-expect-error nettoyage du stub posé pour ce test
-      delete document.documentElement.requestFullscreen
-    })
-
-    it('quitte le plein écran natif du navigateur à la désactivation, et ignore silencieusement un refus', async () => {
-      window.localStorage.setItem('+1.counters.v1', JSON.stringify([makeCounter()]))
-      const exitFullscreen = vi.fn().mockRejectedValue(new Error('refusé'))
-      document.exitFullscreen = exitFullscreen
-      render(<App />)
-      openMenu()
-      fireEvent.click(screen.getByRole('button', { name: 'Mode plein écran' }))
-      stubFullscreenElement(document.body)
-      await act(async () => {
-        fireEvent.click(screen.getByRole('button', { name: 'Quitter le mode plein écran' }))
-      })
-      expect(exitFullscreen).toHaveBeenCalledTimes(1)
-      // @ts-expect-error nettoyage du stub posé pour ce test
-      delete document.exitFullscreen
-    })
-
-    it("resynchronise l'état si le plein écran natif est quitté autrement que par notre bouton", () => {
-      window.localStorage.setItem('+1.counters.v1', JSON.stringify([makeCounter()]))
-      render(<App />)
-      openMenu()
-      fireEvent.click(screen.getByRole('button', { name: 'Mode plein écran' }))
-      stubFullscreenElement(null)
-      fireEvent(document, new Event('fullscreenchange'))
-      expect(screen.getByRole('heading', { name: '+1' })).toBeInTheDocument()
-    })
-
-    it('ignore un changement de plein écran natif tant que celui-ci reste actif', () => {
-      window.localStorage.setItem('+1.counters.v1', JSON.stringify([makeCounter()]))
-      render(<App />)
-      openMenu()
-      fireEvent.click(screen.getByRole('button', { name: 'Mode plein écran' }))
-      stubFullscreenElement(document.body)
-      fireEvent(document, new Event('fullscreenchange'))
       expect(screen.queryByRole('heading', { name: '+1' })).not.toBeInTheDocument()
     })
   })
