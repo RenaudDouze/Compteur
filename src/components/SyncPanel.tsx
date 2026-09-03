@@ -145,7 +145,7 @@ export function SyncPanel({ counters, onClose, onImport, remoteSync }: SyncPanel
             {remoteSync.code ? (
               <>
                 <p className="sync-code">{formatSyncCode(remoteSync.code)}</p>
-                <p className={`sync-status sync-status--${remoteSync.status}`}>
+                <p className={`sync-status sync-status--${remoteSync.status}`} aria-live="polite" aria-atomic="true">
                   {remoteSync.status === 'error' && remoteSync.errorMessage
                     ? remoteSync.errorMessage
                     : REMOTE_STATUS_LABEL[remoteSync.status]}
@@ -215,7 +215,7 @@ export function SyncPanel({ counters, onClose, onImport, remoteSync }: SyncPanel
               </p>
             )}
           {shareUrl && (
-            <button className="modal-btn" onClick={copyLink}>
+            <button className="modal-btn" onClick={copyLink} aria-live="polite" aria-atomic="true">
               {copied ? 'Lien copié ✓' : 'Copier le lien'}
             </button>
           )}

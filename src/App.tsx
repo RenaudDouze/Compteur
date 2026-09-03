@@ -147,6 +147,37 @@ export default function App() {
   // c'est l'action la plus fréquente, elle ne doit pas se cacher derrière un
   // clic supplémentaire.
   const [menuOpen, setMenuOpen] = useState(false)
+  const menuRef = useRef<HTMLDivElement>(null)
+  const menuButtonRef = useRef<HTMLButtonElement>(null)
+
+  // Ferme le menu à l'appui sur Échap (en lui rendant le focus, comme les
+  // autres panneaux de l'app) ou au clic/tap en dehors — sans quoi la seule
+  // façon de le refermer au clavier était d'activer une de ses actions.
+  useEffect(() => {
+    if (!menuOpen) return
+    const onKeyDown = (e: KeyboardEvent) => {
+      if (e.key !== 'Escape') return
+      e.preventDefault()
+      setMenuOpen(false)
+      menuButtonRef.current?.focus()
+    }
+    const onPointerDown = (e: PointerEvent) => {
+      const target = e.target as Node
+      if (menuRef.current?.contains(target) || menuButtonRef.current?.contains(target)) return
+      setMenuOpen(false)
+    }
+    document.addEventListener('keydown', onKeyDown)
+    document.addEventListener('pointerdown', onPointerDown)
+    return () => {
+      document.removeEventListener('keydown', onKeyDown)
+      document.removeEventListener('pointerdown', onPointerDown)
+    }
+  }, [menuOpen])
+
+  // Annonce (lecteur d'écran) du nouveau rang après un déplacement au clavier
+  // (voir moveCounter) : le glisser-déposer souris/tactile est visible à
+  // l'écran, son équivalent clavier a besoin de cette confirmation explicite.
+  const [reorderAnnouncement, setReorderAnnouncement] = useState('')
 
   // Notifications système (objectif atteint, compteurs mis à jour depuis un
   // autre appareil) : voir notifications.ts. `getNotificationPermission`
@@ -401,6 +432,21 @@ export default function App() {
     setCounters((prev) => mergeVisibleOrder(prev, newOrder))
   }
 
+  // Équivalent clavier au glisser-déposer (Reorder.Item ci-dessus ne réagit
+  // qu'au pointeur) : échange le compteur avec son voisin dans la liste
+  // affichée, et annonce le nouveau rang via la région aria-live ci-dessous
+  // — un glisser-déposer réussi est visible à l'écran, mais silencieux pour
+  // un lecteur d'écran sans cette annonce explicite.
+  const moveCounter = (id: string, direction: 1 | -1) => {
+    const index = sortedCounters.findIndex((c) => c.id === id)
+    const targetIndex = index + direction
+    if (index === -1 || targetIndex < 0 || targetIndex >= sortedCounters.length) return
+    const newOrder = [...sortedCounters]
+    ;[newOrder[index], newOrder[targetIndex]] = [newOrder[targetIndex], newOrder[index]]
+    reorderVisible(newOrder)
+    setReorderAnnouncement(`${sortedCounters[index].name} déplacé en position ${targetIndex + 1} sur ${sortedCounters.length}`)
+  }
+
   // Signale une erreur de synchro dès l'en-tête (bouton menu) et sur le
   // bouton Synchroniser dans le menu déroulant : sans ça, rien ne
   // l'indiquait en dehors de la modale Synchroniser elle-même, qu'il faut
@@ -422,6 +468,10 @@ export default function App() {
 
   return (
     <div className="app">
+      <span className="sr-only" aria-live="polite">
+        {reorderAnnouncement}
+      </span>
+
       {focusMode && (
         <button
           className="focus-exit-btn"
@@ -442,6 +492,7 @@ export default function App() {
                 + Nouveau compteur
               </button>
               <button
+                ref={menuButtonRef}
                 className={`add-btn icon-btn${hasSyncError ? ' icon-btn--alert' : ''}`}
                 onClick={() => setMenuOpen((v) => !v)}
                 aria-haspopup="true"
@@ -454,7 +505,7 @@ export default function App() {
             </div>
 
             {menuOpen && (
-              <div className="app-menu" role="menu">
+              <div className="app-menu" ref={menuRef}>
                 {counters.length > 0 && (
                   <button
                     className="add-btn icon-btn"
@@ -595,6 +646,7 @@ export default function App() {
                 onToggleArchive={() => toggleArchive(counter.id)}
                 onTogglePin={() => togglePin(counter.id)}
                 onDelete={() => deleteCounter(counter.id)}
+                onMove={(direction) => moveCounter(counter.id, direction)}
               />
             ))}
           </AnimatePresence>

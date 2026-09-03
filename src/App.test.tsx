@@ -1322,6 +1322,81 @@ describe('App', () => {
     })
   })
 
+  describe('réordonnancement au clavier (équivalent du glisser-déposer)', () => {
+    const counterNames = () => Array.from(document.querySelectorAll('.counter-name')).map((el) => el.textContent)
+    const dragHandleFor = (name: string) =>
+      within(screen.getByText(name).closest('article')!).getByRole('button', {
+        name: 'Réordonner le compteur (flèches Haut/Bas)',
+      })
+
+    it("ArrowDown sur la poignée échange le compteur avec son suivant", async () => {
+      window.localStorage.setItem(
+        '+1.counters.v1',
+        JSON.stringify([
+          makeCounter({ id: 'a', name: 'Un' }),
+          makeCounter({ id: 'b', name: 'Deux' }),
+          makeCounter({ id: 'c', name: 'Trois' }),
+        ])
+      )
+      render(<App />)
+      fireEvent.keyDown(dragHandleFor('Un'), { key: 'ArrowDown' })
+      await waitFor(() => expect(counterNames()).toEqual(['Deux', 'Un', 'Trois']))
+    })
+
+    it("ArrowUp sur la poignée du premier compteur ne change rien (déjà en tête)", () => {
+      window.localStorage.setItem(
+        '+1.counters.v1',
+        JSON.stringify([makeCounter({ id: 'a', name: 'Un' }), makeCounter({ id: 'b', name: 'Deux' })])
+      )
+      render(<App />)
+      fireEvent.keyDown(dragHandleFor('Un'), { key: 'ArrowUp' })
+      expect(counterNames()).toEqual(['Un', 'Deux'])
+    })
+
+    it('annonce le nouveau rang pour les lecteurs d\'écran (région aria-live)', async () => {
+      window.localStorage.setItem(
+        '+1.counters.v1',
+        JSON.stringify([makeCounter({ id: 'a', name: 'Un' }), makeCounter({ id: 'b', name: 'Deux' })])
+      )
+      render(<App />)
+      fireEvent.keyDown(dragHandleFor('Un'), { key: 'ArrowDown' })
+      await waitFor(() => expect(screen.getByText('Un déplacé en position 2 sur 2')).toBeInTheDocument())
+    })
+  })
+
+  describe("menu de l'en-tête", () => {
+    it("se ferme et rend le focus au bouton menu à l'appui sur Échap", () => {
+      render(<App />)
+      openMenu()
+      expect(screen.getByRole('button', { name: 'Thème : Auto' })).toBeInTheDocument()
+      fireEvent.keyDown(document, { key: 'Escape' })
+      expect(screen.queryByRole('button', { name: 'Thème : Auto' })).not.toBeInTheDocument()
+      expect(screen.getByRole('button', { name: 'Ouvrir le menu' })).toHaveFocus()
+    })
+
+    it("ignore les autres touches que Échap", () => {
+      render(<App />)
+      openMenu()
+      fireEvent.keyDown(document, { key: 'a' })
+      expect(screen.getByRole('button', { name: 'Thème : Auto' })).toBeInTheDocument()
+    })
+
+    it('se ferme au clic/tap en dehors', () => {
+      render(<App />)
+      openMenu()
+      expect(screen.getByRole('button', { name: 'Thème : Auto' })).toBeInTheDocument()
+      fireEvent.pointerDown(document.body)
+      expect(screen.queryByRole('button', { name: 'Thème : Auto' })).not.toBeInTheDocument()
+    })
+
+    it("un pointerdown à l'intérieur du menu ne le ferme pas", () => {
+      render(<App />)
+      openMenu()
+      fireEvent.pointerDown(screen.getByRole('button', { name: 'Thème : Auto' }))
+      expect(screen.getByRole('button', { name: 'Thème : Auto' })).toBeInTheDocument()
+    })
+  })
+
   describe('mode plein écran', () => {
     // `document.fullscreenElement` est en lecture seule dans jsdom : on la
     // redéfinit pour simuler l'état plein écran natif du navigateur.

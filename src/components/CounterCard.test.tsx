@@ -40,6 +40,7 @@ function renderCard(counterOverrides: CounterOverrides = {}, props: Partial<Para
     onToggleArchive: vi.fn(),
     onTogglePin: vi.fn(),
     onDelete: vi.fn(),
+    onMove: vi.fn(),
     ...props,
   }
   const utils = render(
@@ -359,16 +360,32 @@ describe('CounterCard', () => {
   describe('poignée de glisser', () => {
     it("un simple clic sur la poignée n'incrémente pas le compteur", () => {
       const { onChange } = renderCard()
-      fireEvent.click(screen.getByRole('button', { name: 'Réordonner le compteur' }))
+      fireEvent.click(screen.getByRole('button', { name: 'Réordonner le compteur (flèches Haut/Bas)' }))
       expect(onChange).not.toHaveBeenCalled()
     })
 
     it("pointerdown sur la poignée n'incrémente pas le compteur", () => {
       const { onChange } = renderCard()
-      fireEvent.pointerDown(screen.getByRole('button', { name: 'Réordonner le compteur' }))
+      fireEvent.pointerDown(screen.getByRole('button', { name: 'Réordonner le compteur (flèches Haut/Bas)' }))
       expect(onChange).not.toHaveBeenCalled()
     })
 
+    it('ArrowUp/ArrowDown sur la poignée appelle onMove sans incrémenter le compteur', () => {
+      const { onChange, onMove } = renderCard()
+      const handle = screen.getByRole('button', { name: 'Réordonner le compteur (flèches Haut/Bas)' })
+      fireEvent.keyDown(handle, { key: 'ArrowUp' })
+      fireEvent.keyDown(handle, { key: 'ArrowDown' })
+      expect(onMove).toHaveBeenNthCalledWith(1, -1)
+      expect(onMove).toHaveBeenNthCalledWith(2, 1)
+      expect(onChange).not.toHaveBeenCalled()
+    })
+
+    it('une autre touche sur la poignée n\'appelle pas onMove', () => {
+      const { onMove } = renderCard()
+      const handle = screen.getByRole('button', { name: 'Réordonner le compteur (flèches Haut/Bas)' })
+      fireEvent.keyDown(handle, { key: 'Enter' })
+      expect(onMove).not.toHaveBeenCalled()
+    })
   })
 
   describe('renommage', () => {
@@ -611,6 +628,7 @@ describe('CounterCard', () => {
             onToggleArchive={vi.fn()}
             onTogglePin={vi.fn()}
             onDelete={vi.fn()}
+            onMove={vi.fn()}
           />
         </Reorder.Group>
       )
@@ -627,6 +645,7 @@ describe('CounterCard', () => {
             onToggleArchive={vi.fn()}
             onTogglePin={vi.fn()}
             onDelete={vi.fn()}
+            onMove={vi.fn()}
           />
         </Reorder.Group>
       )
@@ -660,6 +679,7 @@ describe('CounterCard', () => {
             onToggleArchive={vi.fn()}
             onTogglePin={vi.fn()}
             onDelete={vi.fn()}
+            onMove={vi.fn()}
           />
         </Reorder.Group>
       )
@@ -681,6 +701,7 @@ describe('CounterCard', () => {
             onToggleArchive={vi.fn()}
             onTogglePin={vi.fn()}
             onDelete={vi.fn()}
+            onMove={vi.fn()}
           />
         </Reorder.Group>
       )
@@ -701,6 +722,7 @@ describe('CounterCard', () => {
             onToggleArchive={vi.fn()}
             onTogglePin={vi.fn()}
             onDelete={vi.fn()}
+            onMove={vi.fn()}
           />
         </Reorder.Group>
       )
@@ -718,6 +740,7 @@ describe('CounterCard', () => {
             onToggleArchive={vi.fn()}
             onTogglePin={vi.fn()}
             onDelete={vi.fn()}
+            onMove={vi.fn()}
           />
         </Reorder.Group>
       )
@@ -739,6 +762,7 @@ describe('CounterCard', () => {
             onToggleArchive={vi.fn()}
             onTogglePin={vi.fn()}
             onDelete={vi.fn()}
+            onMove={vi.fn()}
           />
         </Reorder.Group>
       )
@@ -756,6 +780,7 @@ describe('CounterCard', () => {
             onToggleArchive={vi.fn()}
             onTogglePin={vi.fn()}
             onDelete={vi.fn()}
+            onMove={vi.fn()}
           />
         </Reorder.Group>
       )
@@ -776,6 +801,7 @@ describe('CounterCard', () => {
             onToggleArchive={vi.fn()}
             onTogglePin={vi.fn()}
             onDelete={vi.fn()}
+            onMove={vi.fn()}
           />
         </Reorder.Group>
       )
@@ -797,6 +823,7 @@ describe('CounterCard', () => {
             onToggleArchive={vi.fn()}
             onTogglePin={vi.fn()}
             onDelete={vi.fn()}
+            onMove={vi.fn()}
           />
         </Reorder.Group>
       )
@@ -817,6 +844,7 @@ describe('CounterCard', () => {
             onToggleArchive={vi.fn()}
             onTogglePin={vi.fn()}
             onDelete={vi.fn()}
+            onMove={vi.fn()}
           />
         </Reorder.Group>
       )
@@ -838,6 +866,7 @@ describe('CounterCard', () => {
             onToggleArchive={vi.fn()}
             onTogglePin={vi.fn()}
             onDelete={vi.fn()}
+            onMove={vi.fn()}
           />
         </Reorder.Group>
       )
