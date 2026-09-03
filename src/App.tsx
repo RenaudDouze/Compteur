@@ -137,7 +137,7 @@ export default function App() {
     setAutoEditId(null)
   }, [autoEditId])
 
-  // La recherche, le thème, le partage, le plein écran et le filtre
+  // La recherche, le thème, le partage, le mode focus et le filtre
   // Actifs/Archivés vivent dans ce menu déroulant horizontal, replié par
   // défaut pour ne pas encombrer l'en-tête. Il s'ouvre en survol (position
   // absolue ancrée sous le bouton ⋯, pas en poussant le reste de la page) et
@@ -230,31 +230,14 @@ export default function App() {
   const activeTheme = themePreference === 'system' ? (systemDark ? 'dark' : 'light') : themePreference
 
   // Masque l'en-tête (titre, icônes, recherche, filtre archivés) pour ne
-  // garder que les compteurs à l'écran, et bascule le navigateur en plein
-  // écran natif quand c'est supporté (ex : absent sur Safari iOS, où le
-  // masquage de l'en-tête reste quand même utile seul).
+  // garder que les compteurs à l'écran, sans passer par le plein écran natif
+  // du navigateur (`requestFullscreen`) : celui-ci prend tout l'écran de
+  // l'appareil (masque aussi la barre d'adresse/les onglets, voire déborde
+  // sur d'autres écrans en configuration multi-écran) plutôt que de rester
+  // dans la fenêtre/onglet déjà ouvert — pas ce qui est recherché ici, un
+  // simple affichage épuré dans l'espace disponible.
   const [focusMode, setFocusMode] = useState(false)
 
-  useEffect(() => {
-    if (focusMode) {
-      document.documentElement.requestFullscreen?.().catch(() => {})
-    } else if (document.fullscreenElement) {
-      document.exitFullscreen?.().catch(() => {})
-    }
-  }, [focusMode])
-
-  // Synchronise l'état si le plein écran natif est quitté autrement que par
-  // notre bouton (ex : touche Échap gérée nativement par le navigateur).
-  useEffect(() => {
-    const onFullscreenChange = () => {
-      if (!document.fullscreenElement) setFocusMode(false)
-    }
-    document.addEventListener('fullscreenchange', onFullscreenChange)
-    return () => document.removeEventListener('fullscreenchange', onFullscreenChange)
-  }, [])
-
-  // Filet de sécurité pour les navigateurs sans API Fullscreen (ex : Safari
-  // iOS) : l'événement `fullscreenchange` ci-dessus n'y est jamais émis.
   useEffect(() => {
     if (!focusMode) return
     const onKeyDown = (e: KeyboardEvent) => {
@@ -476,8 +459,8 @@ export default function App() {
         <button
           className="focus-exit-btn"
           onClick={() => setFocusMode(false)}
-          aria-label="Quitter le mode plein écran"
-          title="Quitter le mode plein écran"
+          aria-label="Quitter le mode focus"
+          title="Quitter le mode focus"
         >
           <CloseIcon />
         </button>
@@ -558,8 +541,8 @@ export default function App() {
                       setFocusMode(true)
                       setMenuOpen(false)
                     }}
-                    aria-label="Mode plein écran"
-                    title="Mode plein écran"
+                    aria-label="Mode focus"
+                    title="Mode focus"
                   >
                     <FullscreenIcon />
                   </button>

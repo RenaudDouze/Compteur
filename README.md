@@ -20,7 +20,7 @@ appareils (optionnelle) est le seul point qui parle au réseau.
 - 6 styles d'affichage du chiffre au choix : odomètre, volets, 7 segments, anneau,
   éditorial, pastille — chacun avec sa propre animation.
 - Couleur et image de fond personnalisables par compteur.
-- Mode plein écran pour se concentrer sur un seul compteur.
+- Mode focus (masque l'en-tête, sans passer par le plein écran natif du navigateur) pour se concentrer sur un seul compteur.
 
 **Organisation**
 - Recherche/filtre discret des compteurs par nom.
