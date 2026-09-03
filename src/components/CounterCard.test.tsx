@@ -255,6 +255,112 @@ describe('CounterCard', () => {
       })
       expect(onChange).toHaveBeenCalledTimes(1)
     })
+
+    describe('équivalent clavier (Entrée/Espace)', () => {
+      it("incrémente une seule fois pour un appui bref (Espace)", () => {
+        const { onChange } = renderCard()
+        const plus = screen.getByRole('button', { name: 'Incrémenter' })
+        fireEvent.keyDown(plus, { key: ' ' })
+        fireEvent.keyUp(plus, { key: ' ' })
+        expect(onChange).toHaveBeenCalledTimes(1)
+        expect(onChange).toHaveBeenCalledWith(1)
+      })
+
+      it('répète en rafale après le délai de maintien (Entrée), sans incrément en trop au relâchement', () => {
+        const { onChange } = renderCard()
+        const plus = screen.getByRole('button', { name: 'Incrémenter' })
+        fireEvent.keyDown(plus, { key: 'Enter' })
+        act(() => {
+          vi.advanceTimersByTime(350)
+        })
+        expect(onChange).toHaveBeenCalledTimes(1)
+        act(() => {
+          vi.advanceTimersByTime(250)
+        })
+        expect(onChange).toHaveBeenCalledTimes(3)
+
+        fireEvent.keyUp(plus, { key: 'Enter' })
+        expect(onChange).toHaveBeenCalledTimes(3)
+      })
+
+      it("ignore la répétition automatique du système d'exploitation (touche maintenue) pour ne pas redémarrer le minuteur", () => {
+        const { onChange } = renderCard()
+        const minus = screen.getByRole('button', { name: 'Décrémenter' })
+        fireEvent.keyDown(minus, { key: 'Enter' })
+        // Répétitions générées par le système pendant le maintien de la
+        // touche : ignorées (notre propre minuteur pilote déjà la rafale),
+        // sans quoi chacune relancerait startHold et redémarrerait le délai.
+        fireEvent.keyDown(minus, { key: 'Enter', repeat: true })
+        fireEvent.keyDown(minus, { key: 'Enter', repeat: true })
+        act(() => {
+          vi.advanceTimersByTime(350)
+        })
+        expect(onChange).toHaveBeenCalledTimes(1)
+        fireEvent.keyUp(minus, { key: 'Enter' })
+        expect(onChange).toHaveBeenCalledTimes(1)
+      })
+
+      it('une touche autre que Entrée/Espace ne déclenche rien (bouton +)', () => {
+        const { onChange } = renderCard()
+        const plus = screen.getByRole('button', { name: 'Incrémenter' })
+        fireEvent.keyDown(plus, { key: 'Tab' })
+        fireEvent.keyUp(plus, { key: 'Tab' })
+        act(() => {
+          vi.advanceTimersByTime(500)
+        })
+        expect(onChange).not.toHaveBeenCalled()
+      })
+
+      it('une touche autre que Entrée/Espace ne déclenche rien (bouton -)', () => {
+        const { onChange } = renderCard()
+        const minus = screen.getByRole('button', { name: 'Décrémenter' })
+        fireEvent.keyDown(minus, { key: 'Tab' })
+        fireEvent.keyUp(minus, { key: 'Tab' })
+        act(() => {
+          vi.advanceTimersByTime(500)
+        })
+        expect(onChange).not.toHaveBeenCalled()
+      })
+
+      it("ignore aussi la répétition automatique sur le bouton +", () => {
+        const { onChange } = renderCard()
+        const plus = screen.getByRole('button', { name: 'Incrémenter' })
+        fireEvent.keyDown(plus, { key: 'Enter' })
+        fireEvent.keyDown(plus, { key: 'Enter', repeat: true })
+        act(() => {
+          vi.advanceTimersByTime(350)
+        })
+        expect(onChange).toHaveBeenCalledTimes(1)
+        fireEvent.keyUp(plus, { key: 'Enter' })
+        expect(onChange).toHaveBeenCalledTimes(1)
+      })
+    })
+  })
+
+  describe('renommage rapide au clavier (titre)', () => {
+    it("Entrée sur le titre ouvre le champ de renommage", () => {
+      renderCard({ name: 'Mon compteur' })
+      fireEvent.keyDown(screen.getByText('Mon compteur'), { key: 'Enter' })
+      expect(screen.getByDisplayValue('Mon compteur')).toBeInTheDocument()
+    })
+
+    it("Espace sur le titre ouvre aussi le champ de renommage", () => {
+      renderCard({ name: 'Mon compteur' })
+      fireEvent.keyDown(screen.getByText('Mon compteur'), { key: ' ' })
+      expect(screen.getByDisplayValue('Mon compteur')).toBeInTheDocument()
+    })
+
+    it('une autre touche ne fait rien', () => {
+      renderCard({ name: 'Mon compteur' })
+      fireEvent.keyDown(screen.getByText('Mon compteur'), { key: 'Tab' })
+      expect(screen.queryByDisplayValue('Mon compteur')).not.toBeInTheDocument()
+    })
+
+    it("ne fait rien sur un compteur archivé (lecture seule)", () => {
+      renderCard({ name: 'Mon compteur', archived: true })
+      fireEvent.keyDown(screen.getByText('Mon compteur'), { key: 'Enter' })
+      expect(screen.queryByDisplayValue('Mon compteur')).not.toBeInTheDocument()
+    })
   })
 
   it('affiche le calque d\'image de fond quand une URL est définie', () => {

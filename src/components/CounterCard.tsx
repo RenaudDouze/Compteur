@@ -119,6 +119,17 @@ export function CounterCard({
   }
 
   const { startHold, stopHold, longPressFired } = useHoldToRepeat(bump)
+  // Partagé entre le relâchement souris/tactile (onClick, après un
+  // pointerup) et le relâchement clavier (onKeyUp) : un tap bref applique
+  // l'incrément, un relâchement qui suit une rafale ne l'applique pas une
+  // fois de plus (déjà appliquée en boucle par useHoldToRepeat).
+  const handleRelease = (sign: 1 | -1) => {
+    if (longPressFired.current) {
+      longPressFired.current = false
+      return
+    }
+    bump(sign)
+  }
   const {
     onPointerDown: handleCardPointerDown,
     onPointerUp: handleCardPointerUp,
@@ -358,6 +369,18 @@ export function CounterCard({
             setEditing(true)
           }}
           onPointerDown={(e) => e.stopPropagation()}
+          // Raccourci clavier pour ce même accès rapide au renommage (la
+          // modale Personnaliser reste l'accès pleinement clavier ; ceci
+          // évite que ce raccourci reste réservé à la souris/au tactile).
+          tabIndex={locked ? undefined : 0}
+          onKeyDown={(e) => {
+            if (e.target !== e.currentTarget || locked) return
+            if (e.key === 'Enter' || e.key === ' ') {
+              e.preventDefault()
+              setDraftName(counter.name)
+              setEditing(true)
+            }
+          }}
           title={locked ? 'Compteur archivé : lecture seule' : 'Toucher pour renommer'}
         >
           {counter.name}
@@ -401,11 +424,7 @@ export function CounterCard({
           disabled={locked}
           onClick={(e) => {
             e.stopPropagation()
-            if (longPressFired.current) {
-              longPressFired.current = false
-              return
-            }
-            bump(-1)
+            handleRelease(-1)
           }}
           onPointerDown={(e) => {
             e.stopPropagation()
@@ -414,6 +433,23 @@ export function CounterCard({
           onPointerUp={stopHold}
           onPointerLeave={stopHold}
           onPointerCancel={stopHold}
+          // Entrée/Espace : équivalent clavier de l'appui maintenu (rafale),
+          // au lieu du simple appui unique déjà couvert nativement par le
+          // clic déclenché par le navigateur. `e.repeat` (répétition clavier
+          // du système) est ignoré : c'est notre propre minuteur qui pilote
+          // la répétition, comme au pointeur.
+          onKeyDown={(e) => {
+            if (e.key !== 'Enter' && e.key !== ' ') return
+            e.preventDefault()
+            if (e.repeat) return
+            startHold(-1)
+          }}
+          onKeyUp={(e) => {
+            if (e.key !== 'Enter' && e.key !== ' ') return
+            e.preventDefault()
+            stopHold()
+            handleRelease(-1)
+          }}
           aria-label="Décrémenter"
           title="Maintenir pour décrémenter en rafale"
         >
@@ -424,11 +460,7 @@ export function CounterCard({
           disabled={locked}
           onClick={(e) => {
             e.stopPropagation()
-            if (longPressFired.current) {
-              longPressFired.current = false
-              return
-            }
-            bump(1)
+            handleRelease(1)
           }}
           onPointerDown={(e) => {
             e.stopPropagation()
@@ -437,6 +469,18 @@ export function CounterCard({
           onPointerUp={stopHold}
           onPointerLeave={stopHold}
           onPointerCancel={stopHold}
+          onKeyDown={(e) => {
+            if (e.key !== 'Enter' && e.key !== ' ') return
+            e.preventDefault()
+            if (e.repeat) return
+            startHold(1)
+          }}
+          onKeyUp={(e) => {
+            if (e.key !== 'Enter' && e.key !== ' ') return
+            e.preventDefault()
+            stopHold()
+            handleRelease(1)
+          }}
           aria-label="Incrémenter"
           title="Maintenir pour incrémenter en rafale"
         >
