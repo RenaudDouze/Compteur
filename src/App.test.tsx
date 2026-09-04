@@ -1286,6 +1286,107 @@ describe('App', () => {
         })
       })
     })
+
+    describe('statistiques cumulées (vue Archivés)', () => {
+      it("n'affiche pas de barre de statistiques sans compteur archivé", () => {
+        window.localStorage.setItem('+1.counters.v1', JSON.stringify([makeCounter({ name: 'Actif' })]))
+        render(<App />)
+        expect(document.querySelector('.archive-stats-bar')).not.toBeInTheDocument()
+      })
+
+      it("n'affiche pas de barre de statistiques en vue Actifs, même avec des compteurs archivés", () => {
+        window.localStorage.setItem(
+          '+1.counters.v1',
+          JSON.stringify([makeCounter({ name: 'Rangé', archived: true, count: 5 })])
+        )
+        render(<App />)
+        expect(document.querySelector('.archive-stats-bar')).not.toBeInTheDocument()
+      })
+
+      it('cumule le nombre et le total sur tous les compteurs archivés (singulier)', () => {
+        window.localStorage.setItem(
+          '+1.counters.v1',
+          JSON.stringify([makeCounter({ name: 'Rangé', archived: true, count: 42 })])
+        )
+        render(<App />)
+        toggleArchiveView()
+        const bar = document.querySelector('.archive-stats-bar') as HTMLElement
+        expect(within(bar).getByText('1')).toBeInTheDocument()
+        expect(within(bar).getByText('compteur archivé')).toBeInTheDocument()
+        expect(within(bar).getByText('42')).toBeInTheDocument()
+        expect(within(bar).getByText('total cumulé')).toBeInTheDocument()
+      })
+
+      it('accorde le libellé au pluriel avec plusieurs compteurs archivés, et cumule leur total', () => {
+        window.localStorage.setItem(
+          '+1.counters.v1',
+          JSON.stringify([
+            makeCounter({ id: 'a', name: 'Un', archived: true, count: 10 }),
+            makeCounter({ id: 'b', name: 'Deux', archived: true, count: 5 }),
+          ])
+        )
+        render(<App />)
+        toggleArchiveView()
+        const bar = document.querySelector('.archive-stats-bar') as HTMLElement
+        expect(within(bar).getByText('2')).toBeInTheDocument()
+        expect(within(bar).getByText('compteurs archivés')).toBeInTheDocument()
+        expect(within(bar).getByText('15')).toBeInTheDocument()
+      })
+
+      it("n'affiche pas de moyenne par jour quand aucun compteur archivé n'a de date d'archivage connue", () => {
+        window.localStorage.setItem(
+          '+1.counters.v1',
+          JSON.stringify([makeCounter({ name: 'Rangé', archived: true, count: 10 })])
+        )
+        render(<App />)
+        toggleArchiveView()
+        const bar = document.querySelector('.archive-stats-bar') as HTMLElement
+        expect(within(bar).queryByText('en moyenne')).not.toBeInTheDocument()
+      })
+
+      it("affiche la moyenne par jour cumulée dès qu'un compteur archivé a une date d'archivage connue", () => {
+        window.localStorage.setItem(
+          '+1.counters.v1',
+          JSON.stringify([
+            makeCounter({
+              name: 'Rangé',
+              archived: true,
+              count: 20,
+              createdAt: new Date(2026, 0, 1).getTime(),
+              archivedAt: new Date(2026, 0, 11).getTime(), // 10 jours -> 2/jour
+            }),
+          ])
+        )
+        render(<App />)
+        toggleArchiveView()
+        const bar = document.querySelector('.archive-stats-bar') as HTMLElement
+        expect(within(bar).getByText('2 / jour')).toBeInTheDocument()
+        expect(within(bar).getByText('en moyenne')).toBeInTheDocument()
+      })
+
+      it('reste basée sur tous les compteurs archivés, indépendamment du filtre de recherche actif', () => {
+        window.localStorage.setItem(
+          '+1.counters.v1',
+          JSON.stringify([
+            makeCounter({ id: 'a', name: 'Pompes', archived: true, count: 10 }),
+            makeCounter({ id: 'b', name: 'Squats', archived: true, count: 5 }),
+          ])
+        )
+        render(<App />)
+        toggleArchiveView()
+        openMenu()
+        fireEvent.click(screen.getByRole('button', { name: 'Rechercher' }))
+        fireEvent.change(screen.getByPlaceholderText('Rechercher un compteur…'), { target: { value: 'pom' } })
+        expect(screen.getByText('Pompes')).toBeInTheDocument()
+
+        // Calculée à partir de tous les compteurs archivés (`counters`), pas
+        // du sous-ensemble filtré par la recherche (`filteredCounters`) :
+        // reste à 2/15 même une fois la recherche appliquée.
+        const bar = document.querySelector('.archive-stats-bar') as HTMLElement
+        expect(within(bar).getByText('2')).toBeInTheDocument()
+        expect(within(bar).getByText('15')).toBeInTheDocument()
+      })
+    })
   })
 
   describe('épinglage', () => {

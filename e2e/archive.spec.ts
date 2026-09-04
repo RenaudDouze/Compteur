@@ -103,4 +103,30 @@ test.describe('Archivage de compteurs', () => {
     await expect(page.locator('.modal-panel').getByText(/→.*aujourd'hui/)).toBeVisible()
     await expect(page.locator('.modal-panel').getByText(/Moyenne : 2 \/ jour/)).toBeVisible()
   })
+
+  test('affiche des statistiques cumulées sur tous les compteurs archivés', async ({ page }) => {
+    await addCounter(page)
+    await page.getByRole('button', { name: 'Incrémenter', exact: true }).click()
+    await page.getByRole('button', { name: 'Incrémenter', exact: true }).click()
+    await page.getByRole('button', { name: 'Actions du compteur' }).click()
+    await page.getByText('Archiver ce compteur').click()
+
+    await addCounter(page)
+    await page.getByRole('button', { name: 'Incrémenter', exact: true }).click()
+    await page.getByRole('button', { name: 'Actions du compteur' }).click()
+    await page.getByText('Archiver ce compteur').click()
+
+    // Aucune barre de statistiques en vue Actifs.
+    await expect(page.locator('.archive-stats-bar')).toHaveCount(0)
+
+    await toggleArchiveView(page)
+    const bar = page.locator('.archive-stats-bar')
+    await expect(bar).toBeVisible()
+    await expect(bar.getByText('2')).toBeVisible()
+    await expect(bar.getByText('compteurs archivés')).toBeVisible()
+    await expect(bar.getByText('3')).toBeVisible()
+    await expect(bar.getByText('total cumulé')).toBeVisible()
+    await expect(bar.getByText('1,5 / jour')).toBeVisible()
+    await expect(bar.getByText('en moyenne')).toBeVisible()
+  })
 })

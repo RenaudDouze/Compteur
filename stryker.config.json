@@ -24,7 +24,8 @@
     "src/reorder.ts",
     "src/notifications.ts",
     "src/shareCard.ts",
-    "src/counterName.ts"
+    "src/counterName.ts",
+    "src/archiveStats.ts"
   ],
   "thresholds": {
     "high": 100,

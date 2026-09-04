@@ -21,6 +21,7 @@ import {
 } from './components/icons'
 import { decodeCountersFromParam, migrateStoredCounter } from './sync'
 import { mergeVisibleOrder } from './reorder'
+import { computeArchiveStats } from './archiveStats'
 import { makeId } from './id'
 import { COLORS, pickColor } from './colors'
 import { getNotificationPermission, requestNotificationPermission, showLocalNotification } from './notifications'
@@ -213,6 +214,12 @@ export default function App() {
   // recherche filtre ensuite par nom à l'intérieur de la vue active.
   const [archiveView, setArchiveView] = useState<'active' | 'archived'>('active')
   const archivedCount = useMemo(() => counters.filter((c) => c.archived).length, [counters])
+  // Statistiques cumulées sur l'ensemble des compteurs archivés (par
+  // opposition aux stats déjà affichées par carte, propres à un seul
+  // compteur) : indépendantes de la recherche, comme `archivedCount`
+  // ci-dessus — elles portent sur l'ensemble des archives, pas seulement sur
+  // ce que le filtre en cours laisse visible.
+  const archiveStats = useMemo(() => computeArchiveStats(counters), [counters])
   const filteredCounters = useMemo(
     () => counters.filter((c) => (archiveView === 'archived' ? !!c.archived : !c.archived) && matchesSearch(c)),
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -631,6 +638,25 @@ export default function App() {
       )}
 
       <main>
+        {archiveView === 'archived' && archiveStats.count > 0 && (
+          <div className="archive-stats-bar">
+            <div className="archive-stat">
+              <span className="archive-stat-value">{archiveStats.count}</span>
+              <span className="archive-stat-label">{archiveStats.count > 1 ? 'compteurs archivés' : 'compteur archivé'}</span>
+            </div>
+            <div className="archive-stat">
+              <span className="archive-stat-value">{archiveStats.totalValue.toLocaleString('fr-FR')}</span>
+              <span className="archive-stat-label">total cumulé</span>
+            </div>
+            {archiveStats.averagePerDay !== null && (
+              <div className="archive-stat">
+                <span className="archive-stat-value">{archiveStats.averagePerDay}</span>
+                <span className="archive-stat-label">en moyenne</span>
+              </div>
+            )}
+          </div>
+        )}
+
         {filteredCounters.length === 0 ? (
           <div className="empty-state">
             {counters.length === 0 ? (
