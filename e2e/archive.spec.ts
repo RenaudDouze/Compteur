@@ -128,5 +128,8 @@ test.describe('Archivage de compteurs', () => {
     await expect(bar.getByText('total cumulé')).toBeVisible()
     await expect(bar.getByText('1,5 / jour')).toBeVisible()
     await expect(bar.getByText('en moyenne')).toBeVisible()
+    // Les deux compteurs sont archivés le jour même : 1 jour chacun.
+    await expect(bar.getByText('1 jour', { exact: true })).toBeVisible()
+    await expect(bar.getByText('durée moyenne')).toBeVisible()
   })
 })
