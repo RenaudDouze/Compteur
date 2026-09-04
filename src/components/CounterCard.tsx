@@ -344,6 +344,7 @@ export function CounterCard({
         <input
           className="counter-name-input"
           autoFocus
+          aria-label="Renommer le compteur"
           value={draftName}
           onClick={(e) => e.stopPropagation()}
           onPointerDown={(e) => e.stopPropagation()}

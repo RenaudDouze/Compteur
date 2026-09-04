@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useId, useState } from 'react'
 import { isValidImageUrl } from '../url'
 import { sanitizeCounterName } from '../counterName'
 import { CounterValueDisplay } from './CounterValueDisplay'
@@ -18,6 +18,12 @@ interface CounterSettingsPanelProps {
 }
 
 export function CounterSettingsPanel({ counter, colors, onClose, onUpdate, onNavigate }: CounterSettingsPanelProps) {
+  // Relie chaque champ à son <h3> visuel via aria-labelledby : sans ça, un
+  // lecteur d'écran qui navigue directement de champ en champ n'a aucun nom
+  // accessible pour ces deux inputs.
+  const nameLabelId = useId()
+  const backgroundLabelId = useId()
+
   const [draftName, setDraftName] = useState(counter.name)
   const [draftBackground, setDraftBackground] = useState(counter.appearance.backgroundImageUrl ?? '')
   const [backgroundError, setBackgroundError] = useState<string | null>(null)
@@ -59,11 +65,12 @@ export function CounterSettingsPanel({ counter, colors, onClose, onUpdate, onNav
       )}
 
       <section className="modal-section">
-        <h3>Nom</h3>
+        <h3 id={nameLabelId}>Nom</h3>
         <input
           type="text"
           className="modal-input"
           disabled={locked}
+          aria-labelledby={nameLabelId}
           value={draftName}
           maxLength={40}
           onChange={(e) => setDraftName(e.target.value)}
@@ -118,13 +125,14 @@ export function CounterSettingsPanel({ counter, colors, onClose, onUpdate, onNav
       </section>
 
       <section className="modal-section">
-        <h3>Image de fond</h3>
+        <h3 id={backgroundLabelId}>Image de fond</h3>
         <div className="modal-row">
           <input
             type="url"
             inputMode="url"
             className="modal-input"
             disabled={locked}
+            aria-labelledby={backgroundLabelId}
             aria-invalid={backgroundError !== null}
             value={draftBackground}
             placeholder="https://exemple.com/image.jpg"

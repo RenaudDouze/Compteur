@@ -512,6 +512,12 @@ describe('CounterCard', () => {
       expect(screen.getByDisplayValue('Avant')).toBeInTheDocument()
     })
 
+    it('donne un nom accessible au champ de renommage (aria-label)', () => {
+      renderCard({ name: 'Avant' })
+      fireEvent.click(screen.getByText('Avant'))
+      expect(screen.getByLabelText('Renommer le compteur')).toBeInTheDocument()
+    })
+
     it('valide le nouveau nom avec Entrée', () => {
       const { onUpdate } = renderCard({ name: 'Avant' })
       fireEvent.click(screen.getByText('Avant'))

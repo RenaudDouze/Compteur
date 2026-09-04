@@ -1041,6 +1041,14 @@ describe('App', () => {
       expect(screen.queryByPlaceholderText('Rechercher un compteur…')).not.toBeInTheDocument()
     })
 
+    it('donne un nom accessible au champ de recherche (aria-label)', () => {
+      window.localStorage.setItem('+1.counters.v1', JSON.stringify([makeCounter({ name: 'Un' })]))
+      render(<App />)
+      openMenu()
+      fireEvent.click(screen.getByRole('button', { name: 'Rechercher' }))
+      expect(screen.getByLabelText('Rechercher un compteur')).toBeInTheDocument()
+    })
+
     it('révèle le champ au clic et filtre les compteurs par nom', async () => {
       window.localStorage.setItem(
         '+1.counters.v1',
@@ -1303,6 +1311,16 @@ describe('App', () => {
         expect(document.querySelector('.archive-stats-bar')).not.toBeInTheDocument()
       })
 
+      it('regroupe la barre de statistiques sous un role="group" nommé, pour un lecteur d\'écran', () => {
+        window.localStorage.setItem(
+          '+1.counters.v1',
+          JSON.stringify([makeCounter({ name: 'Rangé', archived: true, count: 5 })])
+        )
+        render(<App />)
+        toggleArchiveView()
+        expect(screen.getByRole('group', { name: 'Statistiques des compteurs archivés' })).toBeInTheDocument()
+      })
+
       it('cumule le nombre et le total sur tous les compteurs archivés (singulier)', () => {
         window.localStorage.setItem(
           '+1.counters.v1',
@@ -1561,6 +1579,23 @@ describe('App', () => {
       fireEvent.click(screen.getByRole('button', { name: 'Quitter le mode focus' }))
       expect(screen.getByRole('heading', { name: '+1' })).toBeInTheDocument()
       expect(screen.queryByRole('button', { name: 'Quitter le mode focus' })).not.toBeInTheDocument()
+    })
+
+    it('déplace le focus clavier vers le bouton de sortie à l\'activation', () => {
+      window.localStorage.setItem('+1.counters.v1', JSON.stringify([makeCounter()]))
+      render(<App />)
+      openMenu()
+      fireEvent.click(screen.getByRole('button', { name: 'Mode focus' }))
+      expect(screen.getByRole('button', { name: 'Quitter le mode focus' })).toHaveFocus()
+    })
+
+    it('rend le focus au bouton menu à la sortie', () => {
+      window.localStorage.setItem('+1.counters.v1', JSON.stringify([makeCounter()]))
+      render(<App />)
+      openMenu()
+      fireEvent.click(screen.getByRole('button', { name: 'Mode focus' }))
+      fireEvent.click(screen.getByRole('button', { name: 'Quitter le mode focus' }))
+      expect(screen.getByRole('button', { name: 'Ouvrir le menu' })).toHaveFocus()
     })
 
     it('quitte le mode focus avec Échap', () => {

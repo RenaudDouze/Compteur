@@ -48,6 +48,12 @@ describe('CounterSettingsPanel', () => {
     expect(onClose).toHaveBeenCalledTimes(1)
   })
 
+  it('associe un nom accessible aux champs Nom et Image de fond (aria-labelledby)', () => {
+    renderPanel()
+    expect(screen.getByLabelText('Nom')).toBeInTheDocument()
+    expect(screen.getByLabelText('Image de fond')).toBeInTheDocument()
+  })
+
   it('navigue vers le panneau "Valeur & réglages" au clic sur le lien dédié', () => {
     const { onNavigate } = renderPanel()
     fireEvent.click(screen.getByRole('button', { name: 'Valeur & réglages' }))

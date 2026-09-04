@@ -159,6 +159,7 @@ export function SyncPanel({ counters, onClose, onImport, remoteSync }: SyncPanel
                 <input
                   autoFocus
                   className="modal-input"
+                  aria-label="Code de synchronisation à saisir"
                   placeholder="XXXX XXXX"
                   value={joinInput}
                   onChange={(e) => setJoinInput(e.target.value)}
