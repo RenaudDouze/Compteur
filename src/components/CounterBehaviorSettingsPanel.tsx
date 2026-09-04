@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useId, useState } from 'react'
 import { cumulativeOdds, formatOdds, formatRemainingAttempts, formatConstantChanceReminder, progressRatio } from '../odds'
 import { daysBetween, formatAveragePerDay, formatDuration, formatStartDate, toIsoDate, todayIsoDate } from '../date'
 import { usePositiveIntField } from '../hooks/usePositiveIntField'
@@ -23,6 +23,17 @@ export function CounterBehaviorSettingsPanel({
   onNavigate,
 }: CounterBehaviorSettingsPanelProps) {
   const startDate = counter.behavior.startDate ?? toIsoDate(counter.createdAt)
+
+  // Chaque champ n'a qu'un <h3> visuel comme repère : ces id le relient à son
+  // input via aria-labelledby, pour un nom accessible exploitable par un
+  // lecteur d'écran qui navigue directement de champ en champ (sans lire le
+  // reste de la modale autour).
+  const valueLabelId = useId()
+  const stepLabelId = useId()
+  const targetLabelId = useId()
+  const oddsLabelId = useId()
+  const oddsPrefixId = useId()
+  const startDateLabelId = useId()
 
   const [draftCount, setDraftCount] = useState(counter.count.toString())
   const [countError, setCountError] = useState<string | null>(null)
@@ -82,12 +93,13 @@ export function CounterBehaviorSettingsPanel({
       )}
 
       <section className="modal-section">
-        <h3>Valeur actuelle</h3>
+        <h3 id={valueLabelId}>Valeur actuelle</h3>
         <input
           className="modal-input"
           inputMode="numeric"
           pattern="-?[0-9]*"
           disabled={locked}
+          aria-labelledby={valueLabelId}
           aria-invalid={countError !== null}
           value={draftCount}
           onChange={(e) => {
@@ -103,12 +115,13 @@ export function CounterBehaviorSettingsPanel({
       </section>
 
       <section className="modal-section">
-        <h3>Pas d'incrément</h3>
+        <h3 id={stepLabelId}>Pas d'incrément</h3>
         <input
           className="modal-input modal-input--odds"
           inputMode="numeric"
           pattern="[0-9]*"
           disabled={locked}
+          aria-labelledby={stepLabelId}
           aria-invalid={stepField.error !== null}
           value={stepField.value}
           placeholder="1"
@@ -123,12 +136,13 @@ export function CounterBehaviorSettingsPanel({
       </section>
 
       <section className="modal-section">
-        <h3>Objectif</h3>
+        <h3 id={targetLabelId}>Objectif</h3>
         <input
           className="modal-input modal-input--odds"
           inputMode="numeric"
           pattern="[0-9]*"
           disabled={locked}
+          aria-labelledby={targetLabelId}
           aria-invalid={targetField.error !== null}
           value={targetField.value}
           placeholder="ex : 50"
@@ -158,14 +172,15 @@ export function CounterBehaviorSettingsPanel({
       </section>
 
       <section className="modal-section">
-        <h3>Probabilité</h3>
+        <h3 id={oddsLabelId}>Probabilité</h3>
         <div className="modal-row">
-          <span>1 chance sur</span>
+          <span id={oddsPrefixId}>1 chance sur</span>
           <input
             className="modal-input modal-input--odds"
             inputMode="numeric"
             pattern="[0-9]*"
             disabled={locked}
+            aria-labelledby={`${oddsLabelId} ${oddsPrefixId}`}
             aria-invalid={oddsField.error !== null}
             value={oddsField.value}
             placeholder="4096"
@@ -198,11 +213,12 @@ export function CounterBehaviorSettingsPanel({
       </section>
 
       <section className="modal-section">
-        <h3>Date de début</h3>
+        <h3 id={startDateLabelId}>Date de début</h3>
         <input
           type="date"
           className="modal-input"
           disabled={locked}
+          aria-labelledby={startDateLabelId}
           aria-invalid={startDateError !== null}
           value={draftStartDate}
           max={todayIsoDate()}

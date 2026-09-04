@@ -330,6 +330,12 @@ describe('SyncPanel', () => {
         expect(screen.getByPlaceholderText('XXXX XXXX')).toBeInTheDocument()
       })
 
+      it('donne un nom accessible au champ de saisie du code (aria-label)', () => {
+        render(<SyncPanel counters={[]} onClose={vi.fn()} onImport={vi.fn()} remoteSync={makeRemoteSync()} />)
+        fireEvent.click(screen.getByRole('button', { name: 'Saisir un code' }))
+        expect(screen.getByLabelText('Code de synchronisation à saisir')).toBeInTheDocument()
+      })
+
       it('désactive "Rejoindre" tant que le champ est vide', () => {
         render(<SyncPanel counters={[]} onClose={vi.fn()} onImport={vi.fn()} remoteSync={makeRemoteSync()} />)
         fireEvent.click(screen.getByRole('button', { name: 'Saisir un code' }))

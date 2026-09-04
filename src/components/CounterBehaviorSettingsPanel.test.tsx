@@ -54,6 +54,15 @@ describe('CounterBehaviorSettingsPanel', () => {
     expect(onClose).toHaveBeenCalledTimes(1)
   })
 
+  it('associe un nom accessible à chaque champ (aria-labelledby), pas seulement un <h3> visuel', () => {
+    renderPanel({ count: 5, step: 2, target: 10, oddsDenominator: 4, startDate: '2026-01-01' })
+    expect(screen.getByLabelText('Valeur actuelle')).toBeInTheDocument()
+    expect(screen.getByLabelText("Pas d'incrément")).toBeInTheDocument()
+    expect(screen.getByLabelText('Objectif')).toBeInTheDocument()
+    expect(screen.getByLabelText('Probabilité 1 chance sur')).toBeInTheDocument()
+    expect(screen.getByLabelText('Date de début')).toBeInTheDocument()
+  })
+
   describe('valeur actuelle', () => {
     it('préremplit le champ avec la valeur actuelle', () => {
       renderPanel({ count: 42 })

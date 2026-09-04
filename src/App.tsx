@@ -245,14 +245,45 @@ export default function App() {
   // dans la fenêtre/onglet déjà ouvert — pas ce qui est recherché ici, un
   // simple affichage épuré dans l'espace disponible.
   const [focusMode, setFocusMode] = useState(false)
+  const focusExitBtnRef = useRef<HTMLButtonElement>(null)
+  // Mémorise qu'on était en mode focus, pour détecter la transition
+  // true -> false dans l'effet ci-dessous (comparer à la seule valeur
+  // courante de `focusMode` ne suffit pas à savoir d'où l'on vient).
+  const wasFocusModeRef = useRef(false)
+
+  // Déplace explicitement le focus clavier à chaque bascule, une fois le DOM
+  // à jour (donc après le rendu, dans un effet plutôt que dans le handler de
+  // clic lui-même) : à l'activation, le bouton de sortie qui vient d'
+  // apparaître ; à la désactivation, le bouton menu qui avait déclenché le
+  // mode — comme une modale le fait déjà à son ouverture/fermeture. Sans ce
+  // déplacement, le focus resterait sur un élément qui vient de disparaître
+  // du DOM, perdu jusqu'au prochain Tab.
+  useEffect(() => {
+    if (focusMode) {
+      focusExitBtnRef.current?.focus()
+      wasFocusModeRef.current = true
+    } else if (wasFocusModeRef.current) {
+      wasFocusModeRef.current = false
+      menuButtonRef.current?.focus()
+    }
+  }, [focusMode])
+
+  const exitFocusMode = () => {
+    setFocusMode(false)
+    // Un seul bouton de sortie visible dans cet état : il ramène à
+    // l'affichage normal en une fois, y compris si le plein écran natif de
+    // l'appareil était aussi actif.
+    setDeviceFullscreen(false)
+  }
 
   useEffect(() => {
     if (!focusMode) return
     const onKeyDown = (e: KeyboardEvent) => {
-      if (e.key === 'Escape') setFocusMode(false)
+      if (e.key === 'Escape') exitFocusMode()
     }
     document.addEventListener('keydown', onKeyDown)
     return () => document.removeEventListener('keydown', onKeyDown)
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [focusMode])
 
   // Bascule indépendante vers le plein écran natif de l'appareil
@@ -492,14 +523,9 @@ export default function App() {
 
       {focusMode && (
         <button
+          ref={focusExitBtnRef}
           className="focus-exit-btn"
-          onClick={() => {
-            setFocusMode(false)
-            // Un seul bouton de sortie visible dans cet état : il ramène à
-            // l'affichage normal en une fois, y compris si le plein écran
-            // natif de l'appareil était aussi actif.
-            setDeviceFullscreen(false)
-          }}
+          onClick={exitFocusMode}
           aria-label="Quitter le mode focus"
           title="Quitter le mode focus"
         >
@@ -622,6 +648,7 @@ export default function App() {
                 autoFocus
                 type="text"
                 className="modal-input search-input"
+                aria-label="Rechercher un compteur"
                 placeholder="Rechercher un compteur…"
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
@@ -639,7 +666,7 @@ export default function App() {
 
       <main>
         {archiveView === 'archived' && archiveStats.count > 0 && (
-          <div className="archive-stats-bar">
+          <div className="archive-stats-bar" role="group" aria-label="Statistiques des compteurs archivés">
             <div className="archive-stat">
               <span className="archive-stat-value">{archiveStats.count}</span>
               <span className="archive-stat-label">{archiveStats.count > 1 ? 'compteurs archivés' : 'compteur archivé'}</span>
