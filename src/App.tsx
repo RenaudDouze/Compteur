@@ -654,6 +654,12 @@ export default function App() {
                 <span className="archive-stat-label">en moyenne</span>
               </div>
             )}
+            {archiveStats.averageDurationDays !== null && (
+              <div className="archive-stat">
+                <span className="archive-stat-value">{archiveStats.averageDurationDays}</span>
+                <span className="archive-stat-label">durée moyenne</span>
+              </div>
+            )}
           </div>
         )}
 

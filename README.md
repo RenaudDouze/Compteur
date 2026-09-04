@@ -27,7 +27,7 @@ appareils (optionnelle) est le seul point qui parle au réseau.
 - Recherche/filtre discret des compteurs par nom.
 - Archivage (masque un compteur sans le supprimer, avec sa propre vue dédiée) ;
   verrouillage optionnel des compteurs archivés contre les modifications accidentelles.
-- Statistiques cumulées (nombre, total, moyenne par jour) sur l'ensemble des compteurs archivés.
+- Statistiques cumulées (nombre, total, moyenne par jour, durée moyenne) sur l'ensemble des compteurs archivés.
 
 **Partage et synchronisation entre appareils**
 - Lien ou QR code de partage (compressé) pour transférer l'état de tes compteurs vers

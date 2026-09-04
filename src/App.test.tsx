@@ -1364,6 +1364,45 @@ describe('App', () => {
         expect(within(bar).getByText('en moyenne')).toBeInTheDocument()
       })
 
+      it("n'affiche pas de durée moyenne quand aucun compteur archivé n'a de date d'archivage connue", () => {
+        window.localStorage.setItem(
+          '+1.counters.v1',
+          JSON.stringify([makeCounter({ name: 'Rangé', archived: true, count: 10 })])
+        )
+        render(<App />)
+        toggleArchiveView()
+        const bar = document.querySelector('.archive-stats-bar') as HTMLElement
+        expect(within(bar).queryByText('durée moyenne')).not.toBeInTheDocument()
+      })
+
+      it('affiche le nombre de jours moyen passé sur les compteurs archivés', () => {
+        window.localStorage.setItem(
+          '+1.counters.v1',
+          JSON.stringify([
+            makeCounter({
+              id: 'a',
+              name: 'Un',
+              archived: true,
+              createdAt: new Date(2026, 0, 1).getTime(),
+              archivedAt: new Date(2026, 0, 11).getTime(), // 10 jours
+            }),
+            makeCounter({
+              id: 'b',
+              name: 'Deux',
+              archived: true,
+              createdAt: new Date(2026, 0, 1).getTime(),
+              archivedAt: new Date(2026, 0, 21).getTime(), // 20 jours
+            }),
+          ])
+        )
+        render(<App />)
+        toggleArchiveView()
+        const bar = document.querySelector('.archive-stats-bar') as HTMLElement
+        // (10 + 20) / 2 = 15 jours
+        expect(within(bar).getByText('15 jours')).toBeInTheDocument()
+        expect(within(bar).getByText('durée moyenne')).toBeInTheDocument()
+      })
+
       it('reste basée sur tous les compteurs archivés, indépendamment du filtre de recherche actif', () => {
         window.localStorage.setItem(
           '+1.counters.v1',
