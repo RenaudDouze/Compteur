@@ -1,23 +1,83 @@
 name: Déploiement du worker de synchronisation
 
 on:
-  push:
-    branches:
-      - main
-    paths:
-      - "worker/**"
-      - ".github/workflows/worker-deploy.yml"
+  # Se déclenche à la fin du workflow CI plutôt que sur push directement :
+  # garantit qu'on ne déploie jamais un commit sur lequel lint/typecheck/
+  # tests ont échoué, y compris en cas de push direct sur main qui
+  # contournerait une éventuelle protection de branche basée sur les PR.
+  # `workflow_run` n'a pas d'équivalent du filtre `paths:` du déclencheur
+  # `push` d'origine : le job `changes` ci-dessous le recrée à la main.
+  workflow_run:
+    workflows: [CI]
+    types: [completed]
+    branches: [main]
   workflow_dispatch:
+
+permissions:
+  contents: read
 
 concurrency:
   group: worker-deploy
   cancel-in-progress: false
 
 jobs:
-  deploy:
+  changes:
+    name: Détecte si le worker a changé
+    if: github.event_name == 'workflow_dispatch' || github.event.workflow_run.conclusion == 'success'
     runs-on: ubuntu-latest
+    outputs:
+      worker_changed: ${{ steps.diff.outputs.changed }}
+      sha: ${{ steps.sha.outputs.value }}
+    steps:
+      - id: sha
+        run: echo "value=${{ github.event.workflow_run.head_sha || github.sha }}" >> "$GITHUB_OUTPUT"
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ steps.sha.outputs.value }}
+          fetch-depth: 0
+          fetch-tags: true
+      - id: diff
+        name: Comparer avec le dernier déploiement réussi
+        run: |
+          set -euo pipefail
+          if [ "${{ github.event_name }}" = "workflow_dispatch" ]; then
+            echo "Déclenchement manuel : on déploie sans vérifier les chemins modifiés."
+            echo "changed=true" >> "$GITHUB_OUTPUT"
+            exit 0
+          fi
+
+          # Le tag `worker-deploy-*` le plus récent atteignable depuis ce
+          # commit marque le dernier déploiement réussi (voir le job
+          # `deploy` plus bas, qui pose ce tag après chaque déploiement).
+          # Comparer contre ce tag plutôt que contre le commit précédent
+          # gère correctement les pushes multi-commits (ex: merge non-fast-
+          # forward d'une PR) sans dépendance externe à `paths:`.
+          base=$(git describe --tags --match 'worker-deploy-*' --abbrev=0 HEAD 2>/dev/null || true)
+          if [ -z "$base" ]; then
+            echo "Aucun déploiement précédent détecté, on déploie."
+            echo "changed=true" >> "$GITHUB_OUTPUT"
+          elif git diff --quiet "$base" HEAD -- worker/ .github/workflows/worker-deploy.yml; then
+            echo "Rien sous worker/ depuis $base, on ne redéploie pas."
+            echo "changed=false" >> "$GITHUB_OUTPUT"
+          else
+            echo "Changements sous worker/ depuis $base, on déploie."
+            echo "changed=true" >> "$GITHUB_OUTPUT"
+          fi
+
+  deploy:
+    name: Déployer
+    needs: changes
+    if: needs.changes.outputs.worker_changed == 'true'
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write # write (et non read) : le tag de déploiement ci-dessous doit pouvoir pousser
+    environment:
+      name: cloudflare-worker
+      url: ${{ vars.VITE_SYNC_WORKER_URL }}
     steps:
       - uses: actions/checkout@v4
+        with:
+          ref: ${{ needs.changes.outputs.sha }}
       - uses: actions/setup-node@v4
         with:
           node-version: 24
@@ -25,12 +85,43 @@ jobs:
           cache-dependency-path: worker/package-lock.json
       - run: npm ci
         working-directory: worker
+      - run: npm run lint
+        working-directory: worker
       - run: npm run typecheck
         working-directory: worker
-      - run: npm test
+      - run: npm run test:coverage
+        working-directory: worker
+      - run: npm audit --audit-level=high
         working-directory: worker
       - uses: cloudflare/wrangler-action@v3
         with:
           apiToken: ${{ secrets.CLOUDFLARE_API_TOKEN }}
           accountId: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
           workingDirectory: worker
+
+      - name: Vérification post-déploiement
+        if: vars.VITE_SYNC_WORKER_URL != ''
+        run: |
+          set -euo pipefail
+          url="${{ vars.VITE_SYNC_WORKER_URL }}/api/sync/AAAAAAAA"
+          echo "Vérification de $url"
+          code=$(curl -sS -o /dev/null -w '%{http_code}' "$url")
+          # 404 attendu : "AAAAAAAA" est un code au format valide mais quasi
+          # certainement jamais attribué (voir worker/src/code.ts). Confirme
+          # que le worker répond et que le binding KV fonctionne, sans
+          # consommer le quota (limité) d'écritures KV ni créer de code
+          # inutile — seule une lecture est faite.
+          if [ "$code" != "404" ]; then
+            echo "::error::Le worker répond avec le code $code au lieu de 404 attendu."
+            exit 1
+          fi
+          echo "OK ($code)."
+
+      - name: Tag de déploiement (rollback + détection de changement du prochain run)
+        run: |
+          set -euo pipefail
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          tag="worker-deploy-${{ github.run_number }}"
+          git tag -a "$tag" -m "Déploiement du worker (run ${{ github.run_id }})"
+          git push origin "$tag"

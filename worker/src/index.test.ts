@@ -254,6 +254,21 @@ describe('PUT /api/sync/:code (écriture)', () => {
     expect(await res.json()).toEqual(serverState)
   })
 
+  it("refuse (409) et renvoie un état par défaut quand le code n'a jamais rien stocké et que baseVersion n'est pas 0", async () => {
+    // Cas distinct du premier test de ce bloc : là, aucune entrée KV
+    // n'existe du tout pour ce code (`existing` est `null`), ce qui emprunte
+    // une branche différente de calcul de la réponse 409 que lorsqu'un état
+    // serveur existe déjà.
+    const env = makeEnv()
+    const code = generateSyncCode()
+
+    const push = { baseVersion: 3, counters: [{ id: 'orphelin' }] }
+    const res = await worker.fetch(request('PUT', `/api/sync/${code}`, push), env)
+    expect(res.status).toBe(409)
+    expect(await res.json()).toEqual({ version: 0, counters: [] })
+    expect(await env.SYNC_KV.get(kvKey(code))).toBeNull()
+  })
+
   it('renvoie 400 pour un JSON invalide', async () => {
     const env = makeEnv()
     const code = generateSyncCode()

@@ -6,6 +6,9 @@ on:
     branches:
       - main
 
+permissions:
+  contents: read
+
 concurrency:
   group: ci-${{ github.workflow }}-${{ github.ref }}
   cancel-in-progress: true
@@ -121,10 +124,44 @@ jobs:
           cache-dependency-path: worker/package-lock.json
       - run: npm ci
         working-directory: worker
+      - run: npm run lint
+        working-directory: worker
       - run: npm run typecheck
         working-directory: worker
-      - run: npm test
+      - run: npm run test:coverage
         working-directory: worker
+      - if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: worker-coverage-report
+          path: worker/coverage/
+          retention-days: 14
+      # Niveau « high » ici (contrairement au « critical » utilisé pour le
+      # front, voir le job `audit` plus bas) : le worker n'a aucune
+      # dépendance de build lourde de type vite-plugin-pwa/workbox, donc rien
+      # n'empêche de viser un niveau plus strict dès maintenant.
+      - run: npm audit --audit-level=high
+        working-directory: worker
+
+  audit:
+    name: Audit des dépendances (front)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 24
+          cache: npm
+      - run: npm ci
+      # Niveau « critical » et non « high » : une vulnérabilité high existe
+      # actuellement dans la chaîne vite-plugin-pwa → workbox-build → ajv →
+      # fast-uri (GHSA-5jgf-p345-68v8 et consorts), uniquement utilisée au
+      # moment du build pour générer le manifest PWA — jamais exécutée dans
+      # le bundle livré au navigateur. Aucun correctif amont disponible pour
+      # l'instant ; bloquer la CI dessus casserait le pipeline sans qu'on
+      # puisse agir. Dependabot (.github/dependabot.yml) remontera la mise à
+      # jour dès qu'elle existera. À repasser en « high » à ce moment-là.
+      - run: npm audit --audit-level=critical
 
   build:
     name: Build de production
@@ -138,3 +175,15 @@ jobs:
           cache: npm
       - run: npm ci
       - run: npm run build
+        env:
+          VITE_SYNC_WORKER_URL: ${{ vars.VITE_SYNC_WORKER_URL }}
+      # Pas un vrai déploiement de preview (ça demanderait un hébergeur tiers
+      # + un nouveau secret, une décision à prendre séparément) : juste de
+      # quoi télécharger et ouvrir le build en local pour relire une PR sans
+      # attendre le merge sur main.
+      - if: github.event_name == 'pull_request'
+        uses: actions/upload-artifact@v4
+        with:
+          name: pr-build-preview
+          path: dist/
+          retention-days: 7
