@@ -72,8 +72,8 @@ jobs:
           path: playwright-report/
           retention-days: 14
 
-  mutation-tests:
-    name: Mutation testing (logique pure)
+  mutation-tests-shard:
+    name: Mutation testing (logique pure) — lot ${{ matrix.shard }}
     strategy:
       matrix:
         shard: [1, 2]
@@ -96,6 +96,18 @@ jobs:
           name: mutation-report-${{ matrix.shard }}
           path: reports/mutation/
           retention-days: 14
+
+  # Agrège les 2 lots sous un seul check nommé « Mutation testing (logique
+  # pure) », comme avant la parallélisation : c'est ce nom exact que
+  # référencent les required status checks du dépôt (voir README.md), et un
+  # renommage aurait cassé la protection de branche sans qu'aucun réglage
+  # GitHub ne l'indique dans ce repo.
+  mutation-tests:
+    name: Mutation testing (logique pure)
+    needs: mutation-tests-shard
+    runs-on: ubuntu-latest
+    steps:
+      - run: echo "Les 2 lots de mutation testing sont passés."
 
   worker-tests:
     name: Worker de synchronisation

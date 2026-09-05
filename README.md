@@ -122,8 +122,12 @@ sont pas au vert, active les *required status checks* du dépôt :
 **Settings → Branches → Branch protection rules → `main`** → coche
 « Require status checks to pass before merging » et sélectionne les jobs
 `Linter`, `Vérification des types`, `Tests unitaires + couverture`, `Tests
-fonctionnels (Playwright)`, `Mutation testing (logique pure) (1)`,
-`Mutation testing (logique pure) (2)` et `Build de production`.
+fonctionnels (Playwright)`, `Mutation testing (logique pure)` et `Build de
+production`. En interne, `Mutation testing (logique pure)` est un job
+d'agrégation qui ne fait qu'attendre les 2 lots parallèles
+(`Mutation testing (logique pure) — lot 1/2`, voir `ci.yml`) — le required
+status check garde ce nom stable, à ne surtout pas renommer sans mettre à
+jour la protection de branche en même temps.
 
 ## Déploiement
 
