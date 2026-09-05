@@ -1591,7 +1591,7 @@ describe('App', () => {
       render(<App />)
       openMenu()
       fireEvent.click(screen.getByRole('button', { name: 'Mode focus' }))
-      expect(screen.queryByRole('heading', { name: '+1' })).not.toBeInTheDocument()
+      expect(screen.queryByRole('heading', { name: 'PlusUn' })).not.toBeInTheDocument()
       expect(screen.getByRole('button', { name: 'Quitter le mode focus' })).toBeInTheDocument()
     })
 
@@ -1601,7 +1601,7 @@ describe('App', () => {
       openMenu()
       fireEvent.click(screen.getByRole('button', { name: 'Mode focus' }))
       fireEvent.click(screen.getByRole('button', { name: 'Quitter le mode focus' }))
-      expect(screen.getByRole('heading', { name: '+1' })).toBeInTheDocument()
+      expect(screen.getByRole('heading', { name: 'PlusUn' })).toBeInTheDocument()
       expect(screen.queryByRole('button', { name: 'Quitter le mode focus' })).not.toBeInTheDocument()
     })
 
@@ -1628,7 +1628,7 @@ describe('App', () => {
       openMenu()
       fireEvent.click(screen.getByRole('button', { name: 'Mode focus' }))
       fireEvent.keyDown(document, { key: 'Escape' })
-      expect(screen.getByRole('heading', { name: '+1' })).toBeInTheDocument()
+      expect(screen.getByRole('heading', { name: 'PlusUn' })).toBeInTheDocument()
     })
 
     it('ignore une autre touche que Échap en mode focus', () => {
@@ -1637,7 +1637,7 @@ describe('App', () => {
       openMenu()
       fireEvent.click(screen.getByRole('button', { name: 'Mode focus' }))
       fireEvent.keyDown(document, { key: 'a' })
-      expect(screen.queryByRole('heading', { name: '+1' })).not.toBeInTheDocument()
+      expect(screen.queryByRole('heading', { name: 'PlusUn' })).not.toBeInTheDocument()
     })
   })
 
@@ -1718,7 +1718,7 @@ describe('App', () => {
       render(<App />)
       openMenu()
       fireEvent.click(screen.getByRole('button', { name: 'Plein écran' }))
-      expect(screen.getByRole('heading', { name: '+1' })).toBeInTheDocument()
+      expect(screen.getByRole('heading', { name: 'PlusUn' })).toBeInTheDocument()
     })
 
     it("le bouton de sortie du mode focus quitte aussi le plein écran de l'appareil", async () => {

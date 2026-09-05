@@ -29,7 +29,7 @@ describe('buildShareCardSvg', () => {
     // Sans objectif, l'emplacement interpolé entre la valeur et le pied de
     // carte doit rester vide (pas de contenu injecté par erreur) — et le
     // pied de carte doit être centré et positionné à `CARD_HEIGHT - 40`.
-    expect(svg).toMatch(/>42<\/text>\s*<text x="320" y="760"[^>]*>\+1<\/text>/)
+    expect(svg).toMatch(/>42<\/text>\s*<text x="320" y="760"[^>]*>PlusUn<\/text>/)
   })
 
   it('échappe les caractères spéciaux du nom', () => {

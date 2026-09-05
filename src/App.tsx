@@ -123,7 +123,7 @@ export default function App() {
     // Complète le toast (invisible si l'onglet n'est pas au premier plan) par
     // une notification système — voir notifications.ts pour les conditions
     // (permission déjà accordée, onglet effectivement en arrière-plan).
-    void showLocalNotification('+1', { body: message })
+    void showLocalNotification('PlusUn', { body: message })
   }
   // Absent (fonctionnalité non configurée) tant que le worker de synchro n'a
   // pas été déployé et sa variable d'environnement renseignée au build — voir
@@ -536,7 +536,7 @@ export default function App() {
       {!focusMode && (
         <>
           <header className="app-header">
-            <h1>+1</h1>
+            <h1>PlusUn</h1>
             <div className="app-header-actions">
               <button className="add-btn" onClick={addCounter}>
                 + Nouveau compteur

@@ -27,7 +27,7 @@ export function downloadBackup(counters: Counter[]) {
   const now = new Date()
   const pad = (n: number) => String(n).padStart(2, '0')
   const timestamp = `${now.getFullYear()}-${pad(now.getMonth() + 1)}-${pad(now.getDate())}_${pad(now.getHours())}-${pad(now.getMinutes())}-${pad(now.getSeconds())}`
-  triggerDownload(blob, `+1-sauvegarde-${timestamp}.json`)
+  triggerDownload(blob, `PlusUn-sauvegarde-${timestamp}.json`)
 }
 
 function isValidCounter(value: unknown): value is Record<string, unknown> {
