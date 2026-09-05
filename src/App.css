@@ -153,8 +153,9 @@
 /* Statistiques cumulées sur l'ensemble des compteurs archivés (vue
    Archivés) : une rangée de chiffres, sur le même principe visuel que
    `.modal-hint--locked` (fond plein, coins arrondis) mais organisée en
-   colonnes plutôt qu'en paragraphe, pour rester lisible même avec 3 stats
-   côte à côte sur mobile. */
+   colonnes plutôt qu'en paragraphe, avec un retour à la ligne (flex-wrap)
+   pour rester lisible même avec les 6 stats possibles côte à côte sur
+   mobile. */
 .archive-stats-bar {
   display: flex;
   justify-content: center;

@@ -19,6 +19,8 @@ describe('computeArchiveStats', () => {
     expect(computeArchiveStats([])).toEqual({
       count: 0,
       totalValue: 0,
+      averageValue: '0',
+      medianValue: '0',
       averagePerDay: null,
       averageDurationDays: null,
     })
@@ -26,7 +28,14 @@ describe('computeArchiveStats', () => {
 
   it('ignore les compteurs actifs (non archivés)', () => {
     const stats = computeArchiveStats([makeCounter({ count: 10 })])
-    expect(stats).toEqual({ count: 0, totalValue: 0, averagePerDay: null, averageDurationDays: null })
+    expect(stats).toEqual({
+      count: 0,
+      totalValue: 0,
+      averageValue: '0',
+      medianValue: '0',
+      averagePerDay: null,
+      averageDurationDays: null,
+    })
   })
 
   it("cumule le total sur tous les compteurs archivés, même sans date d'archivage connue", () => {
@@ -56,6 +65,47 @@ describe('computeArchiveStats', () => {
     expect(stats.totalValue).toBe(110)
     expect(stats.averagePerDay).toBe('1 / jour')
     expect(stats.averageDurationDays).toBe('10 jours')
+  })
+
+  it('calcule la valeur moyenne et la valeur médiane par compteur, indépendamment de leur ordre (nombre impair)', () => {
+    const stats = computeArchiveStats([
+      makeCounter({ id: 'a', count: 60, archived: true }),
+      makeCounter({ id: 'b', count: 10, archived: true }),
+      makeCounter({ id: 'c', count: 20, archived: true }),
+    ])
+    // Moyenne : (60 + 10 + 20) / 3 = 30. Médiane : valeur centrale une fois
+    // triées (10, 20, 60) = 20 — volontairement différente de la moyenne
+    // pour vérifier que les deux calculs sont indépendants.
+    expect(stats.averageValue).toBe('30')
+    expect(stats.medianValue).toBe('20')
+  })
+
+  it('calcule la médiane comme la moyenne des 2 valeurs centrales sur un nombre pair de compteurs', () => {
+    const stats = computeArchiveStats([
+      makeCounter({ id: 'a', count: 100, archived: true }),
+      makeCounter({ id: 'b', count: 10, archived: true }),
+      makeCounter({ id: 'c', count: 30, archived: true }),
+      makeCounter({ id: 'd', count: 20, archived: true }),
+    ])
+    // Moyenne : (100 + 10 + 30 + 20) / 4 = 40. Médiane : triées (10, 20, 30,
+    // 100), moyenne des 2 valeurs centrales (20 + 30) / 2 = 25 — distinct de
+    // la moyenne pour vérifier que les deux calculs sont indépendants (pas
+    // un simple alias de l'autre).
+    expect(stats.averageValue).toBe('40')
+    expect(stats.medianValue).toBe('25')
+  })
+
+  it('arrondit la valeur moyenne à une décimale (division non exacte)', () => {
+    const stats = computeArchiveStats([
+      makeCounter({ id: 'a', count: 1, archived: true }),
+      makeCounter({ id: 'b', count: 1, archived: true }),
+      makeCounter({ id: 'c', count: 2, archived: true }),
+    ])
+    // (1 + 1 + 2) / 3 = 1,333... -> arrondi à une décimale : 1,3 (et non
+    // "1,333", que produirait un arrondi par défaut sans limiter
+    // explicitement le nombre de décimales).
+    expect(stats.averageValue).toBe('1,3')
+    expect(stats.medianValue).toBe('1')
   })
 
   it('utilise startDate plutôt que createdAt quand défini', () => {

@@ -675,6 +675,14 @@ export default function App() {
               <span className="archive-stat-value">{archiveStats.totalValue.toLocaleString('fr-FR')}</span>
               <span className="archive-stat-label">total cumulé</span>
             </div>
+            <div className="archive-stat">
+              <span className="archive-stat-value">{archiveStats.averageValue}</span>
+              <span className="archive-stat-label">valeur moyenne</span>
+            </div>
+            <div className="archive-stat">
+              <span className="archive-stat-value">{archiveStats.medianValue}</span>
+              <span className="archive-stat-label">valeur médiane</span>
+            </div>
             {archiveStats.averagePerDay !== null && (
               <div className="archive-stat">
                 <span className="archive-stat-value">{archiveStats.averagePerDay}</span>
