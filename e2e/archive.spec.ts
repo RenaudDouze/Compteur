@@ -126,6 +126,11 @@ test.describe('Archivage de compteurs', () => {
     await expect(bar.getByText('compteurs archivés')).toBeVisible()
     await expect(bar.getByText('3')).toBeVisible()
     await expect(bar.getByText('total cumulé')).toBeVisible()
+    // Comptes 2 et 1 : moyenne (2+1)/2 = 1,5, médiane (1+2)/2 = 1,5 aussi
+    // (2 valeurs) — coïncidence de ce jeu de données, chaque puce est
+    // vérifiée séparément par son libellé pour ne pas dépendre de ça.
+    await expect(bar.locator('.archive-stat', { hasText: 'valeur moyenne' }).getByText('1,5', { exact: true })).toBeVisible()
+    await expect(bar.locator('.archive-stat', { hasText: 'valeur médiane' }).getByText('1,5', { exact: true })).toBeVisible()
     await expect(bar.getByText('1,5 / jour')).toBeVisible()
     await expect(bar.getByText('en moyenne')).toBeVisible()
     // Les deux compteurs sont archivés le jour même : 1 jour chacun.

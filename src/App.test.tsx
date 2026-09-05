@@ -1331,8 +1331,32 @@ describe('App', () => {
         const bar = document.querySelector('.archive-stats-bar') as HTMLElement
         expect(within(bar).getByText('1')).toBeInTheDocument()
         expect(within(bar).getByText('compteur archivé')).toBeInTheDocument()
-        expect(within(bar).getByText('42')).toBeInTheDocument()
         expect(within(bar).getByText('total cumulé')).toBeInTheDocument()
+        // Un seul compteur : la valeur totale, moyenne et médiane valent
+        // toutes 42 — on scope la recherche à chaque puce pour ne pas
+        // confondre les 3 occurrences du texte "42".
+        const totalChip = within(bar).getByText('total cumulé').closest('.archive-stat') as HTMLElement
+        expect(within(totalChip).getByText('42')).toBeInTheDocument()
+      })
+
+      it('affiche la valeur moyenne et la valeur médiane par compteur archivé', () => {
+        window.localStorage.setItem(
+          '+1.counters.v1',
+          JSON.stringify([
+            makeCounter({ id: 'a', name: 'Un', archived: true, count: 10 }),
+            makeCounter({ id: 'b', name: 'Deux', archived: true, count: 20 }),
+            makeCounter({ id: 'c', name: 'Trois', archived: true, count: 60 }),
+          ])
+        )
+        render(<App />)
+        toggleArchiveView()
+        const bar = document.querySelector('.archive-stats-bar') as HTMLElement
+        // Moyenne : (10 + 20 + 60) / 3 = 30. Médiane : valeur centrale une
+        // fois triées (10, 20, 60) = 20.
+        const averageChip = within(bar).getByText('valeur moyenne').closest('.archive-stat') as HTMLElement
+        expect(within(averageChip).getByText('30')).toBeInTheDocument()
+        const medianChip = within(bar).getByText('valeur médiane').closest('.archive-stat') as HTMLElement
+        expect(within(medianChip).getByText('20')).toBeInTheDocument()
       })
 
       it('accorde le libellé au pluriel avec plusieurs compteurs archivés, et cumule leur total', () => {
