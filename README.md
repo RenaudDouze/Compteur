@@ -1,4 +1,4 @@
-# +1
+# PlusUn
 
 Application web (PWA) pour gérer plusieurs compteurs indépendants, à installer sur
 téléphone ou tablette. Fonctionne 100% hors-ligne : les compteurs vivent dans le

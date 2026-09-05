@@ -195,7 +195,7 @@ export function CounterCard({
   // conditions (permission déjà accordée, onglet effectivement en
   // arrière-plan).
   useEffect(() => {
-    if (celebrating) void showLocalNotification('+1', { body: `Objectif atteint pour « ${counter.name} » 🎉` })
+    if (celebrating) void showLocalNotification('PlusUn', { body: `Objectif atteint pour « ${counter.name} » 🎉` })
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [celebrating])
 

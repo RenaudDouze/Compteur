@@ -6,7 +6,7 @@ test.describe('PWA et fonctionnement hors-ligne', () => {
     const response = await page.request.get(`${baseURL}/manifest.webmanifest`)
     expect(response.ok()).toBeTruthy()
     const manifest = await response.json()
-    expect(manifest.name).toBe('+1')
+    expect(manifest.name).toBe('PlusUn')
     expect(manifest.display).toBe('standalone')
     expect(manifest.icons.length).toBeGreaterThan(0)
     expect(manifest.shortcuts).toEqual(
@@ -53,7 +53,7 @@ test.describe('PWA et fonctionnement hors-ligne', () => {
     await context.setOffline(true)
     await page.reload()
 
-    await expect(page.getByRole('heading', { name: '+1', exact: true })).toBeVisible()
+    await expect(page.getByRole('heading', { name: 'PlusUn', exact: true })).toBeVisible()
     await expect(page.locator('.counter-value')).toHaveText('1')
 
     await context.setOffline(false)

@@ -81,7 +81,7 @@ describe('downloadBackup', () => {
 
   it("nomme le fichier avec la date et l'heure du jour (pour ne pas écraser une sauvegarde précédente le même jour)", () => {
     downloadBackup([makeCounter()])
-    expect(lastAnchor?.download).toBe('+1-sauvegarde-2026-08-22_14-05-09.json')
+    expect(lastAnchor?.download).toBe('PlusUn-sauvegarde-2026-08-22_14-05-09.json')
   })
 
   it('révoque l\'URL objet après le téléchargement', () => {

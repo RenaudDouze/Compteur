@@ -1,4 +1,4 @@
-# Worker de synchronisation +1
+# Worker de synchronisation PlusUn
 
 Petit service Cloudflare Worker qui sert de relais entre tes appareils : chacun
 pousse et récupère un instantané JSON de ses compteurs, identifié par un code

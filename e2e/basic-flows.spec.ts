@@ -147,17 +147,17 @@ test.describe('Parcours de base', () => {
     await addCounter(page)
     await openMenu(page)
     await page.getByRole('button', { name: 'Mode focus' }).click()
-    await expect(page.getByRole('heading', { name: '+1', exact: true })).not.toBeVisible()
+    await expect(page.getByRole('heading', { name: 'PlusUn', exact: true })).not.toBeVisible()
     const exitBtn = page.getByRole('button', { name: 'Quitter le mode focus' })
     await expect(exitBtn).toBeVisible()
 
     await exitBtn.click()
-    await expect(page.getByRole('heading', { name: '+1', exact: true })).toBeVisible()
+    await expect(page.getByRole('heading', { name: 'PlusUn', exact: true })).toBeVisible()
 
     await openMenu(page)
     await page.getByRole('button', { name: 'Mode focus' }).click()
     await page.keyboard.press('Escape')
-    await expect(page.getByRole('heading', { name: '+1', exact: true })).toBeVisible()
+    await expect(page.getByRole('heading', { name: 'PlusUn', exact: true })).toBeVisible()
   })
 
   test("le plein écran de l'appareil est indépendant du mode focus", async ({ page }) => {
@@ -166,7 +166,7 @@ test.describe('Parcours de base', () => {
     // Seul, il ne masque pas l'en-tête (contrairement au mode focus).
     await openMenu(page)
     await page.getByRole('button', { name: 'Plein écran' }).click()
-    await expect(page.getByRole('heading', { name: '+1', exact: true })).toBeVisible()
+    await expect(page.getByRole('heading', { name: 'PlusUn', exact: true })).toBeVisible()
 
     // Combiné au mode focus, le bouton de sortie de celui-ci ramène aussi le
     // libellé "Plein écran" à son état initial (quitte les deux d'un coup).
