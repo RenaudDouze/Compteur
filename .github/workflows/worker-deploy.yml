@@ -31,7 +31,7 @@ jobs:
     steps:
       - id: sha
         run: echo "value=${{ github.event.workflow_run.head_sha || github.sha }}" >> "$GITHUB_OUTPUT"
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
         with:
           ref: ${{ steps.sha.outputs.value }}
           fetch-depth: 0
@@ -75,7 +75,7 @@ jobs:
       name: cloudflare-worker
       url: ${{ vars.VITE_SYNC_WORKER_URL }}
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
         with:
           ref: ${{ needs.changes.outputs.sha }}
       - uses: actions/setup-node@v4
