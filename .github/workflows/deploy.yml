@@ -25,7 +25,7 @@ jobs:
     if: github.event_name == 'workflow_dispatch' || github.event.workflow_run.conclusion == 'success'
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
         with:
           # Le SHA exact qui a passé la CI, pas juste « la HEAD actuelle de
           # main » qui a pu bouger entre-temps si des pushes s'enchaînent.
@@ -42,7 +42,7 @@ jobs:
           # Actions → Variables. Absente = fonctionnalité masquée dans l'app
           # déployée (voir worker/README.md).
           VITE_SYNC_WORKER_URL: ${{ vars.VITE_SYNC_WORKER_URL }}
-      - uses: actions/upload-pages-artifact@v3
+      - uses: actions/upload-pages-artifact@v5
         with:
           path: dist
 
@@ -71,7 +71,7 @@ jobs:
       # Checkout tardif, juste pour le tag ci-dessous : `deploy-pages`
       # n'a besoin d'aucun fichier du dépôt, seulement de l'artefact déjà
       # uploadé par le job `build`.
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
         with:
           ref: ${{ github.event.workflow_run.head_sha || github.sha }}
 
