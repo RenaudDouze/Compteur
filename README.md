@@ -97,13 +97,20 @@ npm run preview
   `stryker.config.json` — actuellement `src/odds.ts`, `src/date.ts`,
   `src/sync.ts`, `src/remoteSync.ts`, `src/share.ts`, `src/id.ts`, `src/url.ts`,
   `src/colors.ts`, `src/sound.ts`, `src/reorder.ts`, `src/notifications.ts`,
-  `src/shareCard.ts`) — un score de 100% strict sur les composants React
-  (drag & drop, animations, QR code...) n'est pas un objectif réaliste
-  (mutants équivalents, contenu visuel difficile à mutation-tester
-  utilement).
+  `src/shareCard.ts`, `src/counterName.ts`, `src/archiveStats.ts`) — un score
+  de 100% strict sur les composants React (drag & drop, animations, QR
+  code...) n'est pas un objectif réaliste (mutants équivalents, contenu
+  visuel difficile à mutation-tester utilement). En CI cette liste est
+  répartie automatiquement (`.github/scripts/mutation-shard-files.mjs`) sur 2
+  jobs en parallèle pour réduire le temps total — la liste elle-même reste la
+  seule source de vérité, ajouter un module à `stryker.config.json` suffit,
+  aucun autre fichier à mettre à jour.
 - **Tests fonctionnels** : `e2e/` couvre les parcours de base, les
   fonctionnalités avancées (probabilité, date, glisser-déposer), la
-  synchronisation/partage, et le fonctionnement PWA/hors-ligne.
+  synchronisation/partage, et le fonctionnement PWA/hors-ligne. En CI, la
+  suite tourne sur 4 workers Playwright en parallèle (`playwright.config.ts`)
+  — chaque test isole son propre contexte navigateur, donc aucun état n'est
+  partagé entre eux malgré le serveur `preview` unique.
 
 ## Intégration continue
 
@@ -115,8 +122,8 @@ sont pas au vert, active les *required status checks* du dépôt :
 **Settings → Branches → Branch protection rules → `main`** → coche
 « Require status checks to pass before merging » et sélectionne les jobs
 `Linter`, `Vérification des types`, `Tests unitaires + couverture`, `Tests
-fonctionnels (Playwright)`, `Mutation testing (logique pure)` et `Build de
-production`.
+fonctionnels (Playwright)`, `Mutation testing (logique pure) (1)`,
+`Mutation testing (logique pure) (2)` et `Build de production`.
 
 ## Déploiement
 

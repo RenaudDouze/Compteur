@@ -74,6 +74,9 @@ jobs:
 
   mutation-tests:
     name: Mutation testing (logique pure)
+    strategy:
+      matrix:
+        shard: [1, 2]
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
@@ -82,11 +85,15 @@ jobs:
           node-version: 24
           cache: npm
       - run: npm ci
-      - run: npm run test:mutation
+      - id: files
+        run: node .github/scripts/mutation-shard-files.mjs
+        env:
+          SHARD: ${{ matrix.shard }}
+      - run: npx stryker run --mutate "${{ steps.files.outputs.files }}"
       - if: always()
         uses: actions/upload-artifact@v4
         with:
-          name: mutation-report
+          name: mutation-report-${{ matrix.shard }}
           path: reports/mutation/
           retention-days: 14
 
